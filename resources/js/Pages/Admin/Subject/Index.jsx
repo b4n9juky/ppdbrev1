@@ -2,6 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Button } from '@/Components/ui/button';
 import { Head, useForm, router } from '@inertiajs/react';
 import { useState } from 'react';
+import Switch from '@/Components/Switch';
 
 export default function Index({ subjects, academicYears }) {
     const [editing, setEditing] = useState(null);
@@ -46,6 +47,16 @@ export default function Index({ subjects, academicYears }) {
     function handleCancel() {
         reset();
         setEditing(null);
+    }
+
+    function handleToggleActive(subject) {
+        router.put(route('admin.subjects.update', subject.id), {
+            academic_year_id: subject.academic_year_id,
+            name: subject.name,
+            is_active: !subject.is_active,
+        }, {
+            preserveScroll: true,
+        });
     }
 
     return (
@@ -106,14 +117,11 @@ export default function Index({ subjects, academicYears }) {
                                 </div>
                             </div>
                             <div className="mt-4 flex items-center gap-2">
-                                <input
-                                    type="checkbox"
-                                    id="is_active"
+                                <Switch
                                     checked={data.is_active}
-                                    onChange={(e) => setData('is_active', e.target.checked)}
-                                    className="rounded border-gray-300 text-emerald-600 shadow-sm focus:ring-emerald-500"
+                                    onChange={(checked) => setData('is_active', checked)}
                                 />
-                                <label htmlFor="is_active" className="text-sm text-gray-700">Aktif</label>
+                                <span className="text-sm font-medium text-gray-700">Mapel Aktif</span>
                             </div>
                             <div className="mt-5 flex gap-2">
                                 <Button type="submit" disabled={processing} className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 shadow-sm shadow-emerald-200">
@@ -147,9 +155,10 @@ export default function Index({ subjects, academicYears }) {
                                         <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">{subject.name}</td>
                                         <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{subject.academic_year?.name}</td>
                                         <td className="whitespace-nowrap px-6 py-4">
-                                            <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${subject.is_active ? 'bg-emerald-50 text-emerald-700 ring-emerald-300' : 'bg-gray-100 text-gray-700 ring-gray-300'}`}>
-                                                {subject.is_active ? 'Aktif' : 'Nonaktif'}
-                                            </span>
+                                            <Switch
+                                                checked={subject.is_active}
+                                                onChange={() => handleToggleActive(subject)}
+                                            />
                                         </td>
                                         <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
                                             <button onClick={() => handleEdit(subject)} className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 shadow-sm transition hover:bg-emerald-100 hover:border-emerald-300">

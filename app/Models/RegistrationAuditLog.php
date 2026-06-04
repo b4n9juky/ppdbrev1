@@ -6,14 +6,12 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['registration_id', 'nisn', 'full_name', 'gender', 'birth_place', 'birth_date', 'address', 'phone_number', 'previous_school'])]
-class StudentBiodata extends Model
+#[Fillable(['user_id', 'registration_id', 'action', 'description'])]
+class RegistrationAuditLog extends Model
 {
-    protected function casts(): array
+    public function user(): BelongsTo
     {
-        return [
-            'birth_date' => 'date',
-        ];
+        return $this->belongsTo(User::class);
     }
 
     public function registration(): BelongsTo

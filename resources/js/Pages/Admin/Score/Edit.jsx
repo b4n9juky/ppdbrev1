@@ -100,7 +100,6 @@ export default function Edit({ registration, subjects }) {
                                         <tr>
                                             <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Mata Pelajaran</th>
                                             <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Nilai Ijazah</th>
-                                            <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Nilai Tes</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-50">
@@ -121,18 +120,7 @@ export default function Edit({ registration, subjects }) {
                                                         placeholder="0-100"
                                                     />
                                                 </td>
-                                                <td className="px-5 py-3.5">
-                                                    <input
-                                                        type="number"
-                                                        step="0.01"
-                                                        min="0"
-                                                        max="100"
-                                                        value={score.test_score}
-                                                        onChange={(e) => handleScoreChange(index, 'test_score', e.target.value)}
-                                                        className="block w-32 rounded-xl border-gray-200 shadow-sm transition focus:border-emerald-400 focus:ring-emerald-400"
-                                                        placeholder="0-100"
-                                                    />
-                                                </td>
+
                                             </tr>
                                         ))}
                                     </tbody>

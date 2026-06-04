@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, router } from '@inertiajs/react';
 import { useState } from 'react';
+import Switch from '@/Components/Switch';
 
 export default function Index({ banners }) {
     const [editing, setEditing] = useState(null);
@@ -107,11 +108,9 @@ export default function Index({ banners }) {
                                 </div>
 
                                 <div className="flex items-center gap-2.5">
-                                    <input
-                                        type="checkbox"
+                                    <Switch
                                         checked={data.is_active}
-                                        onChange={(e) => setData('is_active', e.target.checked)}
-                                        className="rounded-lg border-gray-300 text-emerald-600 shadow-sm focus:ring-emerald-500"
+                                        onChange={(checked) => setData('is_active', checked)}
                                     />
                                     <span className="text-sm font-medium text-gray-700">Aktif</span>
                                 </div>
@@ -168,23 +167,13 @@ export default function Index({ banners }) {
                                                     )}
                                                 </td>
                                                 <td className="whitespace-nowrap px-5 py-4">
-                                                    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${banner.is_active ? 'bg-emerald-50 text-emerald-700 ring-emerald-300' : 'bg-gray-100 text-gray-500 ring-gray-300'}`}>
-                                                        {banner.is_active ? 'Aktif' : 'Nonaktif'}
-                                                    </span>
+                                                    <Switch
+                                                        checked={banner.is_active}
+                                                        onChange={() => handleToggle(banner.id)}
+                                                    />
                                                 </td>
                                                 <td className="whitespace-nowrap px-5 py-4 text-right">
                                                     <div className="flex items-center justify-end gap-2">
-                                                        <button
-                                                            onClick={() => handleToggle(banner.id)}
-                                                            className={`inline-flex items-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-medium shadow-sm transition ${
-                                                                banner.is_active
-                                                                    ? 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100 hover:border-red-300'
-                                                                    : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-300'
-                                                            }`}
-                                                        >
-                                                            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={banner.is_active ? 'M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636' : 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'} /></svg>
-                                                            {banner.is_active ? 'Nonaktifkan' : 'Aktifkan'}
-                                                        </button>
                                                         <button onClick={() => startEdit(banner)} className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 shadow-sm transition hover:bg-emerald-100 hover:border-emerald-300">
                                                             <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                                                             Edit

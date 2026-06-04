@@ -1,0 +1,107 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Registration;
+use App\Models\RegistrationAuditLog;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
+use Exception;
+
+class RegistrationAssignmentService
+{
+    /**
+     * Claim a registration.
+     */
+    public function claim(Registration $registration, User $operator): Registration
+    {
+        if ($operator->role !== 'operator') {
+            throw new Exception('Hanya operator yang dapat mengambil pendaftar.');
+        }
+
+        return DB::transaction(function () use ($registration, $operator) {
+            $lockedReg = Registration::where('id', $registration->id)->lockForUpdate()->firstOrFail();
+
+            if ($lockedReg->processing_status !== 'baru') {
+                throw new Exception('Pendaftar ini sudah diambil atau diproses oleh operator lain.');
+            }
+
+            if ($lockedReg->status === 'draft') {
+                throw new Exception('Operator tidak dapat memproses pendaftaran dengan status draft.');
+            }
+
+            $lockedReg->update([
+                'assigned_operator_id' => $operator->id,
+                'assigned_at' => now(),
+                'processing_status' => 'diproses',
+            ]);
+
+            $studentName = $lockedReg->studentBiodata?->full_name ?? $lockedReg->user?->name ?? 'Siswa';
+
+            RegistrationAuditLog::create([
+                'user_id' => $operator->id,
+                'registration_id' => $lockedReg->id,
+                'action' => 'claim',
+                'description' => "Mengambil pendaftaran siswa {$studentName}.",
+            ]);
+
+            return $lockedReg;
+        });
+    }
+
+    /**
+     * Complete a registration.
+     */
+    public function complete(Registration $registration, User $operator): Registration
+    {
+        if ($registration->assigned_operator_id !== $operator->id) {
+            throw new Exception('Anda hanya dapat menyelesaikan pendaftar yang ditugaskan kepada Anda.');
+        }
+
+        return DB::transaction(function () use ($registration, $operator) {
+            $registration->update([
+                'processing_status' => 'selesai',
+            ]);
+
+            $studentName = $registration->studentBiodata?->full_name ?? $registration->user?->name ?? 'Siswa';
+
+            RegistrationAuditLog::create([
+                'user_id' => $operator->id,
+                'registration_id' => $registration->id,
+                'action' => 'complete',
+                'description' => "Menyelesaikan verifikasi pendaftaran siswa {$studentName}.",
+            ]);
+
+            return $registration;
+        });
+    }
+
+    /**
+     * Release a registration.
+     */
+    public function release(Registration $registration, User $user): Registration
+    {
+        if ($user->role !== 'admin' && $registration->assigned_operator_id !== $user->id) {
+            throw new Exception('Anda tidak memiliki wewenang untuk melepaskan pendaftar ini.');
+        }
+
+        return DB::transaction(function () use ($registration, $user) {
+            $registration->update([
+                'assigned_operator_id' => null,
+                'assigned_at' => null,
+                'processing_status' => 'baru',
+            ]);
+
+            $studentName = $registration->studentBiodata?->full_name ?? $registration->user?->name ?? 'Siswa';
+
+            RegistrationAuditLog::create([
+                'user_id' => $user->id,
+                'registration_id' => $registration->id,
+                'action' => 'release',
+                'description' => "Melepaskan pendaftaran siswa {$studentName}.",
+            ]);
+
+            return $registration;
+        });
+    }
+}

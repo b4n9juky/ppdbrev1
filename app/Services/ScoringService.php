@@ -35,6 +35,13 @@ class ScoringService
             $registration->update([
                 'total_score' => round($totalScore, 2),
             ]);
+
+            $passingScore = $registration->academicYear?->passing_score ?? 0.00;
+            if ($registration->total_score < $passingScore) {
+                $registration->update([
+                    'status' => 'rejected',
+                ]);
+            }
         });
     }
 }

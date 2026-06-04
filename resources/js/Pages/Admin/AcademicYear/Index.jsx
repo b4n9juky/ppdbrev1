@@ -2,12 +2,14 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Button } from '@/Components/ui/button';
 import { Head, useForm, router } from '@inertiajs/react';
 import { useState } from 'react';
+import Switch from '@/Components/Switch';
 
 export default function Index({ years }) {
     const [editing, setEditing] = useState(null);
 
     const { data, setData, post, put, processing, errors, reset } = useForm({
         name: '',
+        passing_score: '',
     });
 
     function handleSubmit(e) {
@@ -27,7 +29,10 @@ export default function Index({ years }) {
 
     function handleEdit(year) {
         setEditing(year.id);
-        setData({ name: year.name });
+        setData({
+            name: year.name,
+            passing_score: year.passing_score ?? '',
+        });
     }
 
     function handleDelete(id) {
@@ -103,17 +108,13 @@ export default function Index({ years }) {
                                 <div className="flex-1 text-sm text-gray-500">
                                     Tahun ajaran aktif: <span className="font-medium text-gray-800">{activeYear.name}</span>
                                 </div>
-                                <button
-                                    onClick={() => handleToggleActive(activeYear)}
-                                    className={`inline-flex items-center gap-1.5 rounded-xl border px-4 py-2 text-sm font-medium shadow-sm transition ${
-                                        activeYear.is_active
-                                            ? 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100 hover:border-red-300'
-                                            : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-300'
-                                    }`}
-                                >
-                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={activeYear.is_active ? 'M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636' : 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'} /></svg>
-                                    {activeYear.is_active ? 'Tutup Pendaftaran' : 'Buka Pendaftaran'}
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs text-gray-500">{activeYear.is_active ? 'Tutup Pendaftaran' : 'Buka Pendaftaran'}</span>
+                                    <Switch
+                                        checked={activeYear.is_active}
+                                        onChange={() => handleToggleActive(activeYear)}
+                                    />
+                                </div>
                             </div>
                         )}
                     </div>
@@ -129,7 +130,7 @@ export default function Index({ years }) {
                             </h3>
                         </div>
                         <form onSubmit={handleSubmit} className="px-6 py-5">
-                            <div className="flex items-end gap-4">
+                            <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
                                 <div className="flex-1">
                                     <label className="block text-sm font-medium text-gray-700">Nama Tahun Ajaran</label>
                                     <input
@@ -141,14 +142,28 @@ export default function Index({ years }) {
                                     />
                                     {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
                                 </div>
-                                <Button type="submit" disabled={processing} className="shrink-0 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 shadow-sm shadow-emerald-200">
-                                    {editing ? 'Update' : 'Simpan'}
-                                </Button>
-                                {editing && (
-                                    <Button type="button" variant="outline" onClick={handleCancel} className="shrink-0 border-gray-200 text-gray-600 hover:bg-gray-50">
-                                        Batal
+                                <div className="w-full sm:w-48">
+                                    <label className="block text-sm font-medium text-gray-700">Nilai Minimal Kelulusan</label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        value={data.passing_score}
+                                        onChange={(e) => setData('passing_score', e.target.value)}
+                                        className="mt-1 block w-full rounded-xl border-gray-200 shadow-sm transition focus:border-emerald-400 focus:ring-emerald-400"
+                                        placeholder="Contoh: 75.00"
+                                    />
+                                    {errors.passing_score && <p className="mt-1 text-sm text-red-600">{errors.passing_score}</p>}
+                                </div>
+                                <div className="flex gap-2">
+                                    <Button type="submit" disabled={processing} className="shrink-0 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 shadow-sm shadow-emerald-200">
+                                        {editing ? 'Update' : 'Simpan'}
                                     </Button>
-                                )}
+                                    {editing && (
+                                        <Button type="button" variant="outline" onClick={handleCancel} className="shrink-0 border-gray-200 text-gray-600 hover:bg-gray-50">
+                                            Batal
+                                        </Button>
+                                    )}
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -162,6 +177,7 @@ export default function Index({ years }) {
                             <thead>
                                 <tr className="bg-gray-50/50">
                                     <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Tahun Ajaran</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Nilai Minimal</th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Status</th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Pendaftaran</th>
                                     <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">Aksi</th>
@@ -180,23 +196,19 @@ export default function Index({ years }) {
                                                 </span>
                                             </div>
                                         </td>
+                                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900 font-medium">
+                                            {year.passing_score}
+                                        </td>
                                         <td className="whitespace-nowrap px-6 py-4">
                                             <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${year.is_active ? 'bg-emerald-50 text-emerald-700 ring-emerald-300' : 'bg-gray-100 text-gray-700 ring-gray-300'}`}>
                                                 {year.is_active ? 'Aktif' : 'Nonaktif'}
                                             </span>
                                         </td>
                                         <td className="whitespace-nowrap px-6 py-4">
-                                            <button
-                                                onClick={() => handleToggleActive(year)}
-                                                className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium shadow-sm transition ${
-                                                    year.is_active
-                                                        ? 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100 hover:border-red-300'
-                                                        : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-300'
-                                                }`}
-                                            >
-                                                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={year.is_active ? 'M18.364 18.364A9 9 0 005.636 5.636' : 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'} /></svg>
-                                                {year.is_active ? 'Tutup' : 'Buka'}
-                                            </button>
+                                            <Switch
+                                                checked={year.is_active}
+                                                onChange={() => handleToggleActive(year)}
+                                            />
                                         </td>
                                         <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
                                             <button onClick={() => handleEdit(year)} className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 shadow-sm transition hover:bg-emerald-100 hover:border-emerald-300">

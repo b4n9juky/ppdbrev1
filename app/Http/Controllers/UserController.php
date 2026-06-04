@@ -42,15 +42,18 @@ class UserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
             'password' => ['required', Rules\Password::defaults()],
-            'role' => ['required', Rule::in(['admin', 'kepala_madrasah', 'student'])],
+            'role' => ['required', Rule::in(['admin', 'kepala_madrasah', 'operator', 'student'])],
         ]);
 
-        User::create([
+        $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
         ]);
+
+        $user->email_verified_at = now();
+        $user->save();
 
         return Redirect::route('admin.users.index')
             ->with('success', 'Pengguna berhasil ditambahkan.');
@@ -68,7 +71,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($user->id)],
-            'role' => ['required', Rule::in(['admin', 'kepala_madrasah', 'student'])],
+            'role' => ['required', Rule::in(['admin', 'kepala_madrasah', 'operator', 'student'])],
         ]);
 
         $user->update($validated);

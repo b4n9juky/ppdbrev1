@@ -2,6 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import RichEditor from '@/Components/RichEditor';
 import { Head, useForm, router } from '@inertiajs/react';
 import { useState } from 'react';
+import Switch from '@/Components/Switch';
 
 export default function Index({ schedules, activeYear, academicYears }) {
     const [editing, setEditing] = useState(null);
@@ -48,6 +49,20 @@ export default function Index({ schedules, activeYear, academicYears }) {
         if (confirm('Hapus jadwal kegiatan ini?')) {
             router.delete(route('admin.activity-schedules.destroy', id), { preserveScroll: true });
         }
+    }
+
+    function handleToggleActive(schedule) {
+        router.put(route('admin.activity-schedules.update', schedule.id), {
+            academic_year_id: schedule.academic_year_id,
+            activity_name: schedule.activity_name,
+            start_date: schedule.start_date,
+            end_date: schedule.end_date,
+            requirements: schedule.requirements,
+            order: schedule.order,
+            is_active: !schedule.is_active,
+        }, {
+            preserveScroll: true,
+        });
     }
 
     return (
@@ -147,15 +162,13 @@ export default function Index({ schedules, activeYear, academicYears }) {
                                 </div>
 
                                 <div className="flex items-end">
-                                    <label className="flex items-center gap-2.5">
-                                        <input
-                                            type="checkbox"
+                                    <div className="flex items-center gap-2.5">
+                                        <Switch
                                             checked={data.is_active}
-                                            onChange={(e) => setData('is_active', e.target.checked)}
-                                            className="rounded-lg border-gray-300 text-emerald-600 shadow-sm focus:ring-emerald-500"
+                                            onChange={(checked) => setData('is_active', checked)}
                                         />
                                         <span className="text-sm font-medium text-gray-700">Aktif</span>
-                                    </label>
+                                    </div>
                                 </div>
                             </div>
 
@@ -208,9 +221,10 @@ export default function Index({ schedules, activeYear, academicYears }) {
                                                     {s.academic_year?.name}
                                                 </td>
                                                 <td className="whitespace-nowrap px-5 py-4">
-                                                    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${s.is_active ? 'bg-emerald-50 text-emerald-700 ring-emerald-300' : 'bg-gray-100 text-gray-500 ring-gray-300'}`}>
-                                                        {s.is_active ? 'Aktif' : 'Tidak'}
-                                                    </span>
+                                                    <Switch
+                                                        checked={s.is_active}
+                                                        onChange={() => handleToggleActive(s)}
+                                                    />
                                                 </td>
                                                 <td className="whitespace-nowrap px-5 py-4 text-right">
                                                     <div className="flex items-center justify-end gap-2">

@@ -8,9 +8,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['user_id', 'academic_year_id', 'admission_path_id', 'status', 'total_score'])]
+#[Fillable(['user_id', 'academic_year_id', 'admission_path_id', 'status', 'total_score', 'assigned_operator_id', 'assigned_at', 'processing_status'])]
 class Registration extends Model
 {
+    public function assignedOperator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_operator_id');
+    }
     protected function casts(): array
     {
         return [

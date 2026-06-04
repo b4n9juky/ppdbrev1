@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 const roleConfig = {
     admin: { label: 'Admin', bg: 'bg-purple-50 text-purple-700 ring-purple-300' },
+    operator: { label: 'Operator', bg: 'bg-indigo-50 text-indigo-700 ring-indigo-300' },
     kepala_madrasah: { label: 'Kepala Madrasah', bg: 'bg-emerald-50 text-emerald-700 ring-emerald-300' },
     student: { label: 'Siswa', bg: 'bg-blue-50 text-blue-700 ring-blue-300' },
 };

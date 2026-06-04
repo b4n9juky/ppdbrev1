@@ -90,7 +90,11 @@ class StudentRegistrationController extends Controller
             'birth_place' => ['required', 'string', 'max:255'],
             'birth_date' => ['required', 'date'],
             'address' => ['required', 'string', 'max:1000'],
+            'phone_number' => ['required', 'regex:/^[0-9]{11,13}$/'],
             'previous_school' => ['required', 'string', 'max:255'],
+        ], [
+            'phone_number.required' => 'Nomor kontak / WhatsApp wajib diisi.',
+            'phone_number.regex' => 'Nomor kontak / WhatsApp harus berupa angka dengan panjang antara 11 sampai 13 digit.',
         ]);
 
         StudentBiodata::updateOrCreate(

@@ -38,11 +38,23 @@ export default function AuthenticatedLayout({ header, children }) {
         { type: 'link', name: 'Pengguna', href: route('admin.users.index'), routeName: 'admin.users.*' },
     ];
 
-    const kepsekNav = [
-        { name: 'Dashboard', href: route('dashboard'), routeName: 'dashboard' },
+    const operatorNav = [
+        { type: 'link', name: 'Dashboard', href: route('dashboard'), routeName: 'dashboard' },
+        { type: 'link', name: 'Pendaftar', href: route('admin.registrations.index'), routeName: 'admin.registrations.*' },
+        { type: 'link', name: 'Per Jalur', href: route('admin.registrations.by-path'), routeName: 'admin.registrations.by-path' },
     ];
 
-    const navItems = user.role === 'admin' ? adminNav : user.role === 'kepala_madrasah' ? kepsekNav : [];
+    const kepsekNav = [
+        { type: 'link', name: 'Dashboard', href: route('dashboard'), routeName: 'dashboard' },
+    ];
+
+    const navItems = user.role === 'admin'
+        ? adminNav
+        : user.role === 'operator'
+        ? operatorNav
+        : user.role === 'kepala_madrasah'
+        ? kepsekNav
+        : [];
 
     const isSettingActive = (children) => children.some((c) => route().current(c.routeName));
 

@@ -6,11 +6,18 @@ use App\Models\AcademicYear;
 use App\Models\AdmissionPath;
 use App\Models\Registration;
 use App\Models\SubjectScore;
+use App\Models\Subject;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Http\Requests\ClaimRegistrationRequest;
+use App\Http\Requests\CompleteRegistrationRequest;
+use App\Http\Requests\ReleaseRegistrationRequest;
+use App\Http\Requests\UpdateRegistrationStatusRequest;
+use App\Services\RegistrationAssignmentService;
+use Exception;
 
 class RegistrationController extends Controller
 {
@@ -32,6 +39,8 @@ class RegistrationController extends Controller
                         'total_score' => $reg->total_score,
                         'student_biodata' => $reg->studentBiodata,
                         'user' => $reg->user,
+                        'assigned_operator_id' => $reg->assigned_operator_id,
+                        'processing_status' => $reg->processing_status,
                     ];
                 });
 
@@ -61,13 +70,20 @@ class RegistrationController extends Controller
         $sortDirection = $request->query('direction', 'desc');
         $search = $request->query('search', '');
         $perPage = (int) $request->query('per_page', 15);
+        $processingStatus = $request->query('processing_status', 'all');
 
         $registrations = Registration::with([
             'studentBiodata',
             'admissionPath',
             'user',
+            'studentDocuments',
+            'assignedOperator',
+            'subjectScores.subject',
         ])
             ->when($activeYear, fn ($q) => $q->where('academic_year_id', $activeYear->id))
+            ->when($processingStatus === 'baru', fn ($q) => $q->where('processing_status', 'baru'))
+            ->when($processingStatus === 'my_processing', fn ($q) => $q->where('processing_status', 'diproses')->where('assigned_operator_id', auth()->id()))
+            ->when($processingStatus === 'selesai', fn ($q) => $q->where('processing_status', 'selesai'))
             ->when($search, function ($q) use ($search) {
                 $q->where(function ($sub) use ($search) {
                     $sub->whereHas('studentBiodata', function ($sb) use ($search) {
@@ -94,25 +110,42 @@ class RegistrationController extends Controller
             ];
         });
 
+        $subjects = $activeYear
+            ? Subject::where('academic_year_id', $activeYear->id)
+                ->orderBy('name')
+                ->get()
+            : collect();
+
         return Inertia::render('Admin/Registration/Index', [
             'registrations' => $registrations,
             'paths' => $paths,
+            'subjects' => $subjects,
             'filters' => [
                 'sort' => $sortField,
                 'direction' => $sortDirection,
                 'search' => $search,
                 'per_page' => $perPage,
+                'processing_status' => $processingStatus,
             ],
         ]);
     }
 
-    public function updateStatus(Request $request, Registration $registration): RedirectResponse
+    public function updateStatus(UpdateRegistrationStatusRequest $request, Registration $registration): RedirectResponse
     {
-        $validStatuses = ['accepted', 'reserve', 'rejected'];
+        \Illuminate\Support\Facades\Gate::authorize('update', $registration);
 
-        $request->validate([
-            'status' => ['required', 'string', 'in:' . implode(',', $validStatuses)],
-        ]);
+        if (in_array($request->status, ['accepted', 'reserve'])) {
+            $passingScore = $registration->academicYear?->passing_score ?? 0.00;
+            $totalScore = $registration->total_score ?? 0.00;
+
+            if ($totalScore < $passingScore) {
+                return Redirect::back()->with('error', 'Pendaftar tidak dapat diberikan status lulus/cadangan karena total nilai (' . number_format($totalScore, 2) . ') kurang dari nilai minimal kelulusan (' . number_format($passingScore, 2) . ').');
+            }
+
+            if ($registration->studentDocuments()->count() < 1) {
+                return Redirect::back()->with('error', 'Pendaftar tidak dapat diberikan status lulus/cadangan karena belum mengunggah minimal 1 file dokumen.');
+            }
+        }
 
         $registration->update(['status' => $request->status]);
 
@@ -126,8 +159,10 @@ class RegistrationController extends Controller
             ->with('success', 'Status pendaftar berhasil ' . ($statusLabels[$request->status] ?? 'diubah') . '.');
     }
 
-    public function reset(Registration $registration): RedirectResponse
+    public function reset(Request $request, Registration $registration): RedirectResponse
     {
+        \Illuminate\Support\Facades\Gate::authorize('update', $registration);
+
         if ($registration->status === 'draft') {
             return Redirect::back()->with('error', 'Pendaftar sudah dalam status draft.');
         }
@@ -141,5 +176,38 @@ class RegistrationController extends Controller
 
         return Redirect::route('admin.registrations.index')
             ->with('success', 'Pendaftar berhasil direset. Siswa dapat memperbarui data kembali.');
+    }
+
+    public function claim(ClaimRegistrationRequest $request, Registration $registration, RegistrationAssignmentService $service): RedirectResponse
+    {
+        try {
+            $service->claim($registration, $request->user());
+            return Redirect::route('admin.registrations.index')
+                ->with('success', 'Pendaftar berhasil Anda ambil untuk diproses.');
+        } catch (Exception $e) {
+            return Redirect::back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function complete(CompleteRegistrationRequest $request, Registration $registration, RegistrationAssignmentService $service): RedirectResponse
+    {
+        try {
+            $service->complete($registration, $request->user());
+            return Redirect::route('admin.registrations.index')
+                ->with('success', 'Proses pendaftar berhasil diselesaikan.');
+        } catch (Exception $e) {
+            return Redirect::back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function release(ReleaseRegistrationRequest $request, Registration $registration, RegistrationAssignmentService $service): RedirectResponse
+    {
+        try {
+            $service->release($registration, $request->user());
+            return Redirect::route('admin.registrations.index')
+                ->with('success', 'Penugasan pendaftar berhasil dilepaskan.');
+        } catch (Exception $e) {
+            return Redirect::back()->with('error', $e->getMessage());
+        }
     }
 }

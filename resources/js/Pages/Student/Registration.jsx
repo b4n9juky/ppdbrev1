@@ -161,6 +161,7 @@ function StepBiodata({ registration, onNext, onBack }) {
         birth_place: registration?.student_biodata?.birth_place || '',
         birth_date: registration?.student_biodata?.birth_date?.split('T')[0] || '',
         address: registration?.student_biodata?.address || '',
+        phone_number: registration?.student_biodata?.phone_number || '',
         previous_school: registration?.student_biodata?.previous_school || '',
     });
 
@@ -247,6 +248,19 @@ function StepBiodata({ registration, onNext, onBack }) {
                 </div>
 
                 <div>
+                    <label className="block text-sm font-medium text-gray-700">Nomor Kontak / WhatsApp</label>
+                    <input
+                        type="text"
+                        value={data.phone_number}
+                        onChange={(e) => setData('phone_number', e.target.value.replace(/[^0-9]/g, ''))}
+                        maxLength={13}
+                        className="mt-1 block w-full rounded-xl border-gray-200 shadow-sm transition focus:border-emerald-400 focus:ring-emerald-400"
+                        placeholder="Contoh: 081234567890"
+                    />
+                    {errors.phone_number && <p className="mt-1 text-sm text-red-600">{errors.phone_number}</p>}
+                </div>
+
+                <div>
                     <label className="block text-sm font-medium text-gray-700">Asal Sekolah</label>
                     <input
                         type="text"
@@ -271,7 +285,7 @@ function StepBiodata({ registration, onNext, onBack }) {
                     <button
                         type="submit"
                         disabled={processing}
-                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 px-8 py-2.5 text-sm font-semibold text-white shadow-sm shadow-emerald-200 transition hover:from-emerald-700 hover:to-green-700 hover:shadow-md disabled:opacity-50"
+                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#468432] to-[#9AD872] px-8 py-2.5 text-sm font-semibold text-white shadow-sm shadow-emerald-200 transition hover:opacity-95 disabled:opacity-50"
                     >
                         Simpan & Selanjutnya
                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -577,7 +591,17 @@ function StepConfirm({ registration, onBack }) {
 
     return (
         <div>
-            <h3 className="mb-6 text-xl font-semibold text-gray-800">Konfirmasi Pendaftaran</h3>
+            <h3 className="mb-4 text-xl font-bold text-gray-800">Konfirmasi Pendaftaran</h3>
+
+            <div className="mb-6 rounded-2xl border border-amber-100 bg-amber-50/50 p-4 text-sm text-amber-800 flex items-start gap-3 shadow-sm">
+                <svg className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <div>
+                    <span className="font-semibold block">Perhatian Sebelum Mengirim</span>
+                    Mohon periksa kembali semua informasi data diri, pilihan jalur pendaftaran, dan berkas persyaratan yang telah Anda unggah di bawah ini. Setelah Anda menekan tombol **Kirim Pendaftaran**, seluruh data akan dikunci secara permanen dan tidak dapat diubah lagi.
+                </div>
+            </div>
 
             <RegistrationSummary registration={registration} />
 
@@ -609,61 +633,147 @@ function StepConfirm({ registration, onBack }) {
 
 function RegistrationSummary({ registration }) {
     const bio = registration?.student_biodata;
+    const docs = registration?.student_documents || [];
+
+    function isImage(filePath) {
+        return /\.(jpg|jpeg|png|gif|webp)$/i.test(filePath);
+    }
 
     return (
-        <div className="space-y-4 rounded-lg border bg-gray-50 p-6">
-            <div>
-                <h4 className="text-sm font-medium text-gray-500">Jalur Pendaftaran</h4>
-                <p className="text-gray-800">{registration?.admission_path?.name || '-'}</p>
+        <div className="space-y-6">
+            {/* Info Jalur */}
+            <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50/50 to-green-50/30 p-5 shadow-sm">
+                <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 className="text-xs font-semibold uppercase tracking-wider text-emerald-800/80">Jalur Pendaftaran</h4>
+                        <p className="text-lg font-bold text-emerald-950">{registration?.admission_path?.name || '-'}</p>
+                    </div>
+                </div>
             </div>
 
+            {/* Data Diri */}
             {bio && (
-                <>
-                    <div className="grid gap-4 md:grid-cols-2">
-                        <div>
-                            <h4 className="text-sm font-medium text-gray-500">NISN</h4>
-                            <p className="text-gray-800">{bio.nisn}</p>
+                <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+                    <h4 className="mb-4 flex items-center gap-2 text-base font-bold text-gray-800 border-b border-gray-50 pb-3">
+                        <svg className="h-5 w-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        Data Diri Calon Siswa
+                    </h4>
+                    
+                    <div className="grid gap-6 sm:grid-cols-2">
+                        <div className="space-y-4">
+                            <div>
+                                <span className="block text-xs font-semibold uppercase tracking-wider text-gray-400">Nama Lengkap</span>
+                                <span className="mt-1 block text-sm font-medium text-gray-900">{bio.full_name}</span>
+                            </div>
+                            <div>
+                                <span className="block text-xs font-semibold uppercase tracking-wider text-gray-400">NISN</span>
+                                <span className="mt-1 block text-sm font-medium text-gray-900">{bio.nisn}</span>
+                            </div>
+                            <div>
+                                <span className="block text-xs font-semibold uppercase tracking-wider text-gray-400">Jenis Kelamin</span>
+                                <span className="mt-1 block text-sm font-medium text-gray-900 capitalize">
+                                    {bio.gender === 'male' ? 'Laki-laki' : 'Perempuan'}
+                                </span>
+                            </div>
                         </div>
-                        <div>
-                            <h4 className="text-sm font-medium text-gray-500">Nama Lengkap</h4>
-                            <p className="text-gray-800">{bio.full_name}</p>
+                        <div className="space-y-4">
+                            <div>
+                                <span className="block text-xs font-semibold uppercase tracking-wider text-gray-400">Tempat, Tanggal Lahir</span>
+                                <span className="mt-1 block text-sm font-medium text-gray-900">
+                                    {bio.birth_place}, {bio.birth_date ? new Date(bio.birth_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
+                                </span>
+                            </div>
+                            <div>
+                                <span className="block text-xs font-semibold uppercase tracking-wider text-gray-400">Asal Sekolah</span>
+                                <span className="mt-1 block text-sm font-medium text-gray-900">{bio.previous_school}</span>
+                            </div>
+                            <div>
+                                <span className="block text-xs font-semibold uppercase tracking-wider text-gray-400">Alamat Rumah</span>
+                                <span className="mt-1 block text-sm font-medium text-gray-900">{bio.address}</span>
+                            </div>
+                            <div>
+                                <span className="block text-xs font-semibold uppercase tracking-wider text-gray-400">Nomor Kontak / WA</span>
+                                <span className="mt-1 block text-sm font-medium text-gray-900">{bio.phone_number || '-'}</span>
+                            </div>
                         </div>
                     </div>
-                    <div className="grid gap-4 md:grid-cols-3">
-                        <div>
-                            <h4 className="text-sm font-medium text-gray-500">Jenis Kelamin</h4>
-                            <p className="text-gray-800 capitalize">{bio.gender === 'male' ? 'Laki-laki' : 'Perempuan'}</p>
-                        </div>
-                        <div>
-                            <h4 className="text-sm font-medium text-gray-500">Tempat Lahir</h4>
-                            <p className="text-gray-800">{bio.birth_place}</p>
-                        </div>
-                        <div>
-                            <h4 className="text-sm font-medium text-gray-500">Tanggal Lahir</h4>
-                            <p className="text-gray-800">{bio.birth_date}</p>
-                        </div>
-                    </div>
-                    <div>
-                        <h4 className="text-sm font-medium text-gray-500">Alamat</h4>
-                        <p className="text-gray-800">{bio.address}</p>
-                    </div>
-                    <div>
-                        <h4 className="text-sm font-medium text-gray-500">Asal Sekolah</h4>
-                        <p className="text-gray-800">{bio.previous_school}</p>
-                    </div>
-                </>
-            )}
-
-            {registration?.student_documents?.length > 0 && (
-                <div>
-                    <h4 className="text-sm font-medium text-gray-500">Dokumen ({registration.student_documents.length} file)</h4>
-                    <ul className="mt-1 list-inside list-disc text-sm text-gray-700">
-                        {registration.student_documents.map((doc) => (
-                            <li key={doc.id} className="capitalize">{doc.document_type.replace('_', ' ')}</li>
-                        ))}
-                    </ul>
                 </div>
             )}
+
+            {/* Dokumen Terupload */}
+            <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+                <h4 className="mb-4 flex items-center gap-2 text-base font-bold text-gray-800 border-b border-gray-50 pb-3">
+                    <svg className="h-5 w-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Dokumen Persyaratan ({docs.length})
+                </h4>
+
+                {docs.length > 0 ? (
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        {docs.map((doc) => {
+                            const typeColor = docTypeColors[doc.document_type] || docTypeColors.other;
+                            const typeLabel = docTypeLabels[doc.document_type] || doc.document_type.replace('_', ' ');
+                            const fileName = doc.file_path.split('/').pop();
+                            const fileIsImage = isImage(doc.file_path);
+
+                            return (
+                                <div key={doc.id} className="group relative overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm transition-all hover:shadow-md">
+                                    <div className="relative h-28 bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
+                                        {fileIsImage ? (
+                                            <img
+                                                src={`/storage/${doc.file_path}`}
+                                                alt={typeLabel}
+                                                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                            />
+                                        ) : (
+                                            <div className="flex flex-col items-center gap-1">
+                                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-50">
+                                                    <svg className="h-6 w-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                                    </svg>
+                                                </div>
+                                                <span className="text-[10px] font-semibold text-gray-500">PDF</span>
+                                            </div>
+                                        )}
+                                        <a
+                                            href={`/storage/${doc.file_path}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="absolute inset-0 flex items-center justify-center bg-black/0 transition-all group-hover:bg-black/30"
+                                        >
+                                            <span className="inline-flex items-center gap-1.5 rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-sm opacity-0 transition-all group-hover:opacity-100 backdrop-blur-sm">
+                                                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                </svg>
+                                                Lihat Berkas
+                                            </span>
+                                        </a>
+                                    </div>
+                                    <div className="p-3">
+                                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ring-inset ${typeColor}`}>
+                                            {typeLabel}
+                                        </span>
+                                        <p className="mt-1 truncate text-xs text-gray-400" title={fileName}>
+                                            {fileName}
+                                        </p>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                ) : (
+                    <div className="py-6 text-center text-sm text-gray-400">Belum ada dokumen terunggah.</div>
+                )}
+            </div>
         </div>
     );
 }

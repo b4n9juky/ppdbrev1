@@ -29,4 +29,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(Registration::class);
     }
+
+    public function assignedRegistrations(): HasMany
+    {
+        return $this->hasMany(Registration::class, 'assigned_operator_id');
+    }
+
+    public function assignedPendaftars(): HasMany
+    {
+        return $this->hasMany(Registration::class, 'assigned_operator_id');
+    }
 }

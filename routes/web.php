@@ -81,6 +81,10 @@ Route::get('/dashboard', function () {
         ]);
     }
 
+    if ($user->role === 'operator') {
+        return redirect()->route('admin.registrations.index');
+    }
+
     if ($user->role !== 'admin') {
         return redirect()->route('student.dashboard');
     }
@@ -157,10 +161,20 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
     Route::patch('/pop-up-banners/{popUpBanner}/toggle-active', [App\Http\Controllers\PopUpBannerController::class, 'toggleActive'])
         ->name('pop-up-banners.toggle-active');
 
+    // Registration routes moved below to allow operator role as well
+});
+
+Route::middleware(['auth', 'verified', 'role:admin,operator'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/registrations/by-path', [App\Http\Controllers\RegistrationController::class, 'byPath'])
         ->name('registrations.by-path');
     Route::get('/registrations', [App\Http\Controllers\RegistrationController::class, 'index'])
         ->name('registrations.index');
+    Route::post('/registrations/{registration}/claim', [App\Http\Controllers\RegistrationController::class, 'claim'])
+        ->name('registrations.claim');
+    Route::post('/registrations/{registration}/complete', [App\Http\Controllers\RegistrationController::class, 'complete'])
+        ->name('registrations.complete');
+    Route::post('/registrations/{registration}/release', [App\Http\Controllers\RegistrationController::class, 'release'])
+        ->name('registrations.release');
     Route::patch('/registrations/{registration}/status', [App\Http\Controllers\RegistrationController::class, 'updateStatus'])
         ->name('registrations.status.update');
     Route::patch('/registrations/{registration}/reset', [App\Http\Controllers\RegistrationController::class, 'reset'])

@@ -20,6 +20,8 @@ class ScoreController extends Controller
 
     public function edit(Registration $registration): Response
     {
+        \Illuminate\Support\Facades\Gate::authorize('view', $registration);
+
         $registration->load(['subjectScores.subject', 'studentBiodata', 'admissionPath']);
 
         $activeYear = AcademicYear::where('is_active', true)->first();
@@ -35,6 +37,8 @@ class ScoreController extends Controller
 
     public function update(ScoreStoreRequest $request, Registration $registration): RedirectResponse
     {
+        \Illuminate\Support\Facades\Gate::authorize('update', $registration);
+
         $this->scoringService->saveScores($registration, $request->validated('scores'));
 
         return Redirect::route('admin.registrations.index')

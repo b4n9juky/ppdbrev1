@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Dropdown from '@/Components/Dropdown';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState, useMemo } from 'react';
 
 const statusConfig = {
@@ -23,6 +23,9 @@ const pathGradients = [
 const perPageOptions = [10, 15, 25, 50, 100];
 
 export default function ByPath({ paths }) {
+    const { auth } = usePage().props;
+    const currentUser = auth.user;
+
     // Per-path table state: search, perPage, currentPage, sortField, sortDir
     const [tableState, setTableState] = useState(() => {
         const state = {};
@@ -88,39 +91,50 @@ export default function ByPath({ paths }) {
                     </Link>
                 )}
                 {reg.status !== 'draft' && (
-                    <div className="relative">
-                        <Dropdown>
-                            <Dropdown.Trigger>
-                                <button className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-600 shadow-sm transition hover:bg-gray-100 hover:border-gray-300">
-                                    <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
-                                    </svg>
-                                    Aksi
-                                </button>
-                            </Dropdown.Trigger>
-                            <Dropdown.Content>
-                                {reg.status === 'pending' && (
-                                    <>
-                                        <Dropdown.Button onClick={() => handleStatusChange(reg, 'accepted')}>Terima Utama</Dropdown.Button>
-                                        <Dropdown.Button onClick={() => handleStatusChange(reg, 'reserve')}>Cadangan</Dropdown.Button>
-                                        <Dropdown.Button onClick={() => handleStatusChange(reg, 'rejected')}>Tolak</Dropdown.Button>
-                                    </>
-                                )}
-                                {reg.status === 'reserve' && (
-                                    <>
-                                        <Dropdown.Button onClick={() => handleStatusChange(reg, 'accepted')}>Naikkan</Dropdown.Button>
-                                        <Dropdown.Button onClick={() => handleStatusChange(reg, 'rejected')}>Tolak</Dropdown.Button>
-                                    </>
-                                )}
-                                {reg.status !== 'draft' && (
-                                    <>
-                                        <div className="border-t border-gray-100" />
-                                        <Dropdown.Button onClick={() => handleReset(reg)}>Reset ke Draft</Dropdown.Button>
-                                    </>
-                                )}
-                            </Dropdown.Content>
-                        </Dropdown>
-                    </div>
+                    (() => {
+                        const canChangeStatus = currentUser.role === 'admin' || 
+                            (currentUser.role === 'operator' && reg.assigned_operator_id === currentUser.id && reg.processing_status === 'selesai');
+                        const canReset = currentUser.role === 'admin' ||
+                            (currentUser.role === 'operator' && reg.assigned_operator_id === currentUser.id);
+
+                        if (!canChangeStatus && !canReset) return null;
+
+                        return (
+                            <div className="relative">
+                                <Dropdown>
+                                    <Dropdown.Trigger>
+                                        <button className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-600 shadow-sm transition hover:bg-gray-100 hover:border-gray-300">
+                                            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
+                                            </svg>
+                                            Aksi
+                                        </button>
+                                    </Dropdown.Trigger>
+                                    <Dropdown.Content>
+                                        {canChangeStatus && reg.status === 'pending' && (
+                                            <>
+                                                <Dropdown.Button onClick={() => handleStatusChange(reg, 'accepted')}>Terima Utama</Dropdown.Button>
+                                                <Dropdown.Button onClick={() => handleStatusChange(reg, 'reserve')}>Cadangan</Dropdown.Button>
+                                                <Dropdown.Button onClick={() => handleStatusChange(reg, 'rejected')}>Tolak</Dropdown.Button>
+                                            </>
+                                        )}
+                                        {canChangeStatus && reg.status === 'reserve' && (
+                                            <>
+                                                <Dropdown.Button onClick={() => handleStatusChange(reg, 'accepted')}>Naikkan</Dropdown.Button>
+                                                <Dropdown.Button onClick={() => handleStatusChange(reg, 'rejected')}>Tolak</Dropdown.Button>
+                                            </>
+                                        )}
+                                        {canReset && reg.status !== 'draft' && (
+                                            <>
+                                                {canChangeStatus && <div className="border-t border-gray-100" />}
+                                                <Dropdown.Button onClick={() => handleReset(reg)}>Reset ke Draft</Dropdown.Button>
+                                            </>
+                                        )}
+                                    </Dropdown.Content>
+                                </Dropdown>
+                            </div>
+                        );
+                    })()
                 )}
             </div>
         );

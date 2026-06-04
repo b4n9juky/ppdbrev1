@@ -19,9 +19,19 @@ class DatabaseSeeder extends Seeder
             'role' => 'admin',
         ]);
 
+        $operator = User::create([
+            'name' => 'Operator PPDB',
+            'email' => 'operator@ppdb.ma',
+            'password' => bcrypt('password'),
+            'role' => 'operator',
+        ]);
+        $operator->email_verified_at = now();
+        $operator->save();
+
         $academicYear = AcademicYear::create([
             'name' => '2026/2027',
             'is_active' => true,
+            'passing_score' => 75.00,
         ]);
 
         $zonasi = AdmissionPath::create([

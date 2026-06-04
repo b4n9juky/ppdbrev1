@@ -48,6 +48,26 @@ const featureCards = [
     },
 ];
 
+const docTypeLabels = {
+    ijazah: 'Ijazah',
+    ktp_ortu: 'KTP Orang Tua',
+    kk: 'Kartu Keluarga',
+    prestasi: 'Sertifikat Prestasi',
+    other: 'Lainnya',
+};
+
+const docTypeColors = {
+    ijazah: 'bg-blue-50 text-blue-700 ring-blue-200',
+    ktp_ortu: 'bg-amber-50 text-amber-700 ring-amber-200',
+    kk: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+    prestasi: 'bg-violet-50 text-violet-700 ring-violet-200',
+    other: 'bg-gray-50 text-gray-600 ring-gray-200',
+};
+
+function isImage(filePath) {
+    return /\.(jpg|jpeg|png|gif|webp)$/i.test(filePath);
+}
+
 const summaryItems = [
     { label: 'Jalur Pendaftaran', key: 'admission_path.name' },
     { label: 'NISN', key: 'student_biodata.nisn' },
@@ -59,7 +79,11 @@ export default function Dashboard({ activeYear, registration, madrasah }) {
     const bio = registration?.student_biodata;
     const docs = registration?.student_documents || [];
     const scores = registration?.subject_scores || [];
-    const status = registration ? statusConfig[registration.status] || statusConfig.draft : null;
+    const status = registration 
+        ? (registration.processing_status === 'selesai' && registration.status === 'pending'
+            ? { label: 'Terverifikasi', bg: 'bg-emerald-50 text-emerald-700 ring-emerald-300', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' }
+            : statusConfig[registration.status] || statusConfig.draft)
+        : null;
 
     return (
         <StudentLayout
@@ -219,28 +243,137 @@ export default function Dashboard({ activeYear, registration, madrasah }) {
 
                             {/* Summary */}
                             {registration.status !== 'draft' && (
-                                <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
-                                    <div className="border-b border-gray-100 bg-gray-50/50 px-6 py-4">
-                                        <h3 className="text-base font-semibold text-gray-900">Ringkasan Pendaftaran</h3>
-                                    </div>
-                                    <div className="divide-y divide-gray-50 px-6 py-4">
-                                        {summaryItems.map((item) => {
-                                            const keys = item.key.split('.');
-                                            let value = registration;
-                                            keys.forEach((k) => { value = value?.[k]; });
-                                            return (
-                                                <div key={item.key} className="flex items-center justify-between py-2.5">
-                                                    <span className="text-sm text-gray-500">{item.label}</span>
-                                                    <span className="text-sm font-medium text-gray-800">{value || '-'}</span>
+                                <div className="space-y-6">
+                                    <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+                                        <div className="border-b border-gray-100 bg-gray-50/50 px-6 py-4 flex items-center justify-between">
+                                            <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                                                <svg className="h-5 w-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                </svg>
+                                                Ringkasan Pendaftaran
+                                            </h3>
+                                            {registration.total_score !== null && (
+                                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-600/10">
+                                                    Nilai Total: {registration.total_score}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="p-6 space-y-6">
+                                            {/* Grid Informasi Utama */}
+                                            <div className="grid gap-6 sm:grid-cols-2">
+                                                <div className="space-y-4">
+                                                    <div>
+                                                        <span className="block text-xs font-semibold uppercase tracking-wider text-gray-400">Jalur Pendaftaran</span>
+                                                        <span className="mt-1 block text-sm font-semibold text-gray-900">{registration.admission_path?.name || '-'}</span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="block text-xs font-semibold uppercase tracking-wider text-gray-400">Nama Lengkap</span>
+                                                        <span className="mt-1 block text-sm font-medium text-gray-900">{bio?.full_name || '-'}</span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="block text-xs font-semibold uppercase tracking-wider text-gray-400">NISN</span>
+                                                        <span className="mt-1 block text-sm font-medium text-gray-900">{bio?.nisn || '-'}</span>
+                                                    </div>
                                                 </div>
-                                            );
-                                        })}
-                                        {registration.total_score !== null && (
-                                            <div className="flex items-center justify-between py-2.5">
-                                                <span className="text-sm text-gray-500">Nilai Total</span>
-                                                <span className="text-sm font-semibold text-emerald-600">{registration.total_score}</span>
+                                                <div className="space-y-4">
+                                                    <div>
+                                                        <span className="block text-xs font-semibold uppercase tracking-wider text-gray-400">Asal Sekolah</span>
+                                                        <span className="mt-1 block text-sm font-medium text-gray-900">{bio?.previous_school || '-'}</span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="block text-xs font-semibold uppercase tracking-wider text-gray-400">Jenis Kelamin</span>
+                                                        <span className="mt-1 block text-sm font-medium text-gray-900 capitalize">
+                                                            {bio?.gender === 'male' ? 'Laki-laki' : bio?.gender === 'female' ? 'Perempuan' : '-'}
+                                                        </span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="block text-xs font-semibold uppercase tracking-wider text-gray-400">Tempat, Tanggal Lahir</span>
+                                                        <span className="mt-1 block text-sm font-medium text-gray-900 font-sans">
+                                                            {bio?.birth_place ? `${bio.birth_place}, ` : ''}
+                                                            {bio?.birth_date ? new Date(bio.birth_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
+                                                        </span>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        )}
+
+                                            {/* Alamat & Kontak */}
+                                            <div className="grid gap-6 sm:grid-cols-2 border-t border-gray-50 pt-4">
+                                                {bio?.address && (
+                                                    <div>
+                                                        <span className="block text-xs font-semibold uppercase tracking-wider text-gray-400">Alamat Rumah</span>
+                                                        <span className="mt-1 block text-sm font-medium text-gray-900">{bio.address}</span>
+                                                    </div>
+                                                )}
+                                                {bio?.phone_number && (
+                                                    <div>
+                                                        <span className="block text-xs font-semibold uppercase tracking-wider text-gray-400">Nomor Kontak / WA</span>
+                                                        <span className="mt-1 block text-sm font-medium text-gray-900">{bio.phone_number}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Dokumen Section */}
+                                            <div className="border-t border-gray-50 pt-4">
+                                                <span className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">Dokumen Terunggah ({docs.length})</span>
+                                                {docs.length > 0 ? (
+                                                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                                        {docs.map((doc) => {
+                                                            const typeColor = docTypeColors[doc.document_type] || docTypeColors.other;
+                                                            const typeLabel = docTypeLabels[doc.document_type] || doc.document_type.replace('_', ' ');
+                                                            const fileName = doc.file_path.split('/').pop();
+                                                            const fileIsImage = isImage(doc.file_path);
+
+                                                            return (
+                                                                <div key={doc.id} className="group relative overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm transition-all hover:shadow-md">
+                                                                    <div className="relative h-24 bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
+                                                                        {fileIsImage ? (
+                                                                            <img
+                                                                                src={`/storage/${doc.file_path}`}
+                                                                                alt={typeLabel}
+                                                                                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                                                            />
+                                                                        ) : (
+                                                                            <div className="flex flex-col items-center gap-1">
+                                                                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50">
+                                                                                    <svg className="h-5 w-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                                                                    </svg>
+                                                                                </div>
+                                                                                <span className="text-[9px] font-semibold text-gray-500">PDF</span>
+                                                                            </div>
+                                                                        )}
+                                                                        <a
+                                                                            href={`/storage/${doc.file_path}`}
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
+                                                                            className="absolute inset-0 flex items-center justify-center bg-black/0 transition-all group-hover:bg-black/30"
+                                                                        >
+                                                                            <span className="inline-flex items-center gap-1 rounded-md bg-white/90 px-2 py-1 text-[10px] font-medium text-gray-700 shadow-sm opacity-0 transition-all group-hover:opacity-100 backdrop-blur-sm">
+                                                                                <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                                                </svg>
+                                                                                Lihat
+                                                                            </span>
+                                                                        </a>
+                                                                    </div>
+                                                                    <div className="p-2.5">
+                                                                        <span className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-semibold ring-1 ring-inset ${typeColor}`}>
+                                                                            {typeLabel}
+                                                                        </span>
+                                                                        <p className="mt-0.5 truncate text-[10px] text-gray-400" title={fileName}>
+                                                                            {fileName}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-sm text-gray-400 italic">Belum ada berkas terunggah.</span>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             )}

@@ -75,6 +75,7 @@ export default function Form({ user }) {
                                     className="mt-1 block w-full rounded-xl border-gray-200 shadow-sm transition focus:border-purple-400 focus:ring-purple-400"
                                 >
                                     <option value="student">Siswa</option>
+                                    <option value="operator">Operator</option>
                                     <option value="kepala_madrasah">Kepala Madrasah</option>
                                     <option value="admin">Admin</option>
                                 </select>

@@ -92,7 +92,7 @@ export default function Biodata({ registration, activeYear }) {
                                         <div>
                                             <span className="block text-xs font-semibold uppercase tracking-wider text-gray-400">Tempat, Tanggal Lahir</span>
                                             <span className="mt-1 block text-sm font-medium text-gray-900">
-                                                {bio.birth_place}, {bio.birth_date ? new Date(bio.birth_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
+                                                {bio.birth_place}, {bio.birth_date ? new Date(bio.birth_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) : '-'}
                                             </span>
                                         </div>
                                     </div>
@@ -131,8 +131,9 @@ export default function Biodata({ registration, activeYear }) {
                                         <label className="block text-sm font-semibold text-gray-700">NISN</label>
                                         <input
                                             type="text"
+                                            inputMode="numeric"
                                             value={data.nisn}
-                                            onChange={(e) => setData('nisn', e.target.value)}
+                                            onChange={(e) => setData('nisn', e.target.value.replace(/\D/g, ''))}
                                             className="mt-1.5 block w-full rounded-xl border-gray-200 shadow-sm transition focus:border-[#468432] focus:ring-[#468432] text-sm"
                                         />
                                         {errors.nisn && <p className="mt-1 text-xs text-red-600">{errors.nisn}</p>}

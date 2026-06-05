@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import QuotaMonitor from '@/Components/admin/QuotaMonitor';
 import { Head, Link } from '@inertiajs/react';
+import { formatDateTime } from '@/lib/utils';
 
 const statusBadge = {
     draft: 'bg-gray-100 text-gray-700 ring-gray-300',
@@ -177,7 +178,7 @@ export default function Dashboard({ paths, totalRegistrations, statusCounts, rec
                                                         {statusLabels[r.status] || r.status}
                                                     </span>
                                                 </td>
-                                                <td className="px-5 py-4 text-right text-sm text-gray-400">{r.created_at}</td>
+                                                <td className="px-5 py-4 text-right text-sm text-gray-400">{formatDateTime(r.created_at)}</td>
                                             </tr>
                                         ))}
                                     </tbody>

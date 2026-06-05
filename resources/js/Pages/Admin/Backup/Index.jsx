@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, router } from '@inertiajs/react';
 import { useState } from 'react';
+import { formatDateTime } from '@/lib/utils';
 
 export default function Index({ backups }) {
     const [confirmRestore, setConfirmRestore] = useState(false);
@@ -137,7 +138,7 @@ export default function Index({ backups }) {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 text-gray-600 whitespace-nowrap">{backup.size_formatted}</td>
-                                            <td className="px-6 py-4 text-gray-600 whitespace-nowrap">{backup.created_at}</td>
+                                            <td className="px-6 py-4 text-gray-600 whitespace-nowrap">{formatDateTime(backup.created_at)}</td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center justify-end gap-2">
                                                     <a

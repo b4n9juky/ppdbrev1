@@ -12,6 +12,7 @@ export default function Index({ paths }) {
         description: '',
         quota: '',
         is_active: true,
+        is_show: true,
     });
 
     function handleSubmit(e) {
@@ -36,6 +37,7 @@ export default function Index({ paths }) {
             description: path.description || '',
             quota: path.quota,
             is_active: path.is_active,
+            is_show: path.is_show,
         });
     }
 
@@ -56,6 +58,7 @@ export default function Index({ paths }) {
             description: path.description || '',
             quota: path.quota,
             is_active: !path.is_active,
+            is_show: path.is_show,
         }, {
             preserveScroll: true,
         });
@@ -131,6 +134,13 @@ export default function Index({ paths }) {
                                 />
                                 <span className="text-sm font-medium text-gray-700">Jalur Aktif</span>
                             </div>
+                            <div className="mt-3 flex items-center gap-2">
+                                <Switch
+                                    checked={data.is_show}
+                                    onChange={(checked) => setData('is_show', checked)}
+                                />
+                                <span className="text-sm font-medium text-gray-700">Tampil dihalaman Pendaftaran PPDB</span>
+                            </div>
                             <div className="mt-5 flex gap-2">
                                 <Button type="submit" disabled={processing} className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 shadow-sm shadow-emerald-200">
                                     {editing ? 'Update' : 'Simpan'}
@@ -153,7 +163,8 @@ export default function Index({ paths }) {
                                 <tr className="bg-gray-50/50">
                                     <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Nama</th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Kuota</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Status</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Aktif</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Tampil</th>
                                     <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">Aksi</th>
                                 </tr>
                             </thead>
@@ -173,6 +184,14 @@ export default function Index({ paths }) {
                                                 onChange={() => handleToggleActive(path)}
                                             />
                                         </td>
+                                        <td className="whitespace-nowrap px-6 py-4">
+                                            <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${path.is_show
+                                                ? 'bg-emerald-50 text-emerald-700 ring-emerald-300'
+                                                : 'bg-gray-50 text-gray-500 ring-gray-300'
+                                                }`}>
+                                                {path.is_show ? 'Ya' : 'Tidak'}
+                                            </span>
+                                        </td>
                                         <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
                                             <button onClick={() => handleEdit(path)} className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 shadow-sm transition hover:bg-emerald-100 hover:border-emerald-300">
                                                 <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
@@ -187,7 +206,7 @@ export default function Index({ paths }) {
                                 ))}
                                 {paths.length === 0 && (
                                     <tr>
-                                        <td colSpan={4} className="px-6 py-10 text-center text-sm text-gray-400">
+                                        <td colSpan={5} className="px-6 py-10 text-center text-sm text-gray-400">
                                             Belum ada jalur pendaftaran
                                         </td>
                                     </tr>

@@ -108,6 +108,23 @@
             width: 100%;
             margin-top: 30px;
         }
+        .footer-left {
+            width: 40%;
+            text-align: left;
+            padding-top: 10px;
+        }
+        .photo-box {
+            border: 1px solid #ccc;
+            padding: 4px;
+            background: #fff;
+            display: inline-block;
+        }
+        .photo-box img {
+            width: 4cm;
+            height: 6cm;
+            object-fit: cover;
+            display: block;
+        }
         .signature-col {
             text-align: right;
         }
@@ -175,7 +192,8 @@
 
         <div class="content">
             <p>
-                Yang bertanda tangan di bawah ini, Kepala {{ $madrasah->madrasah_name ?? 'Madrasah Aliyah' }}, 
+                Yang bertanda tangan di bawah ini, Panitia PPDB {{ $registration->academicYear->name ?? '' }} 
+                {{ $madrasah->madrasah_name ?? 'Madrasah Aliyah' }}, 
                 menerangkan bahwa calon peserta didik baru:
             </p>
 
@@ -196,7 +214,7 @@
                         <td class="colon">:</td>
                         <td>
                             {{ $registration->studentBiodata->birth_place ?? '-' }}, 
-                            {{ $registration->studentBiodata->birth_date ? $registration->studentBiodata->birth_date->format('d-m-Y') : '-' }}
+                            {{ $registration->studentBiodata->birth_date ? $registration->studentBiodata->birth_date->locale('id')->settings(['formatFunction' => 'translatedFormat'])->format('d F Y') : '-' }}
                         </td>
                     </tr>
                     <tr>
@@ -259,14 +277,21 @@
         <!-- Signature Section -->
         <table class="footer-table">
             <tr>
-                <td style="width: 40%;"></td>
+                <td class="footer-left">
+                    @if($photo)
+                        <div class="photo-box">
+                            <img src="{{ $photo }}" alt="Pas Foto">
+                        </div>
+                    @endif
+                </td>
                 <td class="signature-col">
                     <div class="signature-area">
                         <div class="signature-date">
                             {{ \Carbon\Carbon::now()->locale('id')->settings(['formatFunction' => 'translatedFormat'])->format('d F Y') }}
                         </div>
                         <div class="signature-title">
-                            Kepala {{ $madrasah->madrasah_name ?? 'Madrasah' }},
+                            Panitia PPDB {{ $registration->academicYear->name ?? '' }}<br>
+                            {{ $madrasah->madrasah_name ?? 'Madrasah' }},
                         </div>
 
                         <div class="stamp-overlay">
@@ -277,11 +302,6 @@
                                 <img src="{{ $stamp_base64 }}" class="stamp-img" alt="Stempel">
                             @endif
                         </div>
-
-                        <p class="headmaster-name">{{ $madrasah->headmaster_name ?? '___________________' }}</p>
-                        @if($madrasah->headmaster_nip)
-                            <p class="headmaster-nip">NIP. {{ $madrasah->headmaster_nip }}</p>
-                        @endif
                     </div>
                 </td>
             </tr>

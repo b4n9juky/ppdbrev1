@@ -13,6 +13,7 @@ class AdmissionPathRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:1000'],
             'quota' => ['required', 'integer', 'min:0'],
             'is_active' => ['boolean'],
+            'is_show' => ['boolean'],
         ];
     }
 }

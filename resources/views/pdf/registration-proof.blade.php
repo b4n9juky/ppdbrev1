@@ -71,10 +71,26 @@
         .footer-table td {
             vertical-align: top;
         }
-        .qrcode-col {
+        .footer-left {
             width: 40%;
             text-align: left;
             padding-top: 10px;
+        }
+        .footer-left-content {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .photo-box {
+            border: 1px solid #ccc;
+            padding: 4px;
+            background: #fff;
+        }
+        .photo-box img {
+            width: 4cm;
+            height: 6cm;
+            object-fit: cover;
+            display: block;
         }
         .qrcode-box {
             display: inline-block;
@@ -179,7 +195,7 @@
                     <td class="colon">:</td>
                     <td>
                         {{ $registration->studentBiodata->birth_place ?? '-' }}, 
-                        {{ $registration->studentBiodata->birth_date ? $registration->studentBiodata->birth_date->format('d-m-Y') : '-' }}
+                        {{ $registration->studentBiodata->birth_date ? $registration->studentBiodata->birth_date->locale('id')->settings(['formatFunction' => 'translatedFormat'])->format('d F Y') : '-' }}
                     </td>
                 </tr>
                 <tr>
@@ -210,17 +226,24 @@
             </tbody>
         </table>
 
-        <!-- Footer Section (QR Code on Left, Signature on Right) -->
+        <!-- Footer Section (Photo + QR Code on Left, Signature on Right) -->
         <table class="footer-table">
             <tr>
-                <!-- QR Code representing NISN -->
-                <td class="qrcode-col">
-                    @if($qrcode)
-                        <div class="qrcode-box">
-                            <img src="data:image/svg+xml;base64,{{ $qrcode }}" alt="QR Code">
-                            <div class="qrcode-text">NISN: {{ $registration->studentBiodata->nisn ?? '-' }}</div>
-                        </div>
-                    @endif
+                <!-- Photo & QR Code -->
+                <td class="footer-left">
+                    <div class="footer-left-content">
+                        @if($photo)
+                            <div class="photo-box">
+                                <img src="{{ $photo }}" alt="Pas Foto">
+                            </div>
+                        @endif
+                        @if($qrcode)
+                            <div class="qrcode-box">
+                                <img src="data:image/svg+xml;base64,{{ $qrcode }}" alt="QR Code">
+                                <div class="qrcode-text">NISN: {{ $registration->studentBiodata->nisn ?? '-' }}</div>
+                            </div>
+                        @endif
+                    </div>
                 </td>
 
                 <!-- Signature & Stamp -->
@@ -230,7 +253,8 @@
                             {{ \Carbon\Carbon::now()->locale('id')->settings(['formatFunction' => 'translatedFormat'])->format('d F Y') }}
                         </div>
                         <div class="signature-title">
-                            Kepala {{ $madrasah->madrasah_name ?? 'Madrasah' }},
+                            Panitia PPDB {{ $registration->academicYear->name ?? '' }}<br>
+                            {{ $madrasah->madrasah_name ?? 'Madrasah' }},
                         </div>
 
                         <div class="stamp-overlay">
@@ -241,11 +265,6 @@
                                 <img src="{{ $stamp_base64 }}" class="stamp-img" alt="Stempel">
                             @endif
                         </div>
-
-                        <p class="headmaster-name">{{ $madrasah->headmaster_name ?? '___________________' }}</p>
-                        @if($madrasah->headmaster_nip)
-                            <p class="headmaster-nip">NIP. {{ $madrasah->headmaster_nip }}</p>
-                        @endif
                     </div>
                 </td>
             </tr>

@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react';
 import { useEffect } from 'react';
+import { formatDate } from '@/lib/utils';
 
 export default function RegistrationProof({ registration, madrasah }) {
     const bio = registration.student_biodata;
@@ -81,7 +82,7 @@ export default function RegistrationProof({ registration, madrasah }) {
                             <tr><td className="label">Nomor Pendaftaran</td><td>: {registration.id.toString().padStart(5, '0')}</td></tr>
                             <tr><td className="label">Nama Lengkap</td><td>: {bio?.full_name || '-'}</td></tr>
                             <tr><td className="label">NISN</td><td>: {bio?.nisn || '-'}</td></tr>
-                            <tr><td className="label">Tempat, Tanggal Lahir</td><td>: {bio?.birth_place || '-'}, {bio?.birth_date || '-'}</td></tr>
+                            <tr><td className="label">Tempat, Tanggal Lahir</td><td>: {bio?.birth_place || '-'}, {formatDate(bio?.birth_date)}</td></tr>
                             <tr><td className="label">Jenis Kelamin</td><td>: {bio?.gender === 'male' ? 'Laki-laki' : 'Perempuan'}</td></tr>
                             <tr><td className="label">Alamat</td><td>: {bio?.address || '-'}</td></tr>
                             <tr><td className="label">Asal Sekolah</td><td>: {bio?.previous_school || '-'}</td></tr>
@@ -92,10 +93,11 @@ export default function RegistrationProof({ registration, madrasah }) {
 
                     <div className="footer">
                         <p style={{ fontSize: '11pt' }}>
-                            {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                            {formatDate(new Date())}
                         </p>
                         <p style={{ fontSize: '11pt', marginTop: 4 }}>
-                            Kepala {madrasah?.madrasah_name || 'Madrasah'},
+                            Panitia PPDB {registration.academic_year?.name}<br />
+                            {madrasah?.madrasah_name || 'Madrasah'},
                         </p>
 
                         <div className="signature-area" style={{ marginTop: 24 }}>
@@ -118,14 +120,6 @@ export default function RegistrationProof({ registration, madrasah }) {
                                 </div>
                             ) : (
                                 <div style={{ height: 60 }} />
-                            )}
-                            <p style={{ fontWeight: 'bold', marginTop: 8, fontSize: '12pt' }}>
-                                {madrasah?.headmaster_name || '___________________'}
-                            </p>
-                            {madrasah?.headmaster_nip && (
-                                <p style={{ fontSize: '10pt', marginTop: 2 }}>
-                                    NIP. {madrasah.headmaster_nip}
-                                </p>
                             )}
                         </div>
                     </div>

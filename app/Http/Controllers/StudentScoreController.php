@@ -53,7 +53,7 @@ class StudentScoreController extends Controller
 
         app(ScoringService::class)->saveScores($registration, $validated['scores']);
 
-        return Redirect::route('student.dashboard')
+        return Redirect::route('student.registration.show')
             ->with('success', 'Nilai ijazah berhasil disimpan.');
     }
 }

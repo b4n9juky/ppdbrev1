@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import Toast from '@/Components/Toast';
 import { useState, useEffect, useCallback } from 'react';
+import { formatDate } from '@/lib/utils';
 
 export default function Welcome({ auth, madrasah, activeYear, schedules, activityRequirements, popUpBanners, paths = [] }) {
     const phaseColors = [
@@ -269,7 +270,7 @@ export default function Welcome({ auth, madrasah, activeYear, schedules, activit
                                                                 <svg className="h-4 w-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                                                 </svg>
-                                                                {s.start_date} — {s.end_date}
+                                                                {formatDate(s.start_date)} — {formatDate(s.end_date)}
                                                             </span>
                                                         </div>
                                                         

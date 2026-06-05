@@ -9,6 +9,7 @@ use App\Models\MadrasahSetting;
 use App\Models\Registration;
 use App\Models\StudentBiodata;
 use App\Models\StudentDocument;
+use App\Models\Subject;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
@@ -28,14 +29,19 @@ class StudentRegistrationController extends Controller
                 'studentBiodata',
                 'studentDocuments',
                 'admissionPath',
+                'subjectScores.subject',
             ])
                 ->where('user_id', auth()->id())
                 ->where('academic_year_id', $activeYear->id)
                 ->first();
         }
 
-        $paths = AdmissionPath::where('is_active', true)->get();
+        $paths = AdmissionPath::where('is_active', true)->where('is_show', true)->get();
         $settings = MadrasahSetting::first();
+
+        $subjects = $activeYear
+            ? Subject::where('academic_year_id', $activeYear->id)->where('is_active', true)->get()
+            : collect();
 
         return Inertia::render('Student/Registration', [
             'activeYear' => $activeYear,
@@ -43,6 +49,7 @@ class StudentRegistrationController extends Controller
             'paths' => $paths,
             'madrasah' => $settings,
             'documentTypes' => DocumentType::all(),
+            'subjects' => $subjects,
         ]);
     }
 
@@ -87,7 +94,7 @@ class StudentRegistrationController extends Controller
         }
 
         $validated = $request->validate([
-            'nisn' => ['required', 'string', 'max:20'],
+            'nisn' => ['required', 'numeric', 'digits:10'],
             'full_name' => ['required', 'string', 'max:255'],
             'gender' => ['required', 'in:male,female'],
             'birth_place' => ['required', 'string', 'max:255'],
@@ -96,6 +103,8 @@ class StudentRegistrationController extends Controller
             'phone_number' => ['required', 'regex:/^[0-9]{11,13}$/'],
             'previous_school' => ['required', 'string', 'max:255'],
         ], [
+            'nisn.numeric' => 'NISN harus berupa angka.',
+            'nisn.digits' => 'NISN harus terdiri dari 10 digit.',
             'phone_number.required' => 'Nomor kontak / WhatsApp wajib diisi.',
             'phone_number.regex' => 'Nomor kontak / WhatsApp harus berupa angka dengan panjang antara 11 sampai 13 digit.',
         ]);
@@ -172,6 +181,10 @@ class StudentRegistrationController extends Controller
 
         if (! $registration->studentBiodata) {
             return Redirect::back()->with('error', 'Lengkapi biodata terlebih dahulu.');
+        }
+
+        if (! $registration->subjectScores || $registration->subjectScores->count() === 0) {
+            return Redirect::back()->with('error', 'Lengkapi nilai ijazah terlebih dahulu.');
         }
 
         $registration->update(['status' => 'pending']);

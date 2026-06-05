@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react';
 import { useEffect } from 'react';
+import { formatDate } from '@/lib/utils';
 
 export default function DecisionLetter({ registration, madrasah }) {
     const bio = registration.student_biodata;
@@ -76,7 +77,8 @@ export default function DecisionLetter({ registration, madrasah }) {
 
                     <div className="content">
                         <p>
-                            Yang bertanda tangan di bawah ini, Kepala {madrasah?.madrasah_name || 'Madrasah Aliyah'},
+                            Yang bertanda tangan di bawah ini, Panitia PPDB {registration.academic_year?.name}
+                            {madrasah?.madrasah_name || 'Madrasah Aliyah'},
                             menerangkan bahwa:
                         </p>
 
@@ -84,7 +86,7 @@ export default function DecisionLetter({ registration, madrasah }) {
                             <tbody>
                                 <tr><td style={{ width: 160, fontWeight: 'bold', padding: '4px 8px' }}>Nama</td><td style={{ padding: '4px 8px' }}>: {bio?.full_name || '-'}</td></tr>
                                 <tr><td style={{ width: 160, fontWeight: 'bold', padding: '4px 8px' }}>NISN</td><td style={{ padding: '4px 8px' }}>: {bio?.nisn || '-'}</td></tr>
-                                <tr><td style={{ width: 160, fontWeight: 'bold', padding: '4px 8px' }}>Tempat, Tgl Lahir</td><td style={{ padding: '4px 8px' }}>: {bio?.birth_place || '-'}, {bio?.birth_date || '-'}</td></tr>
+                                <tr><td style={{ width: 160, fontWeight: 'bold', padding: '4px 8px' }}>Tempat, Tgl Lahir</td><td style={{ padding: '4px 8px' }}>: {bio?.birth_place || '-'}, {formatDate(bio?.birth_date)}</td></tr>
                                 <tr><td style={{ width: 160, fontWeight: 'bold', padding: '4px 8px' }}>Asal Sekolah</td><td style={{ padding: '4px 8px' }}>: {bio?.previous_school || '-'}</td></tr>
                                 <tr><td style={{ width: 160, fontWeight: 'bold', padding: '4px 8px' }}>Jalur Pendaftaran</td><td style={{ padding: '4px 8px' }}>: {registration.admission_path?.name || '-'}</td></tr>
                             </tbody>
@@ -136,10 +138,11 @@ export default function DecisionLetter({ registration, madrasah }) {
 
                     <div className="footer">
                         <p style={{ fontSize: '11pt' }}>
-                            {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                            {formatDate(new Date())}
                         </p>
                         <p style={{ fontSize: '11pt', marginTop: 4 }}>
-                            Kepala {madrasah?.madrasah_name || 'Madrasah'},
+                            Panitia PPDB {registration.academic_year?.name}<br />
+                            {madrasah?.madrasah_name || 'Madrasah'},
                         </p>
 
                         <div className="signature-area" style={{ marginTop: 24 }}>
@@ -162,14 +165,6 @@ export default function DecisionLetter({ registration, madrasah }) {
                                 </div>
                             ) : (
                                 <div style={{ height: 60 }} />
-                            )}
-                            <p style={{ fontWeight: 'bold', marginTop: 8, fontSize: '12pt' }}>
-                                {madrasah?.headmaster_name || '___________________'}
-                            </p>
-                            {madrasah?.headmaster_nip && (
-                                <p style={{ fontSize: '10pt', marginTop: 2 }}>
-                                    NIP. {madrasah.headmaster_nip}
-                                </p>
                             )}
                         </div>
                     </div>

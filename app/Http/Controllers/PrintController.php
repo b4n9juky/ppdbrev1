@@ -38,6 +38,7 @@ class PrintController extends Controller
             'admissionPath',
             'subjectScores.subject',
             'academicYear',
+            'studentDocuments',
             'user',
         ]);
 
@@ -48,12 +49,22 @@ class PrintController extends Controller
         $signatureBase64 = $madrasah ? $this->imageToBase64($madrasah->signature_path) : null;
         $stampBase64 = $madrasah ? $this->imageToBase64($madrasah->stamp_path) : null;
 
+        // Find student photo from documents
+        $photoBase64 = null;
+        if ($registration->studentDocuments) {
+            $photo = $registration->studentDocuments->firstWhere('document_type', 'foto');
+            if ($photo && $photo->file_path) {
+                $photoBase64 = $this->imageToBase64($photo->file_path);
+            }
+        }
+
         $pdf = Pdf::loadView('pdf.decision-letter', [
             'registration' => $registration,
             'madrasah' => $madrasah,
             'kop_surat_base64' => $kopSuratBase64,
             'signature_base64' => $signatureBase64,
             'stamp_base64' => $stampBase64,
+            'photo' => $photoBase64,
         ]);
 
         return $pdf->stream('sk-kelulusan-'.str_pad($registration->id, 5, '0', STR_PAD_LEFT).'.pdf');
@@ -87,6 +98,15 @@ class PrintController extends Controller
             );
         }
 
+        // Find student photo from documents
+        $photoBase64 = null;
+        if ($registration->studentDocuments) {
+            $photo = $registration->studentDocuments->firstWhere('document_type', 'foto');
+            if ($photo && $photo->file_path) {
+                $photoBase64 = $this->imageToBase64($photo->file_path);
+            }
+        }
+
         $pdf = Pdf::loadView('pdf.registration-proof', [
             'registration' => $registration,
             'madrasah' => $madrasah,
@@ -94,6 +114,7 @@ class PrintController extends Controller
             'signature_base64' => $signatureBase64,
             'stamp_base64' => $stampBase64,
             'qrcode' => $qrcodeBase64,
+            'photo' => $photoBase64,
         ]);
 
         return $pdf->stream('bukti-pendaftaran-'.str_pad($registration->id, 5, '0', STR_PAD_LEFT).'.pdf');

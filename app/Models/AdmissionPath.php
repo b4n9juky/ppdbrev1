@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['name', 'description', 'quota', 'is_active'])]
+#[Fillable(['name', 'description', 'quota', 'is_active', 'is_show'])]
 class AdmissionPath extends Model
 {
     protected function casts(): array
@@ -14,6 +14,7 @@ class AdmissionPath extends Model
         return [
             'quota' => 'integer',
             'is_active' => 'boolean',
+            'is_show' => 'boolean',
         ];
     }
 

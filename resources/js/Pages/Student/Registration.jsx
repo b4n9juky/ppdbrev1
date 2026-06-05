@@ -2,14 +2,15 @@ import { useState } from 'react';
 import Toast from '@/Components/Toast';
 import { Head, Link, useForm, router } from '@inertiajs/react';
 
-const steps = ['Pilih Jalur', 'Biodata', 'Upload Dokumen', 'Kirim'];
+const steps = ['Pilih Jalur', 'Biodata', 'Upload Dokumen', 'Nilai Ijazah', 'Kirim'];
 
-export default function Registration({ activeYear, registration, paths, madrasah, documentTypes = [] }) {
+export default function Registration({ activeYear, registration, paths, madrasah, documentTypes = [], subjects = [] }) {
     const [step, setStep] = useState(() => {
         if (!registration) return 0;
         if (!registration.student_biodata) return 1;
         if (!registration.student_documents?.length) return 2;
-        return 3;
+        if (!registration.subject_scores?.length) return 3;
+        return 4;
     });
 
     const isLocked = registration && registration.status !== 'draft';
@@ -79,10 +80,19 @@ export default function Registration({ activeYear, registration, paths, madrasah
                             )}
 
                             {step === 3 && (
+                                <StepScores
+                                    subjects={subjects}
+                                    registration={registration}
+                                    onNext={() => setStep(4)}
+                                    onBack={() => setStep(2)}
+                                />
+                            )}
+
+                            {step === 4 && (
                                 <StepConfirm
                                     registration={registration}
                                     documentTypes={documentTypes}
-                                    onBack={() => setStep(2)}
+                                    onBack={() => setStep(3)}
                                 />
                             )}
                         </div>
@@ -184,8 +194,9 @@ function StepBiodata({ registration, onNext, onBack }) {
                         <label className="block text-sm font-medium text-gray-700">NISN</label>
                         <input
                             type="text"
+                            inputMode="numeric"
                             value={data.nisn}
-                            onChange={(e) => setData('nisn', e.target.value)}
+                            onChange={(e) => setData('nisn', e.target.value.replace(/\D/g, ''))}
                             className="mt-1 block w-full rounded-xl border-gray-200 shadow-sm transition focus:border-emerald-400 focus:ring-emerald-400"
                         />
                         {errors.nisn && <p className="mt-1 text-sm text-red-600">{errors.nisn}</p>}
@@ -582,6 +593,117 @@ function StepDocuments({ registration, onNext, onBack, documentTypes = [] }) {
     );
 }
 
+function StepScores({ subjects = [], registration, onNext, onBack }) {
+    const existingScores = {};
+    (registration?.subject_scores || []).forEach((s) => {
+        existingScores[s.subject_id] = s.ijazah_score;
+    });
+
+    const [scores, setScores] = useState(() => {
+        const initial = {};
+        subjects.forEach((s) => {
+            initial[s.id] = existingScores[s.id] ?? '';
+        });
+        return initial;
+    });
+
+    const [saving, setSaving] = useState(false);
+
+    function handleSubmit(e) {
+        e.preventDefault();
+        setSaving(true);
+        const payload = subjects.map((s) => ({
+            subject_id: s.id,
+            ijazah_score: scores[s.id] !== '' ? parseFloat(scores[s.id]) : null,
+        }));
+        router.patch(route('student.scores.update'), { scores: payload }, {
+            preserveScroll: true,
+            onSuccess: () => onNext(),
+            onFinish: () => setSaving(false),
+        });
+    }
+
+    return (
+        <div>
+            <h3 className="mb-2 text-xl font-semibold text-gray-800">Nilai Ijazah</h3>
+            <p className="mb-6 text-sm text-gray-500">Masukkan nilai ijazah untuk setiap mata pelajaran (skala 0-100).</p>
+
+            {subjects.length === 0 ? (
+                <div className="py-12 text-center text-sm text-gray-400">Belum ada mata pelajaran yang ditentukan.</div>
+            ) : (
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="overflow-hidden rounded-xl border border-gray-100 bg-white">
+                        <table className="min-w-full divide-y divide-gray-100">
+                            <thead className="bg-gray-50/70">
+                                <tr>
+                                    <th className="px-5 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-gray-500">Mata Pelajaran</th>
+                                    <th className="px-5 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-gray-500 w-36">Nilai Ijazah</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {subjects.map((s) => (
+                                    <tr key={s.id} className="hover:bg-gray-50/50 transition">
+                                        <td className="px-5 py-3 text-sm font-medium text-gray-800">{s.name}</td>
+                                        <td className="px-5 py-3 text-right">
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                max="100"
+                                                step="0.01"
+                                                value={scores[s.id]}
+                                                onChange={(e) =>
+                                                    setScores((prev) => ({ ...prev, [s.id]: e.target.value }))
+                                                }
+                                                className="w-28 rounded-xl border-gray-200 text-right shadow-sm focus:border-emerald-400 focus:ring-emerald-400 text-sm font-mono"
+                                                placeholder="0-100"
+                                            />
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2">
+                        <button
+                            type="button"
+                            onClick={onBack}
+                            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-6 py-2.5 text-sm font-semibold text-gray-600 shadow-sm transition hover:bg-gray-50 hover:text-gray-800"
+                        >
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                            </svg>
+                            Kembali
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={saving}
+                            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 px-8 py-2.5 text-sm font-semibold text-white shadow-sm shadow-emerald-200 transition hover:from-emerald-700 hover:to-green-700 disabled:opacity-50"
+                        >
+                            {saving ? (
+                                <span className="inline-flex items-center gap-2">
+                                    <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                    </svg>
+                                    Menyimpan...
+                                </span>
+                            ) : (
+                                <span className="inline-flex items-center gap-2">
+                                    Simpan & Selanjutnya
+                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </span>
+                            )}
+                        </button>
+                    </div>
+                </form>
+            )}
+        </div>
+    );
+}
+
 function StepConfirm({ registration, onBack, documentTypes = [] }) {
     const [submitting, setSubmitting] = useState(false);
 
@@ -691,7 +813,7 @@ function RegistrationSummary({ registration, documentTypes = [] }) {
                             <div>
                                 <span className="block text-xs font-semibold uppercase tracking-wider text-gray-400">Tempat, Tanggal Lahir</span>
                                 <span className="mt-1 block text-sm font-medium text-gray-900">
-                                    {bio.birth_place}, {bio.birth_date ? new Date(bio.birth_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
+                                    {bio.birth_place}, {bio.birth_date ? new Date(bio.birth_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) : '-'}
                                 </span>
                             </div>
                             <div>

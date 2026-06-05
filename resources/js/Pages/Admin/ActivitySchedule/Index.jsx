@@ -3,6 +3,7 @@ import RichEditor from '@/Components/RichEditor';
 import { Head, useForm, router } from '@inertiajs/react';
 import { useState } from 'react';
 import Switch from '@/Components/Switch';
+import { formatDate } from '@/lib/utils';
 
 export default function Index({ schedules, activeYear, academicYears }) {
     const [editing, setEditing] = useState(null);
@@ -215,7 +216,7 @@ export default function Index({ schedules, activeYear, academicYears }) {
                                                     <span className="text-sm font-medium text-gray-900">{s.activity_name}</span>
                                                 </td>
                                                 <td className="whitespace-nowrap px-5 py-4 text-sm text-gray-500">
-                                                    {s.start_date} — {s.end_date}
+                                                    {formatDate(s.start_date)} — {formatDate(s.end_date)}
                                                 </td>
                                                 <td className="whitespace-nowrap px-5 py-4 text-sm text-gray-500">
                                                     {s.academic_year?.name}

@@ -159,13 +159,9 @@
                             {{ \Carbon\Carbon::now()->locale('id')->settings(['formatFunction' => 'translatedFormat'])->format('d F Y') }}
                         </div>
                         <div class="signature-title">
-                            Kepala {{ $madrasah->madrasah_name ?? 'Madrasah' }},
+                            Panitia PPDB {{ $activeYear->name ?? '' }}<br>
+                            {{ $madrasah->madrasah_name ?? 'Madrasah' }},
                         </div>
-
-                        <p class="headmaster-name" style="margin-top: 60px;">{{ $madrasah->headmaster_name ?? '___________________' }}</p>
-                        @if($madrasah->headmaster_nip)
-                            <p class="headmaster-nip">NIP. {{ $madrasah->headmaster_nip }}</p>
-                        @endif
                     </div>
                 </td>
             </tr>

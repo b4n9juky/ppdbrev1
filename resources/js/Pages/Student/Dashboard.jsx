@@ -294,7 +294,7 @@ export default function Dashboard({ activeYear, registration, madrasah, document
                                                         <span className="block text-xs font-semibold uppercase tracking-wider text-gray-400">Tempat, Tanggal Lahir</span>
                                                         <span className="mt-1 block text-sm font-medium text-gray-900 font-sans">
                                                             {bio?.birth_place ? `${bio.birth_place}, ` : ''}
-                                                            {bio?.birth_date ? new Date(bio.birth_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
+                                                            {bio?.birth_date ? new Date(bio.birth_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) : '-'}
                                                         </span>
                                                     </div>
                                                 </div>

@@ -4,7 +4,7 @@ import { Head, Link, useForm, router } from '@inertiajs/react';
 
 const steps = ['Pilih Jalur', 'Biodata', 'Upload Dokumen', 'Kirim'];
 
-export default function Registration({ activeYear, registration, paths, madrasah }) {
+export default function Registration({ activeYear, registration, paths, madrasah, documentTypes = [] }) {
     const [step, setStep] = useState(() => {
         if (!registration) return 0;
         if (!registration.student_biodata) return 1;
@@ -72,6 +72,7 @@ export default function Registration({ activeYear, registration, paths, madrasah
                             {step === 2 && (
                                 <StepDocuments
                                     registration={registration}
+                                    documentTypes={documentTypes}
                                     onNext={() => setStep(3)}
                                     onBack={() => setStep(1)}
                                 />
@@ -80,6 +81,7 @@ export default function Registration({ activeYear, registration, paths, madrasah
                             {step === 3 && (
                                 <StepConfirm
                                     registration={registration}
+                                    documentTypes={documentTypes}
                                     onBack={() => setStep(2)}
                                 />
                             )}
@@ -314,8 +316,10 @@ const docTypeColors = {
     other: 'bg-gray-50 text-gray-600 ring-gray-200',
 };
 
-function StepDocuments({ registration, onNext, onBack }) {
-    const [documentType, setDocumentType] = useState('ijazah');
+function StepDocuments({ registration, onNext, onBack, documentTypes = [] }) {
+    const [documentType, setDocumentType] = useState(() => {
+        return documentTypes[0]?.code || 'ijazah';
+    });
     const [file, setFile] = useState(null);
     const [uploading, setUploading] = useState(false);
     const [previewUrl, setPreviewUrl] = useState(null);
@@ -344,7 +348,7 @@ function StepDocuments({ registration, onNext, onBack }) {
                 setFile(null);
                 setPreviewUrl(null);
                 setUploading(false);
-                setDocumentType('ijazah');
+                setDocumentType(documentTypes[0]?.code || 'ijazah');
                 // Reset file input
                 const input = document.getElementById('doc-file-input');
                 if (input) input.value = '';
@@ -385,11 +389,11 @@ function StepDocuments({ registration, onNext, onBack }) {
                             onChange={(e) => setDocumentType(e.target.value)}
                             className="block w-full rounded-xl border-gray-200 shadow-sm transition focus:border-emerald-400 focus:ring-emerald-400 text-sm"
                         >
-                            <option value="ijazah">Ijazah</option>
-                            <option value="ktp_ortu">KTP Orang Tua</option>
-                            <option value="kk">Kartu Keluarga</option>
-                            <option value="prestasi">Sertifikat Prestasi</option>
-                            <option value="other">Lainnya</option>
+                            {documentTypes.map((dt) => (
+                                <option key={dt.id || dt.code} value={dt.code}>
+                                    {dt.name}
+                                </option>
+                            ))}
                         </select>
                     </div>
 
@@ -469,7 +473,7 @@ function StepDocuments({ registration, onNext, onBack }) {
                 <div className="grid gap-4 sm:grid-cols-2">
                     {docs.map((doc) => {
                         const typeColor = docTypeColors[doc.document_type] || docTypeColors.other;
-                        const typeLabel = docTypeLabels[doc.document_type] || doc.document_type.replace('_', ' ');
+                        const typeLabel = documentTypes.find(dt => dt.code === doc.document_type)?.name || docTypeLabels[doc.document_type] || doc.document_type.replace('_', ' ');
                         const fileName = doc.file_path.split('/').pop();
                         const fileIsImage = isImage(doc.file_path);
 
@@ -578,7 +582,7 @@ function StepDocuments({ registration, onNext, onBack }) {
     );
 }
 
-function StepConfirm({ registration, onBack }) {
+function StepConfirm({ registration, onBack, documentTypes = [] }) {
     const [submitting, setSubmitting] = useState(false);
 
     function handleFinalize() {
@@ -603,7 +607,7 @@ function StepConfirm({ registration, onBack }) {
                 </div>
             </div>
 
-            <RegistrationSummary registration={registration} />
+            <RegistrationSummary registration={registration} documentTypes={documentTypes} />
 
             <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
                 <button
@@ -631,7 +635,7 @@ function StepConfirm({ registration, onBack }) {
     );
 }
 
-function RegistrationSummary({ registration }) {
+function RegistrationSummary({ registration, documentTypes = [] }) {
     const bio = registration?.student_biodata;
     const docs = registration?.student_documents || [];
 
@@ -720,7 +724,7 @@ function RegistrationSummary({ registration }) {
                     <div className="grid gap-4 sm:grid-cols-2">
                         {docs.map((doc) => {
                             const typeColor = docTypeColors[doc.document_type] || docTypeColors.other;
-                            const typeLabel = docTypeLabels[doc.document_type] || doc.document_type.replace('_', ' ');
+                            const typeLabel = documentTypes.find(dt => dt.code === doc.document_type)?.name || docTypeLabels[doc.document_type] || doc.document_type.replace('_', ' ');
                             const fileName = doc.file_path.split('/').pop();
                             const fileIsImage = isImage(doc.file_path);
 

@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import RichEditor from '@/Components/RichEditor';
 import { Head, useForm, router } from '@inertiajs/react';
 import { useState } from 'react';
 
@@ -94,14 +95,14 @@ export default function Index({ requirements, activeYear, academicYears }) {
 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Deskripsi</label>
-                                    <textarea
-                                        value={data.description}
-                                        onChange={(e) => setData('description', e.target.value)}
-                                        rows={4}
-                                        className="mt-1 block w-full rounded-xl border-gray-200 shadow-sm transition focus:border-emerald-400 focus:ring-emerald-400"
-                                        placeholder="Isi deskripsi persyaratan atau alur..."
-                                        required
-                                    />
+                                    <p className="mt-0.5 text-xs text-gray-400 font-normal">Gunakan editor untuk memformat deskripsi persyaratan atau alur.</p>
+                                    <div className="mt-2">
+                                        <RichEditor
+                                            value={data.description}
+                                            onChange={(html) => setData('description', html)}
+                                            placeholder="Isi deskripsi persyaratan atau alur..."
+                                        />
+                                    </div>
                                     {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description}</p>}
                                 </div>
 
@@ -178,8 +179,8 @@ export default function Index({ requirements, activeYear, academicYears }) {
                                                         {req.title}
                                                     </span>
                                                 </td>
-                                                <td className="px-5 py-4 text-sm text-gray-500 max-w-xs truncate">
-                                                    {req.description}
+                                                <td className="px-5 py-4 text-sm text-gray-500 max-w-xs truncate" title={req.description ? req.description.replace(/<[^>]*>/g, '') : ''}>
+                                                    {req.description ? req.description.replace(/<[^>]*>/g, '') : ''}
                                                 </td>
                                                 <td className="whitespace-nowrap px-5 py-4 text-sm text-gray-500">
                                                     {req.academic_year?.name}

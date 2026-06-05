@@ -3,10 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\AcademicYear;
-use App\Models\AdmissionPath;
+use App\Models\DocumentType;
 use App\Models\MadrasahSetting;
 use App\Models\Registration;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -25,6 +24,7 @@ class StudentDashboardController extends Controller
                 'studentBiodata', 'studentDocuments', 'admissionPath', 'subjectScores.subject',
             ]) : null,
             'madrasah' => $settings,
+            'documentTypes' => DocumentType::all(),
         ]);
     }
 
@@ -47,12 +47,13 @@ class StudentDashboardController extends Controller
         return Inertia::render('Student/Documents', [
             'registration' => $registration ? $registration->load('studentDocuments', 'admissionPath') : null,
             'activeYear' => $activeYear,
+            'documentTypes' => DocumentType::all(),
         ]);
     }
 
     private function getRegistration(?AcademicYear $activeYear): ?Registration
     {
-        if (!$activeYear) {
+        if (! $activeYear) {
             return null;
         }
 

@@ -3,7 +3,10 @@
 use App\Models\AcademicYear;
 use App\Models\AdmissionPath;
 use App\Models\Registration;
+use App\Models\StudentDocument;
+use App\Models\Subject;
 use App\Models\User;
+use App\Services\ScoringService;
 
 test('operator can view registration list and claim/complete/release registrations', function () {
     $activeYear = AcademicYear::create(['name' => '2026/2027', 'is_active' => true]);
@@ -39,7 +42,7 @@ test('operator can view registration list and claim/complete/release registratio
         'status' => 'pending',
     ]);
 
-    \App\Models\StudentDocument::create([
+    StudentDocument::create([
         'registration_id' => $registration->id,
         'document_type' => 'ijazah',
         'file_path' => 'documents/test.pdf',
@@ -63,14 +66,14 @@ test('operator can view registration list and claim/complete/release registratio
     // Operator can claim a new registration
     $response = $this->actingAs($operator)->post(route('admin.registrations.claim', $registration->id));
     $response->assertRedirect(route('admin.registrations.index'));
-    
+
     $registration = $registration->fresh();
     expect($registration->processing_status)->toBe('diproses');
     expect($registration->assigned_operator_id)->toBe($operator->id);
 
     // Operator cannot update status when processing_status is 'diproses'
     $response = $this->actingAs($operator)->patch(route('admin.registrations.status.update', $registration->id), [
-        'status' => 'accepted'
+        'status' => 'accepted',
     ]);
     $response->assertStatus(403);
 
@@ -83,7 +86,7 @@ test('operator can view registration list and claim/complete/release registratio
     ]);
     $otherOperator->email_verified_at = now();
     $otherOperator->save();
-    
+
     $response = $this->actingAs($otherOperator)->post(route('admin.registrations.claim', $registration->id));
     $response->assertStatus(302); // Redirect back with error
 
@@ -94,7 +97,7 @@ test('operator can view registration list and claim/complete/release registratio
 
     // Operator can update the status of the registration (diterima utama, cadangan, ditolak)
     $response = $this->actingAs($operator)->patch(route('admin.registrations.status.update', $registration->id), [
-        'status' => 'accepted'
+        'status' => 'accepted',
     ]);
     $response->assertRedirect(route('admin.registrations.index'));
     expect($registration->fresh()->status)->toBe('accepted');
@@ -154,7 +157,7 @@ test('registrations passing score and document requirements are enforced', funct
         'status' => 'pending',
     ]);
 
-    $subject = \App\Models\Subject::create([
+    $subject = Subject::create([
         'academic_year_id' => $activeYear->id,
         'name' => 'Matematika',
         'is_active' => true,
@@ -162,12 +165,12 @@ test('registrations passing score and document requirements are enforced', funct
 
     // 1. Save scores below passing score (e.g. 70.00)
     // Check that it automatically updates status to 'rejected'
-    app(\App\Services\ScoringService::class)->saveScores($registration, [
+    app(ScoringService::class)->saveScores($registration, [
         [
             'subject_id' => $subject->id,
             'ijazah_score' => 70.00,
             'test_score' => 0.00,
-        ]
+        ],
     ]);
 
     expect($registration->fresh()->total_score)->toEqual(70.00);
@@ -175,18 +178,18 @@ test('registrations passing score and document requirements are enforced', funct
 
     // 2. Try to change status to accepted for student below passing score - should fail
     $response = $this->actingAs($admin)->patch(route('admin.registrations.status.update', $registration->id), [
-        'status' => 'accepted'
+        'status' => 'accepted',
     ]);
     $response->assertSessionHas('error');
     expect($registration->fresh()->status)->toBe('rejected');
 
     // 3. Update score to pass (e.g. 80.00)
-    app(\App\Services\ScoringService::class)->saveScores($registration, [
+    app(ScoringService::class)->saveScores($registration, [
         [
             'subject_id' => $subject->id,
             'ijazah_score' => 80.00,
             'test_score' => 0.00,
-        ]
+        ],
     ]);
     // Status is updated to rejected if below, but since it is >= passing, status doesn't automatically change back to pending.
     // Let's reset the status manually to pending to test the next assertions.
@@ -194,13 +197,13 @@ test('registrations passing score and document requirements are enforced', funct
 
     // 4. Try to change status to accepted without any documents - should fail
     $response = $this->actingAs($admin)->patch(route('admin.registrations.status.update', $registration->id), [
-        'status' => 'accepted'
+        'status' => 'accepted',
     ]);
     $response->assertSessionHas('error');
     expect($registration->fresh()->status)->toBe('pending');
 
     // 5. Add a document
-    \App\Models\StudentDocument::create([
+    StudentDocument::create([
         'registration_id' => $registration->id,
         'document_type' => 'ijazah',
         'file_path' => 'documents/test.pdf',
@@ -208,9 +211,8 @@ test('registrations passing score and document requirements are enforced', funct
 
     // 6. Try to change status to accepted with document and passing score - should succeed
     $response = $this->actingAs($admin)->patch(route('admin.registrations.status.update', $registration->id), [
-        'status' => 'accepted'
+        'status' => 'accepted',
     ]);
     $response->assertRedirect(route('admin.registrations.index'));
     expect($registration->fresh()->status)->toBe('accepted');
 });
-

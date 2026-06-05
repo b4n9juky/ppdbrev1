@@ -43,7 +43,7 @@ function isImage(filePath) {
     return /\.(jpg|jpeg|png|gif|webp)$/i.test(filePath);
 }
 
-export default function Index({ registrations, paths, filters, subjects }) {
+export default function Index({ registrations, paths, filters, subjects, documentTypes = [] }) {
     const { auth } = usePage().props;
     const currentUser = auth.user;
 
@@ -637,7 +637,7 @@ export default function Index({ registrations, paths, filters, subjects }) {
                                 <div className="grid gap-4 sm:grid-cols-2">
                                     {(selectedRegForDocs.student_documents || []).map((doc) => {
                                         const typeColor = docTypeColors[doc.document_type] || docTypeColors.other;
-                                        const typeLabel = docTypeLabels[doc.document_type] || doc.document_type.replace('_', ' ');
+                                        const typeLabel = documentTypes.find(dt => dt.code === doc.document_type)?.name || docTypeLabels[doc.document_type] || doc.document_type.replace('_', ' ');
                                         const fileName = doc.file_path.split('/').pop();
                                         const fileIsImage = isImage(doc.file_path);
 

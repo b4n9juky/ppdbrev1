@@ -15,6 +15,7 @@ class Registration extends Model
     {
         return $this->belongsTo(User::class, 'assigned_operator_id');
     }
+
     protected function casts(): array
     {
         return [

@@ -9,7 +9,7 @@ class UpdateRegistrationStatusRequest extends FormRequest
     public function authorize(): bool
     {
         $registration = $this->route('registration');
-        if (!$registration) {
+        if (! $registration) {
             return false;
         }
 
@@ -19,7 +19,7 @@ class UpdateRegistrationStatusRequest extends FormRequest
         }
 
         if ($user->role === 'operator') {
-            return $registration->assigned_operator_id === $user->id 
+            return $registration->assigned_operator_id === $user->id
                 && $registration->processing_status === 'selesai';
         }
 

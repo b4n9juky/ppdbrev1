@@ -9,6 +9,7 @@ class CompleteRegistrationRequest extends FormRequest
     public function authorize(): bool
     {
         $registration = $this->route('registration');
+
         return $registration && $this->user()->can('update', $registration);
     }
 

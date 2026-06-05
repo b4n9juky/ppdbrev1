@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\AcademicYear;
 use App\Models\AdmissionPath;
+use App\Models\DocumentType;
 use App\Models\Subject;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -59,5 +60,18 @@ class DatabaseSeeder extends Seeder
             'name' => 'Bahasa Indonesia',
             'is_active' => true,
         ]);
+
+        $documentTypes = [
+            ['code' => 'foto', 'name' => 'Pas Foto', 'is_required' => true],
+            ['code' => 'ijazah', 'name' => 'Ijazah', 'is_required' => true],
+            ['code' => 'ktp_ortu', 'name' => 'KTP Orang Tua', 'is_required' => false],
+            ['code' => 'kk', 'name' => 'Kartu Keluarga', 'is_required' => true],
+            ['code' => 'prestasi', 'name' => 'Sertifikat Prestasi', 'is_required' => false],
+            ['code' => 'other', 'name' => 'Lainnya', 'is_required' => false],
+        ];
+
+        foreach ($documentTypes as $type) {
+            DocumentType::updateOrCreate(['code' => $type['code']], $type);
+        }
     }
 }

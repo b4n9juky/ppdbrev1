@@ -36,6 +36,11 @@ class AdmissionPathController extends Controller
 
     public function destroy(AdmissionPath $admissionPath): RedirectResponse
     {
+        if ($admissionPath->registrations()->exists()) {
+            return Redirect::route('admin.admission-paths.index')
+                ->with('error', 'Jalur pendaftaran tidak dapat dihapus karena masih digunakan oleh data pendaftaran.');
+        }
+
         $admissionPath->delete();
 
         return Redirect::route('admin.admission-paths.index')

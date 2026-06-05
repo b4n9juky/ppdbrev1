@@ -14,6 +14,7 @@ const icons = {
 
 export default function StudentLayout({ header, children }) {
     const user = usePage().props.auth.user;
+    const { madrasah_setting } = usePage().props;
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -59,10 +60,18 @@ export default function StudentLayout({ header, children }) {
             >
                 {/* Brand Header */}
                 <div className="h-16 flex items-center gap-3 px-4 border-b border-slate-800 bg-slate-950/40">
-                    <Link href="/" className="flex items-center gap-3 shrink-0">
-                        <ApplicationLogo className="block h-9 w-auto fill-current text-[#9AD872]" />
-                        <span className="text-white font-bold text-lg tracking-wider transition-opacity duration-200">
-                            SISWA PPDB
+                    <Link href="/" className="flex items-center gap-3 shrink-0 min-w-0">
+                        {madrasah_setting?.logo_path ? (
+                            <img
+                                src={`/storage/${madrasah_setting.logo_path}`}
+                                alt={madrasah_setting.madrasah_name || 'Logo'}
+                                className="h-9 w-9 rounded-lg object-contain shrink-0"
+                            />
+                        ) : (
+                            <ApplicationLogo className="block h-9 w-auto fill-current text-[#9AD872]" />
+                        )}
+                        <span className="text-white font-bold text-sm tracking-wide transition-opacity duration-200 truncate">
+                            {madrasah_setting?.madrasah_name || 'SISWA PPDB'}
                         </span>
                     </Link>
                 </div>

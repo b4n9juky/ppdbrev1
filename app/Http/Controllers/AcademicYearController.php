@@ -36,7 +36,7 @@ class AcademicYearController extends Controller
     public function update(Request $request, AcademicYear $academicYear): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:academic_years,name,' . $academicYear->id],
+            'name' => ['required', 'string', 'max:255', 'unique:academic_years,name,'.$academicYear->id],
             'passing_score' => ['required', 'numeric', 'min:0'],
         ]);
 

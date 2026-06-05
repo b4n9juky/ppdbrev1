@@ -1,16 +1,38 @@
 <?php
 
+use App\Http\Controllers\AcademicYearController;
+use App\Http\Controllers\ActivityRequirementController;
+use App\Http\Controllers\ActivityScheduleController;
+use App\Http\Controllers\AdmissionPathController;
+use App\Http\Controllers\DocumentTypeController;
+use App\Http\Controllers\MadrasahSettingController;
+use App\Http\Controllers\PopUpBannerController;
+use App\Http\Controllers\PrintController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RegistrationController;
+use App\Http\Controllers\ScoreController;
+use App\Http\Controllers\StudentDashboardController;
+use App\Http\Controllers\StudentRegistrationController;
+use App\Http\Controllers\StudentScoreController;
+use App\Http\Controllers\SubjectController;
+use App\Http\Controllers\UserController;
+use App\Models\AcademicYear;
+use App\Models\ActivityRequirement;
+use App\Models\ActivitySchedule;
+use App\Models\AdmissionPath;
+use App\Models\MadrasahSetting;
+use App\Models\PopUpBanner;
+use App\Models\Registration;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    $madrasah = \App\Models\MadrasahSetting::first();
-    $activeYear = \App\Models\AcademicYear::where('is_active', true)->first();
+    $madrasah = MadrasahSetting::first();
+    $activeYear = AcademicYear::where('is_active', true)->first();
 
     $schedules = $activeYear
-        ? \App\Models\ActivitySchedule::where('academic_year_id', $activeYear->id)
+        ? ActivitySchedule::where('academic_year_id', $activeYear->id)
             ->where('is_active', true)
             ->orderBy('order')
             ->orderBy('start_date')
@@ -18,14 +40,16 @@ Route::get('/', function () {
         : collect();
 
     $activityRequirements = $activeYear
-        ? \App\Models\ActivityRequirement::where('academic_year_id', $activeYear->id)
+        ? ActivityRequirement::where('academic_year_id', $activeYear->id)
             ->orderBy('order')
             ->get()
         : collect();
 
-    $popUpBanners = \App\Models\PopUpBanner::where('is_active', true)
+    $popUpBanners = PopUpBanner::where('is_active', true)
         ->orderBy('created_at', 'desc')
         ->get();
+
+    $paths = AdmissionPath::where('is_active', true)->get();
 
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
@@ -37,6 +61,7 @@ Route::get('/', function () {
         'schedules' => $schedules,
         'activityRequirements' => $activityRequirements,
         'popUpBanners' => $popUpBanners,
+        'paths' => $paths,
     ]);
 })->name('welcome');
 
@@ -44,16 +69,17 @@ Route::get('/dashboard', function () {
     $user = auth()->user();
 
     if ($user->role === 'kepala_madrasah') {
-        $activeYear = \App\Models\AcademicYear::where('is_active', true)->first();
+        $activeYear = AcademicYear::where('is_active', true)->first();
 
-        $totalRegistrations = \App\Models\Registration::when($activeYear, fn ($q) => $q->where('academic_year_id', $activeYear->id))->count();
-        $statusCounts = \App\Models\Registration::when($activeYear, fn ($q) => $q->where('academic_year_id', $activeYear->id))
-            ->selectRaw("status, count(*) as count")
+        $totalRegistrations = Registration::when($activeYear, fn ($q) => $q->where('academic_year_id', $activeYear->id))->count();
+        $statusCounts = Registration::when($activeYear, fn ($q) => $q->where('academic_year_id', $activeYear->id))
+            ->selectRaw('status, count(*) as count')
             ->groupBy('status')
             ->pluck('count', 'status');
 
-        $perPath = \App\Models\AdmissionPath::where('is_active', true)->get()->map(function ($path) use ($activeYear) {
+        $perPath = AdmissionPath::where('is_active', true)->get()->map(function ($path) use ($activeYear) {
             $regs = $path->registrations()->where('academic_year_id', $activeYear?->id);
+
             return [
                 'name' => $path->name,
                 'quota' => $path->quota,
@@ -66,13 +92,13 @@ Route::get('/dashboard', function () {
             ];
         });
 
-        $recentRegistrations = \App\Models\Registration::when($activeYear, fn ($q) => $q->where('academic_year_id', $activeYear->id))
+        $recentRegistrations = Registration::when($activeYear, fn ($q) => $q->where('academic_year_id', $activeYear->id))
             ->with(['user', 'studentBiodata', 'admissionPath'])
             ->latest()
             ->take(5)
             ->get();
 
-        return \Inertia\Inertia::render('KepalaMadrasah/Dashboard', [
+        return Inertia::render('KepalaMadrasah/Dashboard', [
             'totalRegistrations' => $totalRegistrations,
             'statusCounts' => $statusCounts,
             'perPath' => $perPath,
@@ -89,9 +115,9 @@ Route::get('/dashboard', function () {
         return redirect()->route('student.dashboard');
     }
 
-    $activeYear = \App\Models\AcademicYear::where('is_active', true)->first();
+    $activeYear = AcademicYear::where('is_active', true)->first();
 
-    $paths = \App\Models\AdmissionPath::where('is_active', true)->get()->map(function ($path) {
+    $paths = AdmissionPath::where('is_active', true)->get()->map(function ($path) {
         return [
             'id' => $path->id,
             'name' => $path->name,
@@ -101,13 +127,13 @@ Route::get('/dashboard', function () {
         ];
     });
 
-    $totalRegistrations = \App\Models\Registration::when($activeYear, fn ($q) => $q->where('academic_year_id', $activeYear->id))->count();
-    $statusCounts = \App\Models\Registration::when($activeYear, fn ($q) => $q->where('academic_year_id', $activeYear->id))
-        ->selectRaw("status, count(*) as count")
+    $totalRegistrations = Registration::when($activeYear, fn ($q) => $q->where('academic_year_id', $activeYear->id))->count();
+    $statusCounts = Registration::when($activeYear, fn ($q) => $q->where('academic_year_id', $activeYear->id))
+        ->selectRaw('status, count(*) as count')
         ->groupBy('status')
         ->pluck('count', 'status');
 
-    $recentRegistrations = \App\Models\Registration::when($activeYear, fn ($q) => $q->where('academic_year_id', $activeYear->id))
+    $recentRegistrations = Registration::when($activeYear, fn ($q) => $q->where('academic_year_id', $activeYear->id))
         ->with(['user', 'studentBiodata', 'admissionPath'])
         ->latest()
         ->take(5)
@@ -129,95 +155,98 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::resource('users', App\Http\Controllers\UserController::class)
+    Route::resource('users', UserController::class)
         ->except(['show']);
-    Route::post('/users/{user}/reset-password', [App\Http\Controllers\UserController::class, 'resetPassword'])
+    Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword'])
         ->name('users.reset-password');
 
-    Route::resource('academic-years', App\Http\Controllers\AcademicYearController::class)
+    Route::resource('academic-years', AcademicYearController::class)
         ->except(['show', 'create', 'edit']);
-    Route::patch('/academic-years/{academicYear}/toggle-active', [App\Http\Controllers\AcademicYearController::class, 'toggleActive'])
+    Route::patch('/academic-years/{academicYear}/toggle-active', [AcademicYearController::class, 'toggleActive'])
         ->name('academic-years.toggle-active');
 
-    Route::get('/madrasah-settings', [App\Http\Controllers\MadrasahSettingController::class, 'edit'])
+    Route::resource('document-types', DocumentTypeController::class)
+        ->except(['show', 'create', 'edit']);
+
+    Route::get('/madrasah-settings', [MadrasahSettingController::class, 'edit'])
         ->name('madrasah-settings.edit');
-    Route::patch('/madrasah-settings', [App\Http\Controllers\MadrasahSettingController::class, 'update'])
+    Route::patch('/madrasah-settings', [MadrasahSettingController::class, 'update'])
         ->name('madrasah-settings.update');
 
-    Route::resource('admission-paths', App\Http\Controllers\AdmissionPathController::class)
+    Route::resource('admission-paths', AdmissionPathController::class)
         ->except(['show', 'create']);
 
-    Route::resource('subjects', App\Http\Controllers\SubjectController::class)
+    Route::resource('subjects', SubjectController::class)
         ->except(['show', 'create']);
 
-    Route::resource('activity-schedules', App\Http\Controllers\ActivityScheduleController::class)
+    Route::resource('activity-schedules', ActivityScheduleController::class)
         ->except(['show', 'create', 'edit']);
 
-    Route::resource('activity-requirements', App\Http\Controllers\ActivityRequirementController::class)
+    Route::resource('activity-requirements', ActivityRequirementController::class)
         ->except(['show', 'create', 'edit']);
 
-    Route::resource('pop-up-banners', App\Http\Controllers\PopUpBannerController::class)
+    Route::resource('pop-up-banners', PopUpBannerController::class)
         ->except(['show', 'create', 'edit']);
-    Route::patch('/pop-up-banners/{popUpBanner}/toggle-active', [App\Http\Controllers\PopUpBannerController::class, 'toggleActive'])
+    Route::patch('/pop-up-banners/{popUpBanner}/toggle-active', [PopUpBannerController::class, 'toggleActive'])
         ->name('pop-up-banners.toggle-active');
 
     // Registration routes moved below to allow operator role as well
 });
 
 Route::middleware(['auth', 'verified', 'role:admin,operator'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/registrations/by-path', [App\Http\Controllers\RegistrationController::class, 'byPath'])
+    Route::get('/registrations/by-path', [RegistrationController::class, 'byPath'])
         ->name('registrations.by-path');
-    Route::get('/registrations/report/pdf', [App\Http\Controllers\RegistrationController::class, 'downloadReport'])
+    Route::get('/registrations/report/pdf', [RegistrationController::class, 'downloadReport'])
         ->name('registrations.report.pdf');
-    Route::get('/registrations', [App\Http\Controllers\RegistrationController::class, 'index'])
+    Route::get('/registrations', [RegistrationController::class, 'index'])
         ->name('registrations.index');
-    Route::post('/registrations/{registration}/claim', [App\Http\Controllers\RegistrationController::class, 'claim'])
+    Route::post('/registrations/{registration}/claim', [RegistrationController::class, 'claim'])
         ->name('registrations.claim');
-    Route::post('/registrations/{registration}/complete', [App\Http\Controllers\RegistrationController::class, 'complete'])
+    Route::post('/registrations/{registration}/complete', [RegistrationController::class, 'complete'])
         ->name('registrations.complete');
-    Route::post('/registrations/{registration}/release', [App\Http\Controllers\RegistrationController::class, 'release'])
+    Route::post('/registrations/{registration}/release', [RegistrationController::class, 'release'])
         ->name('registrations.release');
-    Route::patch('/registrations/{registration}/status', [App\Http\Controllers\RegistrationController::class, 'updateStatus'])
+    Route::patch('/registrations/{registration}/status', [RegistrationController::class, 'updateStatus'])
         ->name('registrations.status.update');
-    Route::patch('/registrations/{registration}/reset', [App\Http\Controllers\RegistrationController::class, 'reset'])
+    Route::patch('/registrations/{registration}/reset', [RegistrationController::class, 'reset'])
         ->name('registrations.reset');
-    Route::get('/print/registration-proof/{registration}', [App\Http\Controllers\PrintController::class, 'registrationProof'])
+    Route::get('/print/registration-proof/{registration}', [PrintController::class, 'registrationProof'])
         ->name('print.registration-proof');
-    Route::get('/print/decision-letter/{registration}', [App\Http\Controllers\PrintController::class, 'decisionLetter'])
+    Route::get('/print/decision-letter/{registration}', [PrintController::class, 'decisionLetter'])
         ->name('print.decision-letter');
-    Route::get('/registrations/{registration}/scores', [App\Http\Controllers\ScoreController::class, 'edit'])
+    Route::get('/registrations/{registration}/scores', [ScoreController::class, 'edit'])
         ->name('registrations.scores.edit');
-    Route::patch('/registrations/{registration}/scores', [App\Http\Controllers\ScoreController::class, 'update'])
+    Route::patch('/registrations/{registration}/scores', [ScoreController::class, 'update'])
         ->name('registrations.scores.update');
 });
 
 Route::middleware(['auth', 'verified'])->prefix('student')->name('student.')->group(function () {
-    Route::get('/dashboard', [App\Http\Controllers\StudentDashboardController::class, 'index'])
+    Route::get('/dashboard', [StudentDashboardController::class, 'index'])
         ->name('dashboard');
-    Route::get('/biodata', [App\Http\Controllers\StudentDashboardController::class, 'biodata'])
+    Route::get('/biodata', [StudentDashboardController::class, 'biodata'])
         ->name('biodata');
-    Route::get('/dokumen', [App\Http\Controllers\StudentDashboardController::class, 'documents'])
+    Route::get('/dokumen', [StudentDashboardController::class, 'documents'])
         ->name('documents');
-    Route::get('/scores', [App\Http\Controllers\StudentScoreController::class, 'edit'])
+    Route::get('/scores', [StudentScoreController::class, 'edit'])
         ->name('scores.edit');
-    Route::patch('/scores', [App\Http\Controllers\StudentScoreController::class, 'update'])
+    Route::patch('/scores', [StudentScoreController::class, 'update'])
         ->name('scores.update');
-    Route::get('/print', [App\Http\Controllers\PrintController::class, 'studentRegistrationProof'])
+    Route::get('/print', [PrintController::class, 'studentRegistrationProof'])
         ->name('print.proof');
 });
 
 Route::middleware(['auth', 'registration.open'])->prefix('daftar')->name('student.registration.')->group(function () {
-    Route::get('/', [App\Http\Controllers\StudentRegistrationController::class, 'show'])
+    Route::get('/', [StudentRegistrationController::class, 'show'])
         ->name('show');
-    Route::post('/', [App\Http\Controllers\StudentRegistrationController::class, 'store'])
+    Route::post('/', [StudentRegistrationController::class, 'store'])
         ->name('store');
-    Route::post('/biodata', [App\Http\Controllers\StudentRegistrationController::class, 'updateBiodata'])
+    Route::post('/biodata', [StudentRegistrationController::class, 'updateBiodata'])
         ->name('biodata');
-    Route::post('/dokumen', [App\Http\Controllers\StudentRegistrationController::class, 'uploadDocument'])
+    Route::post('/dokumen', [StudentRegistrationController::class, 'uploadDocument'])
         ->name('document');
-    Route::delete('/dokumen/{document}', [App\Http\Controllers\StudentRegistrationController::class, 'deleteDocument'])
+    Route::delete('/dokumen/{document}', [StudentRegistrationController::class, 'deleteDocument'])
         ->name('document.delete');
-    Route::post('/finalize', [App\Http\Controllers\StudentRegistrationController::class, 'finalize'])
+    Route::post('/finalize', [StudentRegistrationController::class, 'finalize'])
         ->name('finalize');
 });
 

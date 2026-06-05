@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\AcademicYear;
 use App\Models\AdmissionPath;
+use App\Models\DocumentType;
+use App\Models\MadrasahSetting;
 use App\Models\Registration;
 use App\Models\StudentBiodata;
 use App\Models\StudentDocument;
@@ -33,13 +35,14 @@ class StudentRegistrationController extends Controller
         }
 
         $paths = AdmissionPath::where('is_active', true)->get();
-        $settings = \App\Models\MadrasahSetting::first();
+        $settings = MadrasahSetting::first();
 
         return Inertia::render('Student/Registration', [
             'activeYear' => $activeYear,
             'registration' => $registration,
             'paths' => $paths,
             'madrasah' => $settings,
+            'documentTypes' => DocumentType::all(),
         ]);
     }
 
@@ -47,7 +50,7 @@ class StudentRegistrationController extends Controller
     {
         $activeYear = AcademicYear::where('is_active', true)->first();
 
-        if (!$activeYear) {
+        if (! $activeYear) {
             return Redirect::back()->with('error', 'Pendaftaran belum dibuka.');
         }
 
@@ -79,7 +82,7 @@ class StudentRegistrationController extends Controller
         $activeYear = AcademicYear::where('is_active', true)->first();
         $registration = $this->getActiveRegistration($activeYear);
 
-        if (!$registration || $registration->status !== 'draft') {
+        if (! $registration || $registration->status !== 'draft') {
             return Redirect::back()->with('error', 'Tidak dapat mengubah biodata.');
         }
 
@@ -111,12 +114,12 @@ class StudentRegistrationController extends Controller
         $activeYear = AcademicYear::where('is_active', true)->first();
         $registration = $this->getActiveRegistration($activeYear);
 
-        if (!$registration || $registration->status !== 'draft') {
+        if (! $registration || $registration->status !== 'draft') {
             return Redirect::back()->with('error', 'Tidak dapat mengunggah dokumen.');
         }
 
         $validated = $request->validate([
-            'document_type' => ['required', 'string', 'max:100'],
+            'document_type' => ['required', 'string', 'exists:document_types,code'],
             'file' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
         ]);
 
@@ -124,10 +127,10 @@ class StudentRegistrationController extends Controller
             ->where('document_type', $validated['document_type'])
             ->exists()
         ) {
-            return Redirect::back()->with('error', 'Dokumen jenis ' . str_replace('_', ' ', $validated['document_type']) . ' sudah diupload.');
+            return Redirect::back()->with('error', 'Dokumen jenis '.str_replace('_', ' ', $validated['document_type']).' sudah diupload.');
         }
 
-        $path = $request->file('file')->store('documents/' . $registration->id, 'public');
+        $path = $request->file('file')->store('documents/'.$registration->id, 'public');
 
         StudentDocument::create([
             'registration_id' => $registration->id,
@@ -159,7 +162,7 @@ class StudentRegistrationController extends Controller
         $activeYear = AcademicYear::where('is_active', true)->first();
         $registration = $this->getActiveRegistration($activeYear);
 
-        if (!$registration) {
+        if (! $registration) {
             return Redirect::back()->with('error', 'Tidak ada pendaftaran aktif.');
         }
 
@@ -167,7 +170,7 @@ class StudentRegistrationController extends Controller
             return Redirect::back()->with('error', 'Pendaftaran sudah difinalisasi.');
         }
 
-        if (!$registration->studentBiodata) {
+        if (! $registration->studentBiodata) {
             return Redirect::back()->with('error', 'Lengkapi biodata terlebih dahulu.');
         }
 
@@ -179,7 +182,7 @@ class StudentRegistrationController extends Controller
 
     private function getActiveRegistration(?AcademicYear $activeYear): ?Registration
     {
-        if (!$activeYear) {
+        if (! $activeYear) {
             return null;
         }
 

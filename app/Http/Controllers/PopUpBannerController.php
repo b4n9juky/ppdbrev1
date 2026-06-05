@@ -67,7 +67,7 @@ class PopUpBannerController extends Controller
     public function toggleActive(PopUpBanner $popUpBanner): RedirectResponse
     {
         $popUpBanner->update([
-            'is_active' => !$popUpBanner->is_active,
+            'is_active' => ! $popUpBanner->is_active,
         ]);
 
         return Redirect::route('admin.pop-up-banners.index')

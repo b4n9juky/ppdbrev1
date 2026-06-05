@@ -13,7 +13,7 @@ class CheckRegistrationOpen
     {
         $activeYear = AcademicYear::where('is_active', true)->first();
 
-        if (!$activeYear) {
+        if (! $activeYear) {
             return redirect()->route('welcome')
                 ->with('error', 'Pendaftaran sedang ditutup.');
         }

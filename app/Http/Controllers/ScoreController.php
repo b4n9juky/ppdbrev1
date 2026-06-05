@@ -8,6 +8,7 @@ use App\Models\Registration;
 use App\Models\Subject;
 use App\Services\ScoringService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -20,7 +21,7 @@ class ScoreController extends Controller
 
     public function edit(Registration $registration): Response
     {
-        \Illuminate\Support\Facades\Gate::authorize('view', $registration);
+        Gate::authorize('view', $registration);
 
         $registration->load(['subjectScores.subject', 'studentBiodata', 'admissionPath']);
 
@@ -37,7 +38,7 @@ class ScoreController extends Controller
 
     public function update(ScoreStoreRequest $request, Registration $registration): RedirectResponse
     {
-        \Illuminate\Support\Facades\Gate::authorize('update', $registration);
+        Gate::authorize('update', $registration);
 
         $this->scoringService->saveScores($registration, $request->validated('scores'));
 

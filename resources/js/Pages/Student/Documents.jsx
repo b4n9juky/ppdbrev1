@@ -24,11 +24,13 @@ function isImage(filePath) {
     return /\.(jpg|jpeg|png|gif|webp)$/i.test(filePath);
 }
 
-export default function Documents({ registration, activeYear }) {
+export default function Documents({ registration, activeYear, documentTypes = [] }) {
     const isLocked = registration && registration.status !== 'draft';
     const docs = registration?.student_documents || [];
 
-    const [documentType, setDocumentType] = useState('foto');
+    const [documentType, setDocumentType] = useState(() => {
+        return documentTypes[0]?.code || 'foto';
+    });
     const [file, setFile] = useState(null);
     const [uploading, setUploading] = useState(false);
     const [previewUrl, setPreviewUrl] = useState(null);
@@ -57,7 +59,7 @@ export default function Documents({ registration, activeYear }) {
                 setFile(null);
                 setPreviewUrl(null);
                 setUploading(false);
-                setDocumentType('foto');
+                setDocumentType(documentTypes[0]?.code || 'foto');
                 // Reset file input
                 const input = document.getElementById('doc-file-input-subpage');
                 if (input) input.value = '';
@@ -139,12 +141,11 @@ export default function Documents({ registration, activeYear }) {
                                                     onChange={(e) => setDocumentType(e.target.value)}
                                                     className="block w-full rounded-xl border-gray-200 shadow-sm transition focus:border-[#468432] focus:ring-[#468432] text-sm"
                                                 >
-                                                    <option value="foto">Pas Foto</option>
-                                                    <option value="ijazah">Ijazah</option>
-                                                    <option value="ktp_ortu">KTP Orang Tua</option>
-                                                    <option value="kk">Kartu Keluarga</option>
-                                                    <option value="prestasi">Sertifikat Prestasi</option>
-                                                    <option value="other">Lainnya</option>
+                                                    {documentTypes.map((dt) => (
+                                                        <option key={dt.id || dt.code} value={dt.code}>
+                                                            {dt.name}
+                                                        </option>
+                                                    ))}
                                                 </select>
                                         </div>
 
@@ -220,7 +221,7 @@ export default function Documents({ registration, activeYear }) {
                                     <div className="grid gap-4 sm:grid-cols-2">
                                         {docs.map((doc) => {
                                             const typeColor = docTypeColors[doc.document_type] || docTypeColors.other;
-                                            const typeLabel = docTypeLabels[doc.document_type] || doc.document_type.replace('_', ' ');
+                                            const typeLabel = documentTypes.find(dt => dt.code === doc.document_type)?.name || docTypeLabels[doc.document_type] || doc.document_type.replace('_', ' ');
                                             const fileName = doc.file_path.split('/').pop();
                                             const fileIsImage = isImage(doc.file_path);
 

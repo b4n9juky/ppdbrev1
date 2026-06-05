@@ -2,23 +2,25 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AcademicYear;
 use App\Models\MadrasahSetting;
 use App\Models\Registration;
 use Barryvdh\DomPDF\Facade\Pdf;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class PrintController extends Controller
 {
-    public function registrationProof(Registration $registration): \Illuminate\Http\Response
+    public function registrationProof(Registration $registration): Response
     {
         return $this->generateRegistrationProofPdf($registration);
     }
 
-    public function studentRegistrationProof(): \Illuminate\Http\Response
+    public function studentRegistrationProof(): Response
     {
-        $activeYear = \App\Models\AcademicYear::where('is_active', true)->first();
-        if (!$activeYear) {
+        $activeYear = AcademicYear::where('is_active', true)->first();
+        if (! $activeYear) {
             abort(404, 'Tidak ada tahun ajaran aktif.');
         }
 
@@ -29,7 +31,7 @@ class PrintController extends Controller
         return $this->generateRegistrationProofPdf($registration);
     }
 
-    public function decisionLetter(Registration $registration): \Illuminate\Http\Response
+    public function decisionLetter(Registration $registration): Response
     {
         $registration->load([
             'studentBiodata',
@@ -54,10 +56,10 @@ class PrintController extends Controller
             'stamp_base64' => $stampBase64,
         ]);
 
-        return $pdf->stream('sk-kelulusan-' . str_pad($registration->id, 5, '0', STR_PAD_LEFT) . '.pdf');
+        return $pdf->stream('sk-kelulusan-'.str_pad($registration->id, 5, '0', STR_PAD_LEFT).'.pdf');
     }
 
-    private function generateRegistrationProofPdf(Registration $registration): \Illuminate\Http\Response
+    private function generateRegistrationProofPdf(Registration $registration): Response
     {
         $registration->load([
             'studentBiodata',
@@ -94,15 +96,17 @@ class PrintController extends Controller
             'qrcode' => $qrcodeBase64,
         ]);
 
-        return $pdf->stream('bukti-pendaftaran-' . str_pad($registration->id, 5, '0', STR_PAD_LEFT) . '.pdf');
+        return $pdf->stream('bukti-pendaftaran-'.str_pad($registration->id, 5, '0', STR_PAD_LEFT).'.pdf');
     }
 
     private function imageToBase64($path)
     {
         if ($path && Storage::disk('public')->exists($path)) {
             $fullPath = Storage::disk('public')->path($path);
-            return 'data:' . mime_content_type($fullPath) . ';base64,' . base64_encode(file_get_contents($fullPath));
+
+            return 'data:'.mime_content_type($fullPath).';base64,'.base64_encode(file_get_contents($fullPath));
         }
+
         return null;
     }
 }

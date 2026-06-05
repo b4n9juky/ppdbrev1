@@ -9,9 +9,10 @@ class ReleaseRegistrationRequest extends FormRequest
     public function authorize(): bool
     {
         $registration = $this->route('registration');
-        if (!$registration) {
+        if (! $registration) {
             return false;
         }
+
         return $this->user()->role === 'admin' || $registration->assigned_operator_id === $this->user()->id;
     }
 

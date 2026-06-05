@@ -2,22 +2,26 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AcademicYear;
-use App\Models\AdmissionPath;
-use App\Models\Registration;
-use App\Models\SubjectScore;
-use App\Models\Subject;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Redirect;
-use Inertia\Inertia;
-use Inertia\Response;
 use App\Http\Requests\ClaimRegistrationRequest;
 use App\Http\Requests\CompleteRegistrationRequest;
 use App\Http\Requests\ReleaseRegistrationRequest;
 use App\Http\Requests\UpdateRegistrationStatusRequest;
+use App\Models\AcademicYear;
+use App\Models\AdmissionPath;
+use App\Models\DocumentType;
+use App\Models\MadrasahSetting;
+use App\Models\Registration;
+use App\Models\Subject;
+use App\Models\SubjectScore;
 use App\Services\RegistrationAssignmentService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Redirect;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class RegistrationController extends Controller
 {
@@ -28,7 +32,7 @@ class RegistrationController extends Controller
         $paths = AdmissionPath::where('is_active', true)
             ->with(['registrations' => function ($q) use ($activeYear) {
                 $q->where('academic_year_id', $activeYear?->id)
-                  ->with(['studentBiodata', 'user']);
+                    ->with(['studentBiodata', 'user']);
             }])
             ->get()
             ->map(function ($path) {
@@ -62,6 +66,7 @@ class RegistrationController extends Controller
             'paths' => $paths,
         ]);
     }
+
     public function index(Request $request): Response
     {
         $activeYear = AcademicYear::where('is_active', true)->first();
@@ -88,7 +93,7 @@ class RegistrationController extends Controller
                 $q->where(function ($sub) use ($search) {
                     $sub->whereHas('studentBiodata', function ($sb) use ($search) {
                         $sb->where('full_name', 'like', "%{$search}%")
-                           ->orWhere('nisn', 'like', "%{$search}%");
+                            ->orWhere('nisn', 'like', "%{$search}%");
                     })->orWhereHas('user', function ($u) use ($search) {
                         $u->where('name', 'like', "%{$search}%");
                     })->orWhereHas('admissionPath', function ($ap) use ($search) {
@@ -120,6 +125,7 @@ class RegistrationController extends Controller
             'registrations' => $registrations,
             'paths' => $paths,
             'subjects' => $subjects,
+            'documentTypes' => DocumentType::all(),
             'filters' => [
                 'sort' => $sortField,
                 'direction' => $sortDirection,
@@ -132,14 +138,14 @@ class RegistrationController extends Controller
 
     public function updateStatus(UpdateRegistrationStatusRequest $request, Registration $registration): RedirectResponse
     {
-        \Illuminate\Support\Facades\Gate::authorize('update', $registration);
+        Gate::authorize('update', $registration);
 
         if (in_array($request->status, ['accepted', 'reserve'])) {
             $passingScore = $registration->academicYear?->passing_score ?? 0.00;
             $totalScore = $registration->total_score ?? 0.00;
 
             if ($totalScore < $passingScore) {
-                return Redirect::back()->with('error', 'Pendaftar tidak dapat diberikan status lulus/cadangan karena total nilai (' . number_format($totalScore, 2) . ') kurang dari nilai minimal kelulusan (' . number_format($passingScore, 2) . ').');
+                return Redirect::back()->with('error', 'Pendaftar tidak dapat diberikan status lulus/cadangan karena total nilai ('.number_format($totalScore, 2).') kurang dari nilai minimal kelulusan ('.number_format($passingScore, 2).').');
             }
 
             if ($registration->studentDocuments()->count() < 1) {
@@ -156,12 +162,12 @@ class RegistrationController extends Controller
         ];
 
         return Redirect::route('admin.registrations.index')
-            ->with('success', 'Status pendaftar berhasil ' . ($statusLabels[$request->status] ?? 'diubah') . '.');
+            ->with('success', 'Status pendaftar berhasil '.($statusLabels[$request->status] ?? 'diubah').'.');
     }
 
     public function reset(Request $request, Registration $registration): RedirectResponse
     {
-        \Illuminate\Support\Facades\Gate::authorize('update', $registration);
+        Gate::authorize('update', $registration);
 
         if ($registration->status === 'draft') {
             return Redirect::back()->with('error', 'Pendaftar sudah dalam status draft.');
@@ -182,6 +188,7 @@ class RegistrationController extends Controller
     {
         try {
             $service->claim($registration, $request->user());
+
             return Redirect::route('admin.registrations.index')
                 ->with('success', 'Pendaftar berhasil Anda ambil untuk diproses.');
         } catch (Exception $e) {
@@ -193,6 +200,7 @@ class RegistrationController extends Controller
     {
         try {
             $service->complete($registration, $request->user());
+
             return Redirect::route('admin.registrations.index')
                 ->with('success', 'Proses pendaftar berhasil diselesaikan.');
         } catch (Exception $e) {
@@ -204,6 +212,7 @@ class RegistrationController extends Controller
     {
         try {
             $service->release($registration, $request->user());
+
             return Redirect::route('admin.registrations.index')
                 ->with('success', 'Penugasan pendaftar berhasil dilepaskan.');
         } catch (Exception $e) {
@@ -214,7 +223,7 @@ class RegistrationController extends Controller
     public function downloadReport(): \Illuminate\Http\Response
     {
         $activeYear = AcademicYear::where('is_active', true)->first();
-        if (!$activeYear) {
+        if (! $activeYear) {
             abort(404, 'Tidak ada tahun ajaran aktif.');
         }
 
@@ -224,14 +233,14 @@ class RegistrationController extends Controller
             ->orderBy('id', 'asc')
             ->get();
 
-        $madrasah = \App\Models\MadrasahSetting::first();
+        $madrasah = MadrasahSetting::first();
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.registrations-report', [
+        $pdf = Pdf::loadView('pdf.registrations-report', [
             'registrations' => $registrations,
             'activeYear' => $activeYear,
             'madrasah' => $madrasah,
         ]);
 
-        return $pdf->download('laporan-pendaftaran-' . str_replace('/', '-', $activeYear->name) . '.pdf');
+        return $pdf->download('laporan-pendaftaran-'.str_replace('/', '-', $activeYear->name).'.pdf');
     }
 }

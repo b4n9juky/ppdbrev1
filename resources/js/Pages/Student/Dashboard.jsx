@@ -75,7 +75,7 @@ const summaryItems = [
     { label: 'Asal Sekolah', key: 'student_biodata.previous_school' },
 ];
 
-export default function Dashboard({ activeYear, registration, madrasah }) {
+export default function Dashboard({ activeYear, registration, madrasah, documentTypes = [] }) {
     const bio = registration?.student_biodata;
     const docs = registration?.student_documents || [];
     const scores = registration?.subject_scores || [];
@@ -323,7 +323,7 @@ export default function Dashboard({ activeYear, registration, madrasah }) {
                                                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                                                         {docs.map((doc) => {
                                                             const typeColor = docTypeColors[doc.document_type] || docTypeColors.other;
-                                                            const typeLabel = docTypeLabels[doc.document_type] || doc.document_type.replace('_', ' ');
+                                                            const typeLabel = documentTypes.find(dt => dt.code === doc.document_type)?.name || docTypeLabels[doc.document_type] || doc.document_type.replace('_', ' ');
                                                             const fileName = doc.file_path.split('/').pop();
                                                             const fileIsImage = isImage(doc.file_path);
 

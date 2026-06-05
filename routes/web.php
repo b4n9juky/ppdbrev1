@@ -4,6 +4,7 @@ use App\Http\Controllers\AcademicYearController;
 use App\Http\Controllers\ActivityRequirementController;
 use App\Http\Controllers\ActivityScheduleController;
 use App\Http\Controllers\AdmissionPathController;
+use App\Http\Controllers\BackupController;
 use App\Http\Controllers\DocumentTypeController;
 use App\Http\Controllers\MadrasahSettingController;
 use App\Http\Controllers\PopUpBannerController;
@@ -189,6 +190,13 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
         ->except(['show', 'create', 'edit']);
     Route::patch('/pop-up-banners/{popUpBanner}/toggle-active', [PopUpBannerController::class, 'toggleActive'])
         ->name('pop-up-banners.toggle-active');
+
+    // Backup & Restore
+    Route::get('/backups', [BackupController::class, 'index'])->name('backups.index');
+    Route::post('/backups', [BackupController::class, 'store'])->name('backups.store');
+    Route::get('/backups/download/{filename}', [BackupController::class, 'download'])->name('backups.download');
+    Route::post('/backups/restore', [BackupController::class, 'restore'])->name('backups.restore');
+    Route::delete('/backups/{filename}', [BackupController::class, 'destroy'])->name('backups.destroy');
 
     // Registration routes moved below to allow operator role as well
 });

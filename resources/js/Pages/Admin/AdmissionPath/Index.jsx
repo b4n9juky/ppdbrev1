@@ -83,8 +83,8 @@ export default function Index({ paths }) {
             <Head title="Jalur Pendaftaran" />
 
             <div className="py-8">
-                <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
-                    <div className="mb-8 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+                <div className="px-4 sm:px-6 lg:px-8">
+                    <div className="mb-8 mx-auto max-w-2xl overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
                         <div className="border-b border-gray-100 bg-gradient-to-r from-violet-50 to-purple-50 px-6 py-4">
                             <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900">
                                 <svg className="h-5 w-5 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -154,7 +154,7 @@ export default function Index({ paths }) {
                         </form>
                     </div>
 
-                    <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+                    <div className="overflow-x-auto rounded-2xl border border-gray-100 bg-white shadow-sm">
                         <div className="border-b border-gray-100 bg-gray-50/50 px-6 py-4">
                             <h3 className="text-base font-semibold text-gray-900">Daftar Jalur</h3>
                         </div>

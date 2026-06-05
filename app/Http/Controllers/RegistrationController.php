@@ -11,6 +11,7 @@ use App\Models\AdmissionPath;
 use App\Models\DocumentType;
 use App\Models\MadrasahSetting;
 use App\Models\Registration;
+use App\Models\StudentBiodata;
 use App\Models\Subject;
 use App\Models\SubjectScore;
 use App\Services\RegistrationAssignmentService;
@@ -32,6 +33,7 @@ class RegistrationController extends Controller
         $paths = AdmissionPath::where('is_active', true)
             ->with(['registrations' => function ($q) use ($activeYear) {
                 $q->where('academic_year_id', $activeYear?->id)
+                    ->withSum('subjectScores as total_score', 'scores')
                     ->with(['studentBiodata', 'user']);
             }])
             ->get()
@@ -77,18 +79,19 @@ class RegistrationController extends Controller
         $perPage = (int) $request->query('per_page', 15);
         $processingStatus = $request->query('processing_status', 'all');
 
-        $registrations = Registration::with([
-            'studentBiodata',
-            'admissionPath',
-            'user',
-            'studentDocuments',
-            'assignedOperator',
-            'subjectScores.subject',
-        ])
+        $registrations = Registration::withSum('subjectScores as total_score', 'scores')
+            ->with([
+                'studentBiodata',
+                'admissionPath',
+                'user',
+                'studentDocuments',
+                'assignedOperator',
+                'subjectScores.subject',
+            ])
+            ->where('processing_status', '!=', 'selesai')
             ->when($activeYear, fn ($q) => $q->where('academic_year_id', $activeYear->id))
             ->when($processingStatus === 'baru', fn ($q) => $q->where('processing_status', 'baru'))
             ->when($processingStatus === 'my_processing', fn ($q) => $q->where('processing_status', 'diproses')->where('assigned_operator_id', auth()->id()))
-            ->when($processingStatus === 'selesai', fn ($q) => $q->where('processing_status', 'selesai'))
             ->when($search, function ($q) use ($search) {
                 $q->where(function ($sub) use ($search) {
                     $sub->whereHas('studentBiodata', function ($sb) use ($search) {
@@ -140,20 +143,30 @@ class RegistrationController extends Controller
     {
         Gate::authorize('update', $registration);
 
-        if (in_array($request->status, ['accepted', 'reserve'])) {
-            $passingScore = $registration->academicYear?->passing_score ?? 0.00;
-            $totalScore = $registration->total_score ?? 0.00;
+        $totalScore = $registration->loadSum('subjectScores as total_score', 'scores')->total_score ?? 0.00;
+        $passingScore = $registration->academicYear?->passing_score ?? 0.00;
+        $finalStatus = $request->status;
 
+        if ($request->status === 'accepted' || $request->status === 'reserve') {
             if ($totalScore < $passingScore) {
-                return Redirect::back()->with('error', 'Pendaftar tidak dapat diberikan status lulus/cadangan karena total nilai ('.number_format($totalScore, 2).') kurang dari nilai minimal kelulusan ('.number_format($passingScore, 2).').');
-            }
+                $finalStatus = 'rejected';
+            } else {
+                if ($registration->studentDocuments()->count() < 1) {
+                    return Redirect::back()->with('error', 'Pendaftar tidak dapat diberikan status lulus/cadangan karena belum mengunggah minimal 1 file dokumen.');
+                }
 
-            if ($registration->studentDocuments()->count() < 1) {
-                return Redirect::back()->with('error', 'Pendaftar tidak dapat diberikan status lulus/cadangan karena belum mengunggah minimal 1 file dokumen.');
+                if ($request->status === 'accepted') {
+                    $acceptedCount = $registration->admissionPath->registrations()
+                        ->where('status', 'accepted')
+                        ->count();
+                    if ($acceptedCount >= $registration->admissionPath->quota) {
+                        $finalStatus = 'reserve';
+                    }
+                }
             }
         }
 
-        $registration->update(['status' => $request->status]);
+        $registration->update(['status' => $finalStatus]);
 
         $statusLabels = [
             'accepted' => 'diterima',
@@ -161,7 +174,16 @@ class RegistrationController extends Controller
             'rejected' => 'ditolak',
         ];
 
-        return Redirect::route('admin.registrations.index')
+        if ($finalStatus !== $request->status) {
+            $autoLabels = [
+                'rejected' => 'ditolak (nilai tidak memenuhi syarat minimal)',
+                'reserve' => 'dicadangkan (kuota jalur telah terpenuhi)',
+            ];
+            return Redirect::back()
+                ->with('success', 'Pendaftar otomatis '.($autoLabels[$finalStatus] ?? 'diubah').'.');
+        }
+
+        return Redirect::back()
             ->with('success', 'Status pendaftar berhasil '.($statusLabels[$request->status] ?? 'diubah').'.');
     }
 
@@ -178,10 +200,42 @@ class RegistrationController extends Controller
         $registration->update([
             'status' => 'draft',
             'total_score' => null,
+            'processing_status' => 'baru',
+            'assigned_operator_id' => null,
+            'assigned_at' => null,
         ]);
 
-        return Redirect::route('admin.registrations.index')
-            ->with('success', 'Pendaftar berhasil direset. Siswa dapat memperbarui data kembali.');
+        return Redirect::back()
+            ->with('success', 'Pendaftar berhasil direset dan kembali ke halaman pendaftar.');
+    }
+
+    public function updateBiodata(Request $request, Registration $registration): RedirectResponse
+    {
+        Gate::authorize('update', $registration);
+
+        $validated = $request->validate([
+            'nisn' => ['required', 'numeric', 'digits:10'],
+            'full_name' => ['required', 'string', 'max:255'],
+            'gender' => ['required', 'in:male,female'],
+            'birth_place' => ['required', 'string', 'max:255'],
+            'birth_date' => ['required', 'date'],
+            'address' => ['required', 'string', 'max:1000'],
+            'phone_number' => ['required', 'regex:/^[0-9]{11,13}$/'],
+            'previous_school' => ['required', 'string', 'max:255'],
+        ], [
+            'nisn.numeric' => 'NISN harus berupa angka.',
+            'nisn.digits' => 'NISN harus terdiri dari 10 digit.',
+            'phone_number.required' => 'Nomor kontak / WhatsApp wajib diisi.',
+            'phone_number.regex' => 'Nomor kontak / WhatsApp harus berupa angka dengan panjang antara 11 sampai 13 digit.',
+        ]);
+
+        StudentBiodata::updateOrCreate(
+            ['registration_id' => $registration->id],
+            $validated
+        );
+
+        return Redirect::back()
+            ->with('success', 'Biodata pendaftar berhasil diperbarui.');
     }
 
     public function claim(ClaimRegistrationRequest $request, Registration $registration, RegistrationAssignmentService $service): RedirectResponse
@@ -201,7 +255,7 @@ class RegistrationController extends Controller
         try {
             $service->complete($registration, $request->user());
 
-            return Redirect::route('admin.registrations.index')
+            return Redirect::back()
                 ->with('success', 'Proses pendaftar berhasil diselesaikan.');
         } catch (Exception $e) {
             return Redirect::back()->with('error', $e->getMessage());
@@ -213,7 +267,7 @@ class RegistrationController extends Controller
         try {
             $service->release($registration, $request->user());
 
-            return Redirect::route('admin.registrations.index')
+            return Redirect::back()
                 ->with('success', 'Penugasan pendaftar berhasil dilepaskan.');
         } catch (Exception $e) {
             return Redirect::back()->with('error', $e->getMessage());
@@ -227,7 +281,8 @@ class RegistrationController extends Controller
             abort(404, 'Tidak ada tahun ajaran aktif.');
         }
 
-        $registrations = Registration::with(['studentBiodata', 'admissionPath', 'user'])
+        $registrations = Registration::withSum('subjectScores as total_score', 'scores')
+            ->with(['studentBiodata', 'admissionPath', 'user'])
             ->where('academic_year_id', $activeYear->id)
             ->where('status', '!=', 'draft')
             ->orderBy('id', 'asc')

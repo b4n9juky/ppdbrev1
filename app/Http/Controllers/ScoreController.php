@@ -23,6 +23,7 @@ class ScoreController extends Controller
     {
         Gate::authorize('view', $registration);
 
+        $registration->loadSum('subjectScores as total_score', 'scores');
         $registration->load(['subjectScores.subject', 'studentBiodata', 'admissionPath']);
 
         $activeYear = AcademicYear::where('is_active', true)->first();
@@ -40,7 +41,7 @@ class ScoreController extends Controller
     {
         Gate::authorize('update', $registration);
 
-        $this->scoringService->saveScores($registration, $request->validated('scores'));
+        $this->scoringService->saveScores($registration, $request->validated()['scores']);
 
         return Redirect::route('admin.registrations.index')
             ->with('success', 'Nilai seleksi berhasil disimpan.');

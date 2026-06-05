@@ -7,7 +7,7 @@ export default function Scores({ registration, subjects }) {
 
     const existingScores = {};
     (registration.subject_scores || []).forEach((s) => {
-        existingScores[s.subject_id] = s.ijazah_score;
+        existingScores[s.subject_id] = s.scores;
     });
 
     const [scores, setScores] = useState(() => {
@@ -26,7 +26,7 @@ export default function Scores({ registration, subjects }) {
 
         const payload = subjects.map((s) => ({
             subject_id: s.id,
-            ijazah_score: scores[s.id] !== '' ? parseFloat(scores[s.id]) : null,
+            scores: scores[s.id] !== '' ? parseFloat(scores[s.id]) : null,
         }));
 
         router.patch(route('student.scores.update'), { scores: payload }, {

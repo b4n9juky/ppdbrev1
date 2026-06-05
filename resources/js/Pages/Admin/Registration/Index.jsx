@@ -3,6 +3,7 @@ import QuotaMonitor from '@/Components/admin/QuotaMonitor';
 import Dropdown from '@/Components/Dropdown';
 import Modal from '@/Components/Modal';
 import { Head, Link, router, usePage } from '@inertiajs/react';
+import { FileText, Star, ChevronDown, UserPlus, ArrowRight, Eye, User, X, Pencil } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 
 const statusConfig = {
@@ -49,6 +50,19 @@ export default function Index({ registrations, paths, filters, subjects, documen
 
     const [search, setSearch] = useState(filters.search || '');
     const [selectedRegForDocs, setSelectedRegForDocs] = useState(null);
+    const [selectedRegForBiodata, setSelectedRegForBiodata] = useState(null);
+    const [isEditingBiodata, setIsEditingBiodata] = useState(false);
+    const [biodataForm, setBiodataForm] = useState({
+        nisn: '',
+        full_name: '',
+        gender: '',
+        birth_place: '',
+        birth_date: '',
+        address: '',
+        phone_number: '',
+        previous_school: '',
+    });
+    const [isSavingBiodata, setIsSavingBiodata] = useState(false);
     const [selectedRegForActions, setSelectedRegForActions] = useState(null);
     const [selectedRegForScores, setSelectedRegForScores] = useState(null);
     const [scoresData, setScoresData] = useState([]);
@@ -60,32 +74,70 @@ export default function Index({ registrations, paths, filters, subjects, documen
             const existingScores = {};
             const userScores = selectedRegForScores.subject_scores || selectedRegForScores.subjectScores || [];
             userScores.forEach((s) => {
-                existingScores[s.subject_id] = {
-                    ijazah_score: s.ijazah_score ?? '',
-                    test_score: s.test_score ?? '',
-                };
+                existingScores[s.subject_id] = s.scores ?? '';
             });
             setScoresData((subjects || []).map((s) => ({
                 subject_id: s.id,
-                ijazah_score: existingScores[s.id]?.ijazah_score ?? '',
-                test_score: existingScores[s.id]?.test_score ?? '',
+                scores: existingScores[s.id] ?? '',
             })));
         } else {
             setScoresData([]);
         }
     }, [selectedRegForScores, subjects]);
 
-    function handleScoreChange(index, field, value) {
+    useEffect(() => {
+        if (selectedRegForBiodata) {
+            const bio = selectedRegForBiodata.student_biodata || {};
+            setBiodataForm({
+                nisn: bio.nisn || '',
+                full_name: bio.full_name || '',
+                gender: bio.gender || '',
+                birth_place: bio.birth_place || '',
+                birth_date: bio.birth_date ? bio.birth_date.split('T')[0] : '',
+                address: bio.address || '',
+                phone_number: bio.phone_number || '',
+                previous_school: bio.previous_school || '',
+            });
+            setIsEditingBiodata(false);
+        }
+    }, [selectedRegForBiodata]);
+
+    function handleBiodataChange(field, value) {
+        setBiodataForm(prev => ({ ...prev, [field]: value }));
+    }
+
+    function handleSaveBiodata(e) {
+        e.preventDefault();
+        setIsSavingBiodata(true);
+        router.patch(route('admin.registrations.biodata.update', selectedRegForBiodata.id), biodataForm, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setIsEditingBiodata(false);
+                setIsSavingBiodata(false);
+            },
+            onError: () => {
+                setIsSavingBiodata(false);
+            }
+        });
+    }
+
+    function handleScoreChange(index, value) {
         const updated = [...scoresData];
-        updated[index] = { ...updated[index], [field]: value };
+        updated[index] = { ...updated[index], scores: value };
         setScoresData(updated);
     }
 
     function handleSaveScores(e) {
         e.preventDefault();
         setIsSavingScores(true);
+
+        const payload = scoresData.map((s) => ({
+            subject_id: s.subject_id,
+            scores: s.scores !== '' ? parseFloat(s.scores) : null,
+        }));
+
         router.patch(route('admin.registrations.scores.update', selectedRegForScores.id), {
-            scores: scoresData
+            scores: payload
         }, {
             preserveScroll: true,
             onSuccess: () => {
@@ -238,7 +290,6 @@ export default function Index({ registrations, paths, filters, subjects, documen
                                     { key: 'all', label: 'Semua Data' },
                                     { key: 'baru', label: 'Belum Diproses' },
                                     { key: 'my_processing', label: 'Sedang Saya Proses' },
-                                    { key: 'selesai', label: 'Selesai' },
                                 ].map((tab) => {
                                     const isActive = (filters.processing_status || 'all') === tab.key;
                                     return (
@@ -408,25 +459,36 @@ export default function Index({ registrations, paths, filters, subjects, documen
                                                                 {reg.status !== 'draft' && (
                                                                     <button
                                                                         onClick={() => setSelectedRegForDocs(reg)}
-                                                                        className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 shadow-sm transition hover:bg-emerald-100"
+                                                                        className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 shadow-xs transition-all hover:bg-emerald-100 hover:shadow-sm active:translate-y-px"
                                                                     >
-                                                                        Berkas ({reg.student_documents?.length || 0})
+                                                                        <FileText className="h-3.5 w-3.5 text-emerald-500" />
+                                                                        Berkas
+                                                                        <span className="ml-0.5 inline-flex items-center justify-center rounded-md bg-emerald-200/60 px-1.5 py-0.5 text-[10px] font-bold text-emerald-800">{reg.student_documents?.length || 0}</span>
                                                                     </button>
                                                                 )}
                                                                 
                                                                 <button
-                                                                    onClick={() => setSelectedRegForScores(reg)}
-                                                                    className="inline-flex items-center gap-1 rounded-lg border border-violet-200 bg-violet-50 px-2.5 py-1.5 text-xs font-semibold text-violet-700 shadow-sm transition hover:bg-violet-100"
+                                                                    onClick={() => setSelectedRegForBiodata(reg)}
+                                                                    className="inline-flex items-center gap-1.5 rounded-xl border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700 shadow-xs transition-all hover:bg-sky-100 hover:shadow-sm active:translate-y-px"
                                                                 >
+                                                                    <User className="h-3.5 w-3.5 text-sky-500" />
+                                                                    Biodata
+                                                                </button>
+                                                                
+                                                                <button
+                                                                    onClick={() => setSelectedRegForScores(reg)}
+                                                                    className="inline-flex items-center gap-1.5 rounded-xl border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-700 shadow-xs transition-all hover:bg-violet-100 hover:shadow-sm active:translate-y-px"
+                                                                >
+                                                                    <Star className="h-3.5 w-3.5 text-violet-500" />
                                                                     Nilai
                                                                 </button>
                                                                 
                                                                 <button
                                                                     onClick={() => setSelectedRegForActions(reg)}
-                                                                    className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50"
+                                                                    className="inline-flex items-center gap-1 rounded-xl border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-600 shadow-xs transition-all hover:bg-gray-50 hover:shadow-sm active:translate-y-px"
                                                                 >
                                                                     Pilihan
-                                                                    <svg className="h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                                                                    <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
                                                                 </button>
                                                             </div>
                                                         )}
@@ -438,8 +500,9 @@ export default function Index({ registrations, paths, filters, subjects, documen
                                                                     <button 
                                                                         onClick={() => handleClaim(reg)} 
                                                                         disabled={reg.status === 'draft'}
-                                                                        className="rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:from-blue-600 hover:to-indigo-700 disabled:from-gray-300 disabled:to-gray-400 disabled:text-gray-500 disabled:cursor-not-allowed disabled:shadow-none"
+                                                                        className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-sm transition-all hover:from-blue-600 hover:to-indigo-700 hover:shadow-md active:translate-y-px disabled:from-gray-300 disabled:to-gray-400 disabled:text-gray-500 disabled:cursor-not-allowed disabled:shadow-none"
                                                                     >
+                                                                        <UserPlus className="h-3.5 w-3.5" />
                                                                         Ambil
                                                                     </button>
                                                                 )}
@@ -448,46 +511,62 @@ export default function Index({ registrations, paths, filters, subjects, documen
                                                                     <>
                                                                         <button
                                                                             onClick={() => setSelectedRegForScores(reg)}
-                                                                            className="inline-flex items-center gap-1 rounded-lg bg-blue-50 border border-blue-200 px-2.5 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100"
+                                                                            className="inline-flex items-center gap-1.5 rounded-xl bg-blue-50 border border-blue-200 px-3 py-1.5 text-xs font-semibold text-blue-700 shadow-xs transition-all hover:bg-blue-100 hover:shadow-sm active:translate-y-px"
                                                                         >
+                                                                            <ArrowRight className="h-3.5 w-3.5 text-blue-500" />
                                                                             Lanjutkan
                                                                         </button>
                                                                         
                                                                         <button
                                                                             onClick={() => setSelectedRegForDocs(reg)}
-                                                                            className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 shadow-sm transition hover:bg-emerald-100"
+                                                                            className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 shadow-xs transition-all hover:bg-emerald-100 hover:shadow-sm active:translate-y-px"
                                                                         >
-                                                                            Berkas ({reg.student_documents?.length || 0})
+                                                                            <FileText className="h-3.5 w-3.5 text-emerald-500" />
+                                                                            Berkas
+                                                                            <span className="ml-0.5 inline-flex items-center justify-center rounded-md bg-emerald-200/60 px-1.5 py-0.5 text-[10px] font-bold text-emerald-800">{reg.student_documents?.length || 0}</span>
+                                                                        </button>
+                                                                        
+                                                                        <button
+                                                                            onClick={() => setSelectedRegForBiodata(reg)}
+                                                                            className="inline-flex items-center gap-1.5 rounded-xl border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700 shadow-xs transition-all hover:bg-sky-100 hover:shadow-sm active:translate-y-px"
+                                                                        >
+                                                                            <User className="h-3.5 w-3.5 text-sky-500" />
+                                                                            Biodata
                                                                         </button>
                                                                         
                                                                         <button
                                                                             onClick={() => setSelectedRegForActions(reg)}
-                                                                            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50"
+                                                                            className="inline-flex items-center gap-1 rounded-xl border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-600 shadow-xs transition-all hover:bg-gray-50 hover:shadow-sm active:translate-y-px"
                                                                         >
                                                                             Aksi
-                                                                            <svg className="h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                                                                            <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
                                                                         </button>
                                                                     </>
                                                                 )}
 
                                                                 {reg.processing_status === 'diproses' && reg.assigned_operator_id !== currentUser.id && (
-                                                                    <span className="text-xs font-medium text-gray-500 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5">
+                                                                    <span className="text-xs font-medium text-gray-500 bg-gray-50 border border-gray-200 rounded-xl px-2.5 py-1.5">
                                                                         Sedang diproses operator lain
                                                                     </span>
                                                                 )}
 
                                                                 {reg.processing_status === 'selesai' && (
                                                                     <>
-                                                                        <button onClick={() => setSelectedRegForDocs(reg)} className="inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50">
+                                                                        <button onClick={() => setSelectedRegForBiodata(reg)} className="inline-flex items-center gap-1.5 rounded-xl border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700 shadow-xs transition-all hover:bg-sky-100 hover:shadow-sm active:translate-y-px">
+                                                                            <User className="h-3.5 w-3.5 text-sky-500" />
+                                                                            Biodata
+                                                                        </button>
+                                                                        <button onClick={() => setSelectedRegForDocs(reg)} className="inline-flex items-center gap-1.5 rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-xs transition-all hover:bg-gray-50 hover:shadow-sm active:translate-y-px">
+                                                                            <Eye className="h-3.5 w-3.5 text-gray-500" />
                                                                             Lihat
                                                                         </button>
                                                                         {reg.status !== 'draft' && (
                                                                             <button
                                                                                 onClick={() => setSelectedRegForActions(reg)}
-                                                                                className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50"
+                                                                                className="inline-flex items-center gap-1 rounded-xl border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-600 shadow-xs transition-all hover:bg-gray-50 hover:shadow-sm active:translate-y-px"
                                                                             >
                                                                                 Pilihan
-                                                                                <svg className="h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                                                                                <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
                                                                             </button>
                                                                         )}
                                                                     </>
@@ -710,6 +789,209 @@ export default function Index({ registrations, paths, filters, subjects, documen
                 </div>
             )}
 
+            {/* Modal for biodata detail */}
+            {selectedRegForBiodata && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => { setSelectedRegForBiodata(null); setIsEditingBiodata(false); }}>
+                    <div className="relative w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl transition-all" onClick={(e) => e.stopPropagation()}>
+                        {/* Header */}
+                        <div className="border-b border-gray-100 bg-gradient-to-r from-sky-50 to-blue-50 px-6 py-4 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 to-blue-500 shadow-sm shadow-sky-200">
+                                    <User className="h-5 w-5 text-white" />
+                                </div>
+                                <div>
+                                    <h3 className="text-base font-bold text-gray-900">Biodata Pendaftar</h3>
+                                    <p className="text-xs text-gray-500">
+                                        {isEditingBiodata ? 'Edit data diri pendaftar' : 'Data diri calon peserta didik'}
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => { setSelectedRegForBiodata(null); setIsEditingBiodata(false); }}
+                                className="rounded-lg p-1.5 text-gray-400 hover:bg-white/60 hover:text-gray-600 transition"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-6 max-h-[65vh] overflow-y-auto">
+                            {(() => {
+                                const bio = selectedRegForBiodata.student_biodata;
+                                if (!bio && !isEditingBiodata) {
+                                    return (
+                                        <div className="text-center py-12">
+                                            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-gray-50 text-gray-400">
+                                                <User className="h-6 w-6" />
+                                            </div>
+                                            <p className="text-sm font-medium text-gray-500">Siswa belum melengkapi biodata.</p>
+                                            <button
+                                                onClick={() => setIsEditingBiodata(true)}
+                                                className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 px-4 py-2 text-xs font-bold text-white shadow-sm transition-all hover:from-sky-600 hover:to-blue-700 active:translate-y-px"
+                                            >
+                                                <Pencil className="h-3.5 w-3.5" />
+                                                Isi Biodata
+                                            </button>
+                                        </div>
+                                    );
+                                }
+
+                                if (!isEditingBiodata && bio) {
+                                    const items = [
+                                        { label: 'NISN', value: bio.nisn },
+                                        { label: 'Nama Lengkap', value: bio.full_name },
+                                        { label: 'Jenis Kelamin', value: bio.gender === 'male' ? 'Laki-laki' : bio.gender === 'female' ? 'Perempuan' : bio.gender },
+                                        { label: 'Tempat Lahir', value: bio.birth_place },
+                                        { label: 'Tanggal Lahir', value: bio.birth_date },
+                                        { label: 'No. Telepon', value: bio.phone_number },
+                                        { label: 'Asal Sekolah', value: bio.previous_school },
+                                        { label: 'Alamat', value: bio.address },
+                                    ];
+                                    return (
+                                        <div className="divide-y divide-gray-50">
+                                            {items.map((item, i) => (
+                                                <div key={i} className="flex items-start gap-4 py-3">
+                                                    <span className="min-w-[120px] text-xs font-semibold text-gray-500 uppercase tracking-wider">{item.label}</span>
+                                                    <span className="text-sm font-medium text-gray-900 break-words">
+                                                        {item.value || <span className="text-gray-300 italic">-</span>}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    );
+                                }
+
+                                return (
+                                    <form onSubmit={handleSaveBiodata} className="space-y-4">
+                                        <div className="grid gap-4 sm:grid-cols-2">
+                                            <div>
+                                                <label className="block text-xs font-semibold text-gray-600">NISN</label>
+                                                <input
+                                                    type="text"
+                                                    inputMode="numeric"
+                                                    value={biodataForm.nisn}
+                                                    onChange={(e) => handleBiodataChange('nisn', e.target.value.replace(/\D/g, ''))}
+                                                    className="mt-1 block w-full rounded-xl border-gray-200 shadow-sm text-sm focus:border-sky-400 focus:ring-sky-100"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-semibold text-gray-600">Nama Lengkap</label>
+                                                <input
+                                                    type="text"
+                                                    value={biodataForm.full_name}
+                                                    onChange={(e) => handleBiodataChange('full_name', e.target.value)}
+                                                    className="mt-1 block w-full rounded-xl border-gray-200 shadow-sm text-sm focus:border-sky-400 focus:ring-sky-100"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="grid gap-4 sm:grid-cols-3">
+                                            <div>
+                                                <label className="block text-xs font-semibold text-gray-600">Jenis Kelamin</label>
+                                                <select
+                                                    value={biodataForm.gender}
+                                                    onChange={(e) => handleBiodataChange('gender', e.target.value)}
+                                                    className="mt-1 block w-full rounded-xl border-gray-200 shadow-sm text-sm focus:border-sky-400 focus:ring-sky-100"
+                                                >
+                                                    <option value="">Pilih</option>
+                                                    <option value="male">Laki-laki</option>
+                                                    <option value="female">Perempuan</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-semibold text-gray-600">Tempat Lahir</label>
+                                                <input
+                                                    type="text"
+                                                    value={biodataForm.birth_place}
+                                                    onChange={(e) => handleBiodataChange('birth_place', e.target.value)}
+                                                    className="mt-1 block w-full rounded-xl border-gray-200 shadow-sm text-sm focus:border-sky-400 focus:ring-sky-100"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-semibold text-gray-600">Tanggal Lahir</label>
+                                                <input
+                                                    type="date"
+                                                    value={biodataForm.birth_date}
+                                                    onChange={(e) => handleBiodataChange('birth_date', e.target.value)}
+                                                    className="mt-1 block w-full rounded-xl border-gray-200 shadow-sm text-sm focus:border-sky-400 focus:ring-sky-100"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-600">Alamat</label>
+                                            <textarea
+                                                value={biodataForm.address}
+                                                onChange={(e) => handleBiodataChange('address', e.target.value)}
+                                                rows={3}
+                                                className="mt-1 block w-full rounded-xl border-gray-200 shadow-sm text-sm focus:border-sky-400 focus:ring-sky-100"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-600">No. Telepon / WA</label>
+                                            <input
+                                                type="text"
+                                                value={biodataForm.phone_number}
+                                                onChange={(e) => handleBiodataChange('phone_number', e.target.value.replace(/[^0-9]/g, ''))}
+                                                className="mt-1 block w-full rounded-xl border-gray-200 shadow-sm text-sm focus:border-sky-400 focus:ring-sky-100"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-600">Asal Sekolah</label>
+                                            <input
+                                                type="text"
+                                                value={biodataForm.previous_school}
+                                                onChange={(e) => handleBiodataChange('previous_school', e.target.value)}
+                                                className="mt-1 block w-full rounded-xl border-gray-200 shadow-sm text-sm focus:border-sky-400 focus:ring-sky-100"
+                                            />
+                                        </div>
+                                    </form>
+                                );
+                            })()}
+                        </div>
+
+                        {/* Footer */}
+                        <div className="border-t border-gray-100 bg-gray-50/50 px-6 py-4 flex items-center justify-between gap-3">
+                            <div>
+                                {isEditingBiodata ? (
+                                    <button
+                                        onClick={() => setIsEditingBiodata(false)}
+                                        className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs font-semibold text-gray-600 shadow-sm transition hover:bg-gray-50"
+                                    >
+                                        Batal
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={() => { setSelectedRegForBiodata(null); setIsEditingBiodata(false); }}
+                                        className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs font-semibold text-gray-600 shadow-sm transition hover:bg-gray-50"
+                                    >
+                                        Tutup
+                                    </button>
+                                )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                                {!isEditingBiodata && (
+                                    <button
+                                        onClick={() => setIsEditingBiodata(true)}
+                                        className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 px-4 py-2 text-xs font-bold text-white shadow-sm transition-all hover:from-sky-600 hover:to-blue-700 active:translate-y-px"
+                                    >
+                                        <Pencil className="h-3.5 w-3.5" />
+                                        Edit Biodata
+                                    </button>
+                                )}
+                                {isEditingBiodata && (
+                                    <button
+                                        onClick={handleSaveBiodata}
+                                        disabled={isSavingBiodata}
+                                        className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 px-4 py-2 text-xs font-bold text-white shadow-sm transition-all hover:from-sky-600 hover:to-blue-700 active:translate-y-px disabled:opacity-50"
+                                    >
+                                        {isSavingBiodata ? 'Menyimpan...' : 'Simpan Biodata'}
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Modal for registration actions */}
             <Modal show={!!selectedRegForActions} onClose={() => setSelectedRegForActions(null)} maxWidth="2xl">
                 {selectedRegForActions && (
@@ -767,59 +1049,7 @@ export default function Index({ registrations, paths, filters, subjects, documen
 
                         {/* Actions content */}
                         <div className="p-6 space-y-6 max-h-[65vh] overflow-y-auto">
-                            {/* 1. KELULUSAN ACTIONS */}
-                            {((currentUser.role === 'admin' && selectedRegForActions.status !== 'draft') || 
-                              (currentUser.role === 'operator' && 
-                               selectedRegForActions.assigned_operator_id === currentUser.id && 
-                               selectedRegForActions.processing_status === 'selesai')) && (
-                                <div className="space-y-3">
-                                    <h5 className="text-xs font-bold uppercase tracking-wider text-gray-400">Ubah Status Kelulusan</h5>
-                                    <div className="grid gap-3 sm:grid-cols-3">
-                                        {/* Terima Utama / Naikkan */}
-                                        {(selectedRegForActions.status === 'pending' || selectedRegForActions.status === 'reserve') && (
-                                            <button
-                                                onClick={() => handleStatusChange(selectedRegForActions, 'accepted')}
-                                                className="flex flex-col items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 px-4 py-3 text-center text-white shadow-sm hover:from-emerald-600 hover:to-green-700 transition-all duration-200 active:scale-[0.98]"
-                                            >
-                                                <svg className="mb-1 h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
-                                                <span className="text-xs font-bold">
-                                                    {selectedRegForActions.status === 'reserve' ? 'Naikkan Utama' : 'Diterima Utama'}
-                                                </span>
-                                            </button>
-                                        )}
-
-                                        {/* Cadangan */}
-                                        {selectedRegForActions.status === 'pending' && (
-                                            <button
-                                                onClick={() => handleStatusChange(selectedRegForActions, 'reserve')}
-                                                className="flex flex-col items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 px-4 py-3 text-center text-white shadow-sm hover:from-amber-600 hover:to-orange-600 transition-all duration-200 active:scale-[0.98]"
-                                            >
-                                                <svg className="mb-1 h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                                </svg>
-                                                <span className="text-xs font-bold">Cadangan</span>
-                                            </button>
-                                        )}
-
-                                        {/* Tolak */}
-                                        {(selectedRegForActions.status === 'pending' || selectedRegForActions.status === 'reserve') && (
-                                            <button
-                                                onClick={() => handleStatusChange(selectedRegForActions, 'rejected')}
-                                                className="flex flex-col items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-rose-600 px-4 py-3 text-center text-white shadow-sm hover:from-red-600 hover:to-rose-700 transition-all duration-200 active:scale-[0.98]"
-                                            >
-                                                <svg className="mb-1 h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
-                                                <span className="text-xs font-bold">Ditolak</span>
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* 2. OPERATOR PROCESS ACTIONS */}
+                            {/* 1. OPERATOR PROCESS ACTIONS */}
                             {((currentUser.role === 'operator' && selectedRegForActions.processing_status === 'diproses' && selectedRegForActions.assigned_operator_id === currentUser.id) ||
                               (currentUser.role === 'admin' && selectedRegForActions.assigned_operator_id !== null)) && (
                                 <div className="space-y-3">
@@ -866,24 +1096,11 @@ export default function Index({ registrations, paths, filters, subjects, documen
                                             Cetak Bukti Pendaftaran
                                         </a>
                                         
-                                        {selectedRegForActions.status === 'accepted' && (
-                                            <a
-                                                href={route('admin.print.decision-letter', selectedRegForActions.id)}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="inline-flex items-center gap-2 rounded-xl border border-teal-200 bg-teal-50 px-4 py-2.5 text-xs font-semibold text-teal-700 shadow-sm hover:bg-teal-100 transition duration-200"
-                                            >
-                                                <svg className="h-4 w-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                </svg>
-                                                Unduh SK Kelulusan
-                                            </a>
-                                        )}
                                     </div>
                                 </div>
                             )}
 
-                            {/* 4. UTILITY (RESET) */}
+                            {/* 3. UTILITY (RESET) */}
                             {selectedRegForActions.status !== 'draft' && 
                              ((currentUser.role === 'admin') || 
                               (currentUser.role === 'operator' && selectedRegForActions.assigned_operator_id === currentUser.id)) && (
@@ -964,7 +1181,7 @@ export default function Index({ registrations, paths, filters, subjects, documen
                                         <thead className="bg-gray-50/50">
                                             <tr>
                                                 <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Mata Pelajaran</th>
-                                                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Nilai Ijazah</th>
+                                                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Nilai</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-50">
@@ -994,8 +1211,8 @@ export default function Index({ registrations, paths, filters, subjects, documen
                                                                 step="0.01"
                                                                 min="0"
                                                                 max="100"
-                                                                value={score.ijazah_score}
-                                                                onChange={(e) => handleScoreChange(index, 'ijazah_score', e.target.value)}
+                                                                value={score.scores}
+                                                                onChange={(e) => handleScoreChange(index, e.target.value)}
                                                                 className="block w-28 rounded-lg border border-gray-200 bg-white py-1.5 px-3 text-sm font-medium text-gray-700 shadow-sm transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 focus:outline-none"
                                                                 placeholder="0-100"
                                                             />

@@ -11,8 +11,7 @@ class ScoreStoreRequest extends FormRequest
         return [
             'scores' => ['required', 'array', 'min:1'],
             'scores.*.subject_id' => ['required', 'exists:subjects,id'],
-            'scores.*.ijazah_score' => ['nullable', 'numeric', 'min:0', 'max:100'],
-            'scores.*.test_score' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'scores.*.scores' => ['nullable', 'numeric', 'min:0', 'max:100'],
         ];
     }
 }

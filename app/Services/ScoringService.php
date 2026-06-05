@@ -13,35 +13,25 @@ class ScoringService
         DB::transaction(function () use ($registration, $scores) {
             SubjectScore::where('registration_id', $registration->id)->delete();
 
-            $totalIjazah = 0;
-            $totalTest = 0;
-            $count = 0;
+            $totalScores = 0;
 
             foreach ($scores as $score) {
+                $scoreValue = $score['scores'] ?? null;
+
                 SubjectScore::create([
                     'registration_id' => $registration->id,
                     'subject_id' => $score['subject_id'],
-                    'ijazah_score' => $score['ijazah_score'] ?? 0,
-                    'test_score' => $score['test_score'] ?? 0,
+                    'scores' => is_numeric($scoreValue) ? $scoreValue : null,
                 ]);
 
-                $totalIjazah += floatval($score['ijazah_score'] ?? 0);
-                $totalTest += floatval($score['test_score'] ?? 0);
-                $count++;
+                if (is_numeric($scoreValue)) {
+                    $totalScores += floatval($scoreValue);
+                }
             }
-
-            $totalScore = $count > 0 ? ($totalIjazah + $totalTest) / $count : 0;
 
             $registration->update([
-                'total_score' => round($totalScore, 2),
+                'total_score' => round($totalScores, 2),
             ]);
-
-            $passingScore = $registration->academicYear?->passing_score ?? 0.00;
-            if ($registration->total_score < $passingScore) {
-                $registration->update([
-                    'status' => 'rejected',
-                ]);
-            }
         });
     }
 }

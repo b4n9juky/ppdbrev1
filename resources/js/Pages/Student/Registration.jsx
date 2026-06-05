@@ -596,7 +596,7 @@ function StepDocuments({ registration, onNext, onBack, documentTypes = [] }) {
 function StepScores({ subjects = [], registration, onNext, onBack }) {
     const existingScores = {};
     (registration?.subject_scores || []).forEach((s) => {
-        existingScores[s.subject_id] = s.ijazah_score;
+        existingScores[s.subject_id] = s.scores;
     });
 
     const [scores, setScores] = useState(() => {
@@ -614,7 +614,7 @@ function StepScores({ subjects = [], registration, onNext, onBack }) {
         setSaving(true);
         const payload = subjects.map((s) => ({
             subject_id: s.id,
-            ijazah_score: scores[s.id] !== '' ? parseFloat(scores[s.id]) : null,
+            scores: scores[s.id] !== '' ? parseFloat(scores[s.id]) : null,
         }));
         router.patch(route('student.scores.update'), { scores: payload }, {
             preserveScroll: true,
@@ -625,8 +625,8 @@ function StepScores({ subjects = [], registration, onNext, onBack }) {
 
     return (
         <div>
-            <h3 className="mb-2 text-xl font-semibold text-gray-800">Nilai Ijazah</h3>
-            <p className="mb-6 text-sm text-gray-500">Masukkan nilai ijazah untuk setiap mata pelajaran (skala 0-100).</p>
+            <h3 className="mb-2 text-xl font-semibold text-gray-800">Nilai</h3>
+            <p className="mb-6 text-sm text-gray-500">Masukkan nilai untuk setiap mata pelajaran (skala 0-100).</p>
 
             {subjects.length === 0 ? (
                 <div className="py-12 text-center text-sm text-gray-400">Belum ada mata pelajaran yang ditentukan.</div>

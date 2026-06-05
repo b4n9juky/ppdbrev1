@@ -5,23 +5,19 @@ import { Head, useForm } from '@inertiajs/react';
 export default function Edit({ registration, subjects }) {
     const existingScores = {};
     (registration.subject_scores || []).forEach((s) => {
-        existingScores[s.subject_id] = {
-            ijazah_score: s.ijazah_score ?? '',
-            test_score: s.test_score ?? '',
-        };
+        existingScores[s.subject_id] = s.scores ?? '';
     });
 
     const { data, setData, patch, processing, errors, setError } = useForm({
         scores: subjects.map((s) => ({
             subject_id: s.id,
-            ijazah_score: existingScores[s.id]?.ijazah_score ?? '',
-            test_score: existingScores[s.id]?.test_score ?? '',
+            scores: existingScores[s.id] ?? '',
         })),
     });
 
-    function handleScoreChange(index, field, value) {
+    function handleScoreChange(index, value) {
         const updated = data.scores.map((s, i) =>
-            i === index ? { ...s, [field]: value } : s,
+            i === index ? { ...s, scores: value } : s,
         );
         setData('scores', updated);
     }
@@ -34,7 +30,13 @@ export default function Edit({ registration, subjects }) {
             return;
         }
 
+        const payload = data.scores.map((s) => ({
+            subject_id: s.subject_id,
+            scores: s.scores !== '' ? parseFloat(s.scores) : null,
+        }));
+
         patch(route('admin.registrations.scores.update', registration.id), {
+            scores: payload,
             preserveScroll: true,
         });
     }
@@ -99,7 +101,7 @@ export default function Edit({ registration, subjects }) {
                                     <thead className="bg-gray-50/50">
                                         <tr>
                                             <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Mata Pelajaran</th>
-                                            <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Nilai Ijazah</th>
+                                            <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Nilai</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-50">
@@ -114,13 +116,12 @@ export default function Edit({ registration, subjects }) {
                                                         step="0.01"
                                                         min="0"
                                                         max="100"
-                                                        value={score.ijazah_score}
-                                                        onChange={(e) => handleScoreChange(index, 'ijazah_score', e.target.value)}
+                                                        value={score.scores}
+                                                        onChange={(e) => handleScoreChange(index, e.target.value)}
                                                         className="block w-32 rounded-xl border-gray-200 shadow-sm transition focus:border-emerald-400 focus:ring-emerald-400"
                                                         placeholder="0-100"
                                                     />
                                                 </td>
-
                                             </tr>
                                         ))}
                                     </tbody>

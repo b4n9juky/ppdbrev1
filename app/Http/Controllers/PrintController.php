@@ -33,6 +33,7 @@ class PrintController extends Controller
 
     public function decisionLetter(Registration $registration): Response
     {
+        $registration->loadSum('subjectScores as total_score', 'scores');
         $registration->load([
             'studentBiodata',
             'admissionPath',

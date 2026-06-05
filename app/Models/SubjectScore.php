@@ -6,14 +6,13 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['registration_id', 'subject_id', 'ijazah_score', 'test_score'])]
+#[Fillable(['registration_id', 'subject_id', 'scores'])]
 class SubjectScore extends Model
 {
     protected function casts(): array
     {
         return [
-            'ijazah_score' => 'decimal:2',
-            'test_score' => 'decimal:2',
+            'scores' => 'decimal:2',
         ];
     }
 

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use App\Http\Controllers\AcademicYearController;
 use App\Http\Controllers\ActivityRequirementController;
@@ -12,6 +12,8 @@ use App\Http\Controllers\PrintController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\ScoreController;
+use App\Http\Controllers\VerificationController;
+use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\StudentDashboardController;
 use App\Http\Controllers\StudentRegistrationController;
 use App\Http\Controllers\StudentScoreController;
@@ -198,10 +200,15 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
     Route::post('/backups/restore', [BackupController::class, 'restore'])->name('backups.restore');
     Route::delete('/backups/{filename}', [BackupController::class, 'destroy'])->name('backups.destroy');
 
+    Route::get('/announcement', [AnnouncementController::class, 'index'])
+        ->name('announcement.index');
+
     // Registration routes moved below to allow operator role as well
 });
 
 Route::middleware(['auth', 'verified', 'role:admin,operator'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/verification', [VerificationController::class, 'index'])
+        ->name('verification.index');
     Route::get('/registrations/by-path', [RegistrationController::class, 'byPath'])
         ->name('registrations.by-path');
     Route::get('/registrations/report/pdf', [RegistrationController::class, 'downloadReport'])
@@ -216,6 +223,8 @@ Route::middleware(['auth', 'verified', 'role:admin,operator'])->prefix('admin')-
         ->name('registrations.release');
     Route::patch('/registrations/{registration}/status', [RegistrationController::class, 'updateStatus'])
         ->name('registrations.status.update');
+    Route::patch('/registrations/{registration}/biodata', [RegistrationController::class, 'updateBiodata'])
+        ->name('registrations.biodata.update');
     Route::patch('/registrations/{registration}/reset', [RegistrationController::class, 'reset'])
         ->name('registrations.reset');
     Route::get('/print/registration-proof/{registration}', [PrintController::class, 'registrationProof'])
@@ -259,3 +268,4 @@ Route::middleware(['auth', 'registration.open'])->prefix('daftar')->name('studen
 });
 
 require __DIR__.'/auth.php';
+

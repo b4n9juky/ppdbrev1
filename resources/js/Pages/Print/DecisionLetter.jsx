@@ -100,8 +100,7 @@ export default function DecisionLetter({ registration, madrasah }) {
                                         <tr>
                                             <th>No</th>
                                             <th>Mata Pelajaran</th>
-                                            <th>Nilai Ijazah</th>
-                                            <th>Nilai Tes</th>
+                                            <th>Nilai</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -109,8 +108,7 @@ export default function DecisionLetter({ registration, madrasah }) {
                                             <tr key={score.id}>
                                                 <td>{i + 1}</td>
                                                 <td style={{ textAlign: 'left' }}>{score.subject?.name || '-'}</td>
-                                                <td>{score.ijazah_score ?? '-'}</td>
-                                                <td>{score.test_score ?? '-'}</td>
+                                                <td>{score.scores ?? '-'}</td>
                                             </tr>
                                         ))}
                                     </tbody>

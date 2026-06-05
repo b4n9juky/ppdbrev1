@@ -48,7 +48,7 @@ class StudentScoreController extends Controller
         $validated = $request->validate([
             'scores' => ['required', 'array'],
             'scores.*.subject_id' => ['required', 'exists:subjects,id'],
-            'scores.*.ijazah_score' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'scores.*.scores' => ['nullable', 'numeric', 'min:0', 'max:100'],
         ]);
 
         app(ScoringService::class)->saveScores($registration, $validated['scores']);

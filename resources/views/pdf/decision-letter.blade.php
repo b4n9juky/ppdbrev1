@@ -237,8 +237,7 @@
                         <tr>
                             <th style="width: 50px;">No</th>
                             <th>Mata Pelajaran</th>
-                            <th>Nilai Ijazah</th>
-                            <th>Nilai Tes</th>
+                            <th>Nilai</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -246,8 +245,7 @@
                             <tr>
                                 <td>{{ $index + 1 }}</td>
                                 <td style="text-align: left;">{{ $score->subject->name ?? '-' }}</td>
-                                <td>{{ $score->ijazah_score ?? '-' }}</td>
-                                <td>{{ $score->test_score ?? '-' }}</td>
+                                <td>{{ $score->scores ?? '-' }}</td>
                             </tr>
                         @endforeach
                     </tbody>

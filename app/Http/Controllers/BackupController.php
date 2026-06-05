@@ -62,18 +62,16 @@ class BackupController extends Controller
             $filepath
         );
 
-        $output = [];
-        $returnCode = 0;
-        exec($command, $output, $returnCode);
+        $result = $this->runShellCommand($command);
 
-        if ($returnCode !== 0 || ! file_exists($filepath) || filesize($filepath) === 0) {
+        if ($result['return_code'] !== 0 || ! file_exists($filepath) || filesize($filepath) === 0) {
             // Cleanup empty file if created
             if (file_exists($filepath)) {
                 unlink($filepath);
             }
 
             return Redirect::route('admin.backups.index')
-                ->with('error', 'Gagal membuat backup database. Error: '.implode("\n", $output));
+                ->with('error', 'Gagal membuat backup database. Error: '.implode("\n", $result['output']));
         }
 
         return Redirect::route('admin.backups.index')
@@ -148,9 +146,7 @@ class BackupController extends Controller
             $fullTempPath
         );
 
-        $output = [];
-        $returnCode = 0;
-        exec($command, $output, $returnCode);
+        $result = $this->runShellCommand($command);
 
         // Cleanup temp file
         if (file_exists($fullTempPath)) {
@@ -163,9 +159,9 @@ class BackupController extends Controller
             rmdir($tempDir);
         }
 
-        if ($returnCode !== 0) {
+        if ($result['return_code'] !== 0) {
             return Redirect::route('admin.backups.index')
-                ->with('error', 'Gagal restore database. Error: '.implode("\n", $output));
+                ->with('error', 'Gagal restore database. Error: '.implode("\n", $result['output']));
         }
 
         return Redirect::route('admin.backups.index')
@@ -193,7 +189,7 @@ class BackupController extends Controller
     /**
      * Get list of existing backup files with metadata.
      */
-    private function getBackupList(): array
+    protected function getBackupList(): array
     {
         $backupDir = storage_path('app/backups');
 
@@ -222,7 +218,7 @@ class BackupController extends Controller
     /**
      * Format file size to human readable format.
      */
-    private function formatFileSize(int $bytes): string
+    protected function formatFileSize(int $bytes): string
     {
         $units = ['B', 'KB', 'MB', 'GB'];
         $i = 0;
@@ -239,7 +235,7 @@ class BackupController extends Controller
     /**
      * Find the path to a MySQL binary (mysqldump or mysql).
      */
-    private function findBinary(string $name): ?string
+    protected function findBinary(string $name): ?string
     {
         // Common paths on Windows (Herd, XAMPP, MariaDB, MySQL)
         $commonPaths = [
@@ -267,5 +263,20 @@ class BackupController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * Run a shell command and return its output and return code.
+     */
+    protected function runShellCommand(string $command): array
+    {
+        $output = [];
+        $returnCode = 0;
+        exec($command, $output, $returnCode);
+
+        return [
+            'output' => $output,
+            'return_code' => $returnCode,
+        ];
     }
 }

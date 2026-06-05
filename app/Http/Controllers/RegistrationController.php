@@ -210,4 +210,28 @@ class RegistrationController extends Controller
             return Redirect::back()->with('error', $e->getMessage());
         }
     }
+
+    public function downloadReport(): \Illuminate\Http\Response
+    {
+        $activeYear = AcademicYear::where('is_active', true)->first();
+        if (!$activeYear) {
+            abort(404, 'Tidak ada tahun ajaran aktif.');
+        }
+
+        $registrations = Registration::with(['studentBiodata', 'admissionPath', 'user'])
+            ->where('academic_year_id', $activeYear->id)
+            ->where('status', '!=', 'draft')
+            ->orderBy('id', 'asc')
+            ->get();
+
+        $madrasah = \App\Models\MadrasahSetting::first();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.registrations-report', [
+            'registrations' => $registrations,
+            'activeYear' => $activeYear,
+            'madrasah' => $madrasah,
+        ]);
+
+        return $pdf->download('laporan-pendaftaran-' . str_replace('/', '-', $activeYear->name) . '.pdf');
+    }
 }

@@ -167,6 +167,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
 Route::middleware(['auth', 'verified', 'role:admin,operator'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/registrations/by-path', [App\Http\Controllers\RegistrationController::class, 'byPath'])
         ->name('registrations.by-path');
+    Route::get('/registrations/report/pdf', [App\Http\Controllers\RegistrationController::class, 'downloadReport'])
+        ->name('registrations.report.pdf');
     Route::get('/registrations', [App\Http\Controllers\RegistrationController::class, 'index'])
         ->name('registrations.index');
     Route::post('/registrations/{registration}/claim', [App\Http\Controllers\RegistrationController::class, 'claim'])
@@ -200,18 +202,8 @@ Route::middleware(['auth', 'verified'])->prefix('student')->name('student.')->gr
         ->name('scores.edit');
     Route::patch('/scores', [App\Http\Controllers\StudentScoreController::class, 'update'])
         ->name('scores.update');
-    Route::get('/print', function () {
-        $activeYear = \App\Models\AcademicYear::where('is_active', true)->first();
-        $registration = \App\Models\Registration::with(['studentBiodata', 'admissionPath', 'studentDocuments', 'academicYear', 'user'])
-            ->where('user_id', auth()->id())
-            ->where('academic_year_id', $activeYear->id)
-            ->firstOrFail();
-        $madrasah = \App\Models\MadrasahSetting::first();
-        return \Inertia\Inertia::render('Print/RegistrationProof', [
-            'registration' => $registration,
-            'madrasah' => $madrasah,
-        ]);
-    })->name('print.proof');
+    Route::get('/print', [App\Http\Controllers\PrintController::class, 'studentRegistrationProof'])
+        ->name('print.proof');
 });
 
 Route::middleware(['auth', 'registration.open'])->prefix('daftar')->name('student.registration.')->group(function () {

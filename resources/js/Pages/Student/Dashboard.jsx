@@ -217,11 +217,15 @@ export default function Dashboard({ activeYear, registration, madrasah }) {
                             <div className="mb-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
                                 {featureCards.map((card) => {
                                     const st = card.getStatus(bio, scores, docs);
+                                    const isPrint = card.name === 'Cetak Bukti';
+                                    const CardTag = isPrint ? 'a' : Link;
                                     return (
-                                        <Link
+                                        <CardTag
                                             key={card.name}
                                             href={card.href}
-                                            className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 transition-all duration-200 hover:shadow-lg hover:-translate-y-1"
+                                            target={isPrint ? "_blank" : undefined}
+                                            rel={isPrint ? "noopener noreferrer" : undefined}
+                                            className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 transition-all duration-200 hover:shadow-lg hover:-translate-y-1 block text-left"
                                         >
                                             <div className={`absolute -right-8 -top-8 h-24 w-24 rounded-full bg-gradient-to-br ${card.gradient} opacity-[0.06] transition-all duration-300 group-hover:scale-150 group-hover:opacity-10`} />
                                             <div className="relative">
@@ -236,7 +240,7 @@ export default function Dashboard({ activeYear, registration, madrasah }) {
                                                     {st.text}
                                                 </span>
                                             </div>
-                                        </Link>
+                                        </CardTag>
                                     );
                                 })}
                             </div>

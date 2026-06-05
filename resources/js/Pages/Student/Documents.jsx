@@ -3,6 +3,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 
 const docTypeLabels = {
+    foto: 'Pas Foto',
     ijazah: 'Ijazah',
     ktp_ortu: 'KTP Orang Tua',
     kk: 'Kartu Keluarga',
@@ -11,6 +12,7 @@ const docTypeLabels = {
 };
 
 const docTypeColors = {
+    foto: 'bg-rose-50 text-rose-700 ring-rose-200',
     ijazah: 'bg-blue-50 text-blue-700 ring-blue-200',
     ktp_ortu: 'bg-amber-50 text-amber-700 ring-amber-200',
     kk: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
@@ -26,7 +28,7 @@ export default function Documents({ registration, activeYear }) {
     const isLocked = registration && registration.status !== 'draft';
     const docs = registration?.student_documents || [];
 
-    const [documentType, setDocumentType] = useState('ijazah');
+    const [documentType, setDocumentType] = useState('foto');
     const [file, setFile] = useState(null);
     const [uploading, setUploading] = useState(false);
     const [previewUrl, setPreviewUrl] = useState(null);
@@ -55,7 +57,7 @@ export default function Documents({ registration, activeYear }) {
                 setFile(null);
                 setPreviewUrl(null);
                 setUploading(false);
-                setDocumentType('ijazah');
+                setDocumentType('foto');
                 // Reset file input
                 const input = document.getElementById('doc-file-input-subpage');
                 if (input) input.value = '';
@@ -132,17 +134,18 @@ export default function Documents({ registration, activeYear }) {
                                     <div className="p-5 space-y-4">
                                         <div>
                                             <label className="block text-sm font-semibold text-gray-700 mb-1.5">Jenis Dokumen</label>
-                                            <select
-                                                value={documentType}
-                                                onChange={(e) => setDocumentType(e.target.value)}
-                                                className="block w-full rounded-xl border-gray-200 shadow-sm transition focus:border-[#468432] focus:ring-[#468432] text-sm"
-                                            >
-                                                <option value="ijazah">Ijazah</option>
-                                                <option value="ktp_ortu">KTP Orang Tua</option>
-                                                <option value="kk">Kartu Keluarga</option>
-                                                <option value="prestasi">Sertifikat Prestasi</option>
-                                                <option value="other">Lainnya</option>
-                                            </select>
+                                                <select
+                                                    value={documentType}
+                                                    onChange={(e) => setDocumentType(e.target.value)}
+                                                    className="block w-full rounded-xl border-gray-200 shadow-sm transition focus:border-[#468432] focus:ring-[#468432] text-sm"
+                                                >
+                                                    <option value="foto">Pas Foto</option>
+                                                    <option value="ijazah">Ijazah</option>
+                                                    <option value="ktp_ortu">KTP Orang Tua</option>
+                                                    <option value="kk">Kartu Keluarga</option>
+                                                    <option value="prestasi">Sertifikat Prestasi</option>
+                                                    <option value="other">Lainnya</option>
+                                                </select>
                                         </div>
 
                                         <div>

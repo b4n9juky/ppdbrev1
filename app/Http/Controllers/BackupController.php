@@ -232,34 +232,79 @@ class BackupController extends Controller
         return round($size, 2).' '.$units[$i];
     }
 
-    /**
-     * Find the path to a MySQL binary (mysqldump or mysql).
-     */
     protected function findBinary(string $name): ?string
     {
-        // Common paths on Windows (Herd, XAMPP, MariaDB, MySQL)
-        $commonPaths = [
-            "C:\\Program Files\\MariaDB 12.2\\bin\\{$name}.exe",
-            "C:\\Program Files\\MariaDB 11.4\\bin\\{$name}.exe",
-            "C:\\Program Files\\MariaDB 10.11\\bin\\{$name}.exe",
-            "C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\{$name}.exe",
-            "C:\\xampp\\mysql\\bin\\{$name}.exe",
-            "C:\\laragon\\bin\\mysql\\mysql-8.0.30-winx64\\bin\\{$name}.exe",
-        ];
+        // 1. Check custom path in .env/config first (e.g., MYSQLDUMP_PATH or MYSQL_PATH)
+        $envKey = strtoupper($name).'_PATH';
+        $customPath = env($envKey);
+        if ($customPath) {
+            if (file_exists($customPath)) {
+                return $customPath;
+            }
 
-        foreach ($commonPaths as $path) {
-            if (file_exists($path)) {
-                return $path;
+            return $customPath;
+        }
+
+        $isWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
+
+        if ($isWindows) {
+            // Common paths on Windows (Herd, XAMPP, MariaDB, MySQL)
+            $commonPaths = [
+                "C:\\Program Files\\MariaDB 12.2\\bin\\{$name}.exe",
+                "C:\\Program Files\\MariaDB 11.4\\bin\\{$name}.exe",
+                "C:\\Program Files\\MariaDB 10.11\\bin\\{$name}.exe",
+                "C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\{$name}.exe",
+                "C:\\xampp\\mysql\\bin\\{$name}.exe",
+                "C:\\laragon\\bin\\mysql\\mysql-8.0.30-winx64\\bin\\{$name}.exe",
+            ];
+
+            foreach ($commonPaths as $path) {
+                if (file_exists($path)) {
+                    return $path;
+                }
+            }
+
+            // Try finding via `where` command on Windows
+            $output = [];
+            $returnCode = 0;
+            exec("where {$name} 2>NUL", $output, $returnCode);
+
+            if ($returnCode === 0 && ! empty($output[0])) {
+                return trim($output[0]);
+            }
+        } else {
+            // Common paths on Linux / macOS
+            $commonPaths = [
+                "/usr/bin/{$name}",
+                "/usr/local/bin/{$name}",
+                "/bin/{$name}",
+                "/usr/sbin/{$name}",
+                "/sbin/{$name}",
+            ];
+
+            foreach ($commonPaths as $path) {
+                if (file_exists($path) && is_executable($path)) {
+                    return $path;
+                }
+            }
+
+            // Try finding via `which` command on Linux/macOS
+            $output = [];
+            $returnCode = 0;
+            exec("which {$name} 2>/dev/null", $output, $returnCode);
+
+            if ($returnCode === 0 && ! empty($output[0])) {
+                return trim($output[0]);
             }
         }
 
-        // Try finding via `where` command on Windows
+        // Final fallback: check if we can run it globally
         $output = [];
         $returnCode = 0;
-        exec("where {$name} 2>NUL", $output, $returnCode);
-
-        if ($returnCode === 0 && ! empty($output[0])) {
-            return trim($output[0]);
+        $checkCmd = $isWindows ? "where {$name} 2>NUL" : "which {$name} 2>/dev/null";
+        exec($checkCmd, $output, $returnCode);
+        if ($returnCode === 0) {
+            return $name;
         }
 
         return null;

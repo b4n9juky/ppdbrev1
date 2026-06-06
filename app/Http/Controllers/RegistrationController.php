@@ -76,8 +76,9 @@ class RegistrationController extends Controller
         $sortField = $request->query('sort', 'created_at');
         $sortDirection = $request->query('direction', 'desc');
         $search = $request->query('search', '');
-        $perPage = (int) $request->query('per_page', 15);
+        $perPage = (int)$request->query('per_page', 15);
         $processingStatus = $request->query('processing_status', 'all');
+        $selectedId = $request->query('selected_id');
 
         $registrations = Registration::withSum('subjectScores as total_score', 'scores')
             ->with([
@@ -89,9 +90,9 @@ class RegistrationController extends Controller
                 'subjectScores.subject',
             ])
             ->where('processing_status', '!=', 'selesai')
-            ->when($activeYear, fn ($q) => $q->where('academic_year_id', $activeYear->id))
-            ->when($processingStatus === 'baru', fn ($q) => $q->where('processing_status', 'baru'))
-            ->when($processingStatus === 'my_processing', fn ($q) => $q->where('processing_status', 'diproses')->where('assigned_operator_id', auth()->id()))
+            ->when($activeYear, fn($q) => $q->where('academic_year_id', $activeYear->id))
+            ->when($processingStatus === 'baru', fn($q) => $q->where('processing_status', 'baru'))
+            ->when($processingStatus === 'my_processing', fn($q) => $q->where('processing_status', 'diproses')->where('assigned_operator_id', auth()->id()))
             ->when($search, function ($q) use ($search) {
                 $q->where(function ($sub) use ($search) {
                     $sub->whereHas('studentBiodata', function ($sb) use ($search) {
@@ -107,6 +108,41 @@ class RegistrationController extends Controller
             ->orderBy($sortField, $sortDirection)
             ->paginate($perPage)
             ->withQueryString();
+
+        $selectedRegistration = null;
+        if ($selectedId) {
+            $selectedRegistration = Registration::withSum('subjectScores as total_score', 'scores')
+                ->with([
+                    'studentBiodata',
+                    'admissionPath',
+                    'user',
+                    'studentDocuments',
+                    'assignedOperator',
+                    'subjectScores.subject',
+                ])
+                ->find($selectedId);
+        }
+
+        $user = auth()->user();
+
+        if ($user->role === 'operator') {
+            $paths = AdmissionPath::where('is_active', true)->get(['id', 'name']);
+
+            return Inertia::render('Admin/Registration/OperatorIndex', [
+                'registrations' => $registrations,
+                'selectedRegistration' => $selectedRegistration,
+                'paths' => $paths,
+                'documentTypes' => DocumentType::all(),
+                'filters' => [
+                    'sort' => $sortField,
+                    'direction' => $sortDirection,
+                    'search' => $search,
+                    'per_page' => $perPage,
+                    'processing_status' => $processingStatus,
+                    'selected_id' => $selectedId,
+                ],
+            ]);
+        }
 
         $paths = AdmissionPath::where('is_active', true)->get()->map(function ($path) {
             return [
@@ -180,11 +216,11 @@ class RegistrationController extends Controller
                 'reserve' => 'dicadangkan (kuota jalur telah terpenuhi)',
             ];
             return Redirect::back()
-                ->with('success', 'Pendaftar otomatis '.($autoLabels[$finalStatus] ?? 'diubah').'.');
+                ->with('success', 'Pendaftar otomatis ' . ($autoLabels[$finalStatus] ?? 'diubah') . '.');
         }
 
         return Redirect::back()
-            ->with('success', 'Status pendaftar berhasil '.($statusLabels[$request->status] ?? 'diubah').'.');
+            ->with('success', 'Status pendaftar berhasil ' . ($statusLabels[$request->status] ?? 'diubah') . '.');
     }
 
     public function reset(Request $request, Registration $registration): RedirectResponse
@@ -243,8 +279,10 @@ class RegistrationController extends Controller
         try {
             $service->claim($registration, $request->user());
 
-            return Redirect::route('admin.registrations.index')
-                ->with('success', 'Pendaftar berhasil Anda ambil untuk diproses.');
+            return Redirect::route('admin.registrations.index', [
+                'selected_id' => $registration->id,
+                'processing_status' => 'my_processing',
+            ])->with('success', 'Pendaftar berhasil Anda ambil untuk diproses.');
         } catch (Exception $e) {
             return Redirect::back()->with('error', $e->getMessage());
         }
@@ -255,8 +293,103 @@ class RegistrationController extends Controller
         try {
             $service->complete($registration, $request->user());
 
+            $user = $request->user();
+            if ($user->role === 'operator') {
+                $activeYear = AcademicYear::where('is_active', true)->first();
+                $nextRegistration = Registration::where('processing_status', 'baru')
+                    ->where('academic_year_id', $activeYear?->id)
+                    ->where('status', '!=', 'draft')
+                    ->orderBy('created_at', 'asc')
+                    ->first();
+
+                if ($nextRegistration) {
+                    return Redirect::route('admin.registrations.index', [
+                        'selected_id' => $nextRegistration->id,
+                        'processing_status' => 'baru',
+                    ])->with('success', 'Proses pendaftar berhasil diselesaikan. Membuka pendaftar berikutnya...');
+                }
+
+                return Redirect::route('admin.registrations.index', [
+                    'processing_status' => 'baru',
+                ])->with('success', 'Proses pendaftar berhasil diselesaikan. Semua pendaftar telah diproses.');
+            }
+
             return Redirect::back()
                 ->with('success', 'Proses pendaftar berhasil diselesaikan.');
+        } catch (Exception $e) {
+            return Redirect::back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function verify(Request $request, Registration $registration, RegistrationAssignmentService $service): RedirectResponse
+    {
+        Gate::authorize('update', $registration);
+
+        try {
+            $service->complete($registration, $request->user());
+
+            $registration->update(['status' => 'accepted']);
+
+            $user = $request->user();
+            if ($user->role === 'operator') {
+                $activeYear = AcademicYear::where('is_active', true)->first();
+                $nextRegistration = Registration::where('processing_status', 'baru')
+                    ->where('academic_year_id', $activeYear?->id)
+                    ->where('status', '!=', 'draft')
+                    ->orderBy('created_at', 'asc')
+                    ->first();
+
+                if ($nextRegistration) {
+                    return Redirect::route('admin.registrations.index', [
+                        'selected_id' => $nextRegistration->id,
+                        'processing_status' => 'baru',
+                    ])->with('success', 'Pendaftar berhasil diverifikasi. Membuka pendaftar berikutnya...');
+                }
+
+                return Redirect::route('admin.registrations.index', [
+                    'processing_status' => 'baru',
+                ])->with('success', 'Pendaftar berhasil diverifikasi. Semua pendaftar telah diproses.');
+            }
+
+            return Redirect::back()
+                ->with('success', 'Pendaftar berhasil diverifikasi.');
+        } catch (Exception $e) {
+            return Redirect::back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function rejectFile(Request $request, Registration $registration, RegistrationAssignmentService $service): RedirectResponse
+    {
+        Gate::authorize('update', $registration);
+
+        try {
+            $service->complete($registration, $request->user());
+
+            $registration->update(['status' => 'rejected']);
+
+            $user = $request->user();
+            if ($user->role === 'operator') {
+                $activeYear = AcademicYear::where('is_active', true)->first();
+                $nextRegistration = Registration::where('processing_status', 'baru')
+                    ->where('academic_year_id', $activeYear?->id)
+                    ->where('status', '!=', 'draft')
+                    ->orderBy('created_at', 'asc')
+                    ->first();
+
+                if ($nextRegistration) {
+                    return Redirect::route('admin.registrations.index', [
+                        'selected_id' => $nextRegistration->id,
+                        'processing_status' => 'baru',
+                    ])->with('success', 'Berkas ditolak. Membuka pendaftar berikutnya...');
+                }
+
+                return Redirect::route('admin.registrations.index', [
+                    'processing_status' => 'baru',
+                ])->with('success', 'Berkas ditolak. Semua pendaftar telah diproses.');
+            }
+
+            return Redirect::back()
+                ->with('success', 'Berkas pendaftar berhasil ditolak.');
         } catch (Exception $e) {
             return Redirect::back()->with('error', $e->getMessage());
         }
@@ -274,10 +407,26 @@ class RegistrationController extends Controller
         }
     }
 
+    public function saveNote(Request $request, Registration $registration): RedirectResponse
+    {
+        Gate::authorize('update', $registration);
+
+        $validated = $request->validate([
+            'notes' => ['nullable', 'string', 'max:5000'],
+        ]);
+
+        $registration->update([
+            'verification_notes' => $validated['notes'] ?? null,
+        ]);
+
+        return Redirect::back()
+            ->with('success', 'Catatan verifikasi berhasil disimpan.');
+    }
+
     public function downloadReport(): \Illuminate\Http\Response
     {
         $activeYear = AcademicYear::where('is_active', true)->first();
-        if (! $activeYear) {
+        if (!$activeYear) {
             abort(404, 'Tidak ada tahun ajaran aktif.');
         }
 
@@ -296,6 +445,6 @@ class RegistrationController extends Controller
             'madrasah' => $madrasah,
         ]);
 
-        return $pdf->download('laporan-pendaftaran-'.str_replace('/', '-', $activeYear->name).'.pdf');
+        return $pdf->download('laporan-pendaftaran-' . str_replace('/', '-', $activeYear->name) . '.pdf');
     }
 }

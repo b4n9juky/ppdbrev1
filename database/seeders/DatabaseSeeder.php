@@ -7,6 +7,7 @@ use App\Models\AdmissionPath;
 use App\Models\DocumentType;
 use App\Models\Subject;
 use App\Models\User;
+use Database\Seeders\RegistrantSeeder;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -73,5 +74,7 @@ class DatabaseSeeder extends Seeder
         foreach ($documentTypes as $type) {
             DocumentType::updateOrCreate(['code' => $type['code']], $type);
         }
+
+        $this->call(RegistrantSeeder::class);
     }
 }

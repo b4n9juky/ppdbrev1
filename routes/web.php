@@ -235,6 +235,12 @@ Route::middleware(['auth', 'verified', 'role:admin,operator'])->prefix('admin')-
         ->name('registrations.scores.edit');
     Route::patch('/registrations/{registration}/scores', [ScoreController::class, 'update'])
         ->name('registrations.scores.update');
+    Route::post('/registrations/{registration}/note', [RegistrationController::class, 'saveNote'])
+        ->name('registrations.note');
+    Route::post('/registrations/{registration}/verify', [RegistrationController::class, 'verify'])
+        ->name('registrations.verify');
+    Route::post('/registrations/{registration}/reject-file', [RegistrationController::class, 'rejectFile'])
+        ->name('registrations.reject-file');
 });
 
 Route::middleware(['auth', 'verified'])->prefix('student')->name('student.')->group(function () {

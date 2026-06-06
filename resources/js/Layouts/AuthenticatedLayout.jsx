@@ -23,31 +23,34 @@ const icons = {
     'Backup & Restore': 'M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4'
 };
 
-export default function AuthenticatedLayout({ header, children }) {
+export default function AuthenticatedLayout({ header, children, wide = false }) {
     const user = usePage().props.auth.user;
     const { madrasah_setting } = usePage().props;
-    
+
     // Manage sidebar responsive states
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
     const adminNav = [
         { type: 'link', name: 'Dashboard', href: route('dashboard'), routeName: 'dashboard' },
-        { type: 'group', name: 'Setting', children: [
-            { name: 'Tahun Ajaran', href: route('admin.academic-years.index'), routeName: 'admin.academic-years.*' },
-            { name: 'Pengaturan Madrasah', href: route('admin.madrasah-settings.edit'), routeName: 'admin.madrasah-settings.edit' },
-            { name: 'Jalur Pendaftaran', href: route('admin.admission-paths.index'), routeName: 'admin.admission-paths.*' },
-            { name: 'Mata Pelajaran', href: route('admin.subjects.index'), routeName: 'admin.subjects.*' },
-            { name: 'Jadwal Kegiatan', href: route('admin.activity-schedules.index'), routeName: 'admin.activity-schedules.*' },
-            { name: 'Persyaratan & Alur', href: route('admin.activity-requirements.index'), routeName: 'admin.activity-requirements.*' },
-            { name: 'Pop Up Banner', href: route('admin.pop-up-banners.index'), routeName: 'admin.pop-up-banners.*' },
-            { name: 'Tipe Dokumen', href: route('admin.document-types.index'), routeName: 'admin.document-types.*' },
-            { name: 'Backup & Restore', href: route('admin.backups.index'), routeName: 'admin.backups.*' },
-        ]},
+        {
+            type: 'group', name: 'Setting', children: [
+                { name: 'Tahun Ajaran', href: route('admin.academic-years.index'), routeName: 'admin.academic-years.*' },
+                { name: 'Pengaturan Madrasah', href: route('admin.madrasah-settings.edit'), routeName: 'admin.madrasah-settings.edit' },
+                { name: 'Jalur Pendaftaran', href: route('admin.admission-paths.index'), routeName: 'admin.admission-paths.*' },
+                { name: 'Mata Pelajaran', href: route('admin.subjects.index'), routeName: 'admin.subjects.*' },
+                { name: 'Jadwal Kegiatan', href: route('admin.activity-schedules.index'), routeName: 'admin.activity-schedules.*' },
+                { name: 'Persyaratan & Alur', href: route('admin.activity-requirements.index'), routeName: 'admin.activity-requirements.*' },
+                { name: 'Pop Up Banner', href: route('admin.pop-up-banners.index'), routeName: 'admin.pop-up-banners.*' },
+                { name: 'Tipe Dokumen', href: route('admin.document-types.index'), routeName: 'admin.document-types.*' },
+                { name: 'Backup & Restore', href: route('admin.backups.index'), routeName: 'admin.backups.*' },
+                { type: 'link', name: 'Pengguna', href: route('admin.users.index'), routeName: 'admin.users.*' }
+            ]
+        },
         { type: 'link', name: 'Pendaftar', href: route('admin.registrations.index'), routeName: 'admin.registrations.*' },
         { type: 'link', name: 'Verifikasi', href: route('admin.verification.index'), routeName: 'admin.verification.*' },
-        { type: 'link', name: 'Pengumuman', href: route('admin.announcement.index'), routeName: 'admin.announcement.*' },
-        { type: 'link', name: 'Pengguna', href: route('admin.users.index'), routeName: 'admin.users.*' },
+        { type: 'link', name: 'Pengumuman', href: route('admin.announcement.index'), routeName: 'admin.announcement.*' }
+
     ];
 
     const operatorNav = [
@@ -63,10 +66,10 @@ export default function AuthenticatedLayout({ header, children }) {
     const navItems = user.role === 'admin'
         ? adminNav
         : user.role === 'operator'
-        ? operatorNav
-        : user.role === 'kepala_madrasah'
-        ? kepsekNav
-        : [];
+            ? operatorNav
+            : user.role === 'kepala_madrasah'
+                ? kepsekNav
+                : [];
 
     const isSettingActive = (children) => children.some((c) => route().current(c.routeName));
 
@@ -98,19 +101,17 @@ export default function AuthenticatedLayout({ header, children }) {
         <div className="min-h-screen bg-[#f4f6f9] font-sans antialiased text-gray-800 flex">
             {/* Mobile Sidebar Backdrop overlay */}
             {sidebarOpen && (
-                <div 
-                    onClick={() => setSidebarOpen(false)} 
+                <div
+                    onClick={() => setSidebarOpen(false)}
                     className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 md:hidden transition-opacity duration-300"
                 />
             )}
 
             {/* Sidebar (AdminLTE style dark panel) */}
-            <aside 
-                className={`fixed top-0 bottom-0 left-0 z-40 bg-slate-900 text-slate-300 flex flex-col transition-all duration-300 ease-in-out border-r border-slate-950 w-64 ${
-                    sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-                } ${
-                    sidebarCollapsed ? 'md:-translate-x-full' : 'md:translate-x-0'
-                }`}
+            <aside
+                className={`fixed top-0 bottom-0 left-0 z-40 bg-slate-900 text-slate-300 flex flex-col transition-all duration-300 ease-in-out border-r border-slate-950 w-64 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+                    } ${sidebarCollapsed ? 'md:-translate-x-full' : 'md:translate-x-0'
+                    }`}
             >
                 {/* Brand Header */}
                 <div className="h-16 flex items-center gap-3 px-4 border-b border-slate-800 bg-slate-950/40">
@@ -158,11 +159,10 @@ export default function AuthenticatedLayout({ header, children }) {
                                 <Link
                                     key={item.routeName}
                                     href={item.href}
-                                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-150 ${
-                                        active 
-                                            ? 'bg-emerald-600 text-white font-medium shadow-md shadow-emerald-950/20' 
-                                            : 'text-slate-400 hover:text-white hover:bg-slate-800'
-                                    }`}
+                                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-150 ${active
+                                        ? 'bg-emerald-600 text-white font-medium shadow-md shadow-emerald-950/20'
+                                        : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                                        }`}
                                 >
                                     <svg className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={icons[item.name]} />
@@ -178,11 +178,10 @@ export default function AuthenticatedLayout({ header, children }) {
                                 <div key={item.name} className="space-y-1">
                                     <button
                                         onClick={() => setSettingsOpen(!settingsOpen)}
-                                        className={`flex items-center justify-between w-full px-3 py-2.5 rounded-lg text-sm transition-all duration-150 ${
-                                            active
-                                                ? 'text-white bg-slate-800/40 font-medium'
-                                                : 'text-slate-400 hover:text-white hover:bg-slate-800'
-                                        }`}
+                                        className={`flex items-center justify-between w-full px-3 py-2.5 rounded-lg text-sm transition-all duration-150 ${active
+                                            ? 'text-white bg-slate-800/40 font-medium'
+                                            : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                                            }`}
                                     >
                                         <div className="flex items-center gap-3">
                                             <svg className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -190,17 +189,16 @@ export default function AuthenticatedLayout({ header, children }) {
                                             </svg>
                                             <span>{item.name}</span>
                                         </div>
-                                        <svg 
-                                            className={`h-3.5 w-3.5 transition-transform duration-200 ${settingsOpen ? 'rotate-180' : ''}`} 
+                                        <svg
+                                            className={`h-3.5 w-3.5 transition-transform duration-200 ${settingsOpen ? 'rotate-180' : ''}`}
                                             fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                         >
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                                         </svg>
                                     </button>
-                                    <div 
-                                        className={`pl-4 overflow-hidden transition-all duration-300 ${
-                                            settingsOpen ? 'max-h-[400px] opacity-100 mt-1' : 'max-h-0 opacity-0 pointer-events-none'
-                                        }`}
+                                    <div
+                                        className={`pl-4 overflow-hidden transition-all duration-300 ${settingsOpen ? 'max-h-[400px] opacity-100 mt-1' : 'max-h-0 opacity-0 pointer-events-none'
+                                            }`}
                                     >
                                         <div className="border-l border-slate-800 pl-2 space-y-0.5 py-1">
                                             {item.children.map((child) => {
@@ -209,11 +207,10 @@ export default function AuthenticatedLayout({ header, children }) {
                                                     <Link
                                                         key={child.routeName}
                                                         href={child.href}
-                                                        className={`flex items-center gap-3 px-3 py-2 rounded-md text-xs transition ${
-                                                            childActive
-                                                                ? 'text-emerald-400 bg-emerald-500/10 font-semibold'
-                                                                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
-                                                        }`}
+                                                        className={`flex items-center gap-3 px-3 py-2 rounded-md text-xs transition ${childActive
+                                                            ? 'text-emerald-400 bg-emerald-500/10 font-semibold'
+                                                            : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                                                            }`}
                                                     >
                                                         <svg className="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={icons[child.name] || 'M12 6v6m0 0v6m0-6h6m-6 0H6'} />
@@ -238,9 +235,8 @@ export default function AuthenticatedLayout({ header, children }) {
             </aside>
 
             {/* Content Wrapper */}
-            <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${
-                sidebarCollapsed ? 'md:pl-0' : 'md:pl-64'
-            }`}>
+            <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${sidebarCollapsed ? 'md:pl-0' : 'md:pl-64'
+                }`}>
                 {/* Top Header Navbar */}
                 <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-20 shadow-sm">
                     <div className="flex items-center gap-4">
@@ -299,7 +295,7 @@ export default function AuthenticatedLayout({ header, children }) {
                 )}
 
                 {/* Main Content Body */}
-                <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6">
+                <main className={`flex-1 w-full mx-auto px-4 sm:px-6 py-6 ${wide ? 'max-w-full' : 'max-w-7xl'}`}>
                     <div className="animate-fade-in">
                         {children}
                     </div>
@@ -315,7 +311,7 @@ export default function AuthenticatedLayout({ header, children }) {
                     </div>
                 </footer>
             </div>
-            
+
             <Toast />
         </div>
     );

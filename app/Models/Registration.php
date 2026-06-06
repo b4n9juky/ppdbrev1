@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['user_id', 'academic_year_id', 'admission_path_id', 'status', 'total_score', 'assigned_operator_id', 'assigned_at', 'processing_status'])]
+#[Fillable(['user_id', 'academic_year_id', 'admission_path_id', 'status', 'total_score', 'assigned_operator_id', 'assigned_at', 'processing_status', 'verification_notes'])]
 class Registration extends Model
 {
     public function assignedOperator(): BelongsTo

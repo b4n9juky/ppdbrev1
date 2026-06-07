@@ -32,7 +32,7 @@ const menuCards = [
     { name: 'Jalur Pendaftaran', desc: 'Kelola jalur dan kuota', href: route('admin.admission-paths.index'), gradient: 'from-violet-500 to-purple-500', icon: 'M4 6h16M4 10h16M4 14h16M4 18h16' },
     { name: 'Mata Pelajaran', desc: 'Kelola mapel ujian', href: route('admin.subjects.index'), gradient: 'from-sky-500 to-cyan-500', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' },
     { name: 'Pengaturan Madrasah', desc: 'Profil dan berkas madrasah', href: route('admin.madrasah-settings.edit'), gradient: 'from-emerald-500 to-green-500', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z' },
-    { name: 'Pendaftar', desc: 'Verifikasi dan kelulusan', href: route('admin.registrations.index'), gradient: 'from-orange-500 to-amber-500', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
+    { name: 'Workspace', desc: 'Verifikasi dan kelulusan', href: route('admin.workspace', { tab: 'monitoring' }), gradient: 'from-orange-500 to-amber-500', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
 ];
 
 export default function Dashboard({ paths, totalRegistrations, statusCounts, recentRegistrations, activeYear }) {
@@ -140,7 +140,7 @@ export default function Dashboard({ paths, totalRegistrations, statusCounts, rec
                                     <p className="text-sm text-gray-500">{recentRegistrations.length} pendaftar terakhir</p>
                                 </div>
                                 <Link
-                                    href={route('admin.registrations.index')}
+                                    href={route('admin.workspace', { tab: 'monitoring' })}
                                     className="inline-flex items-center gap-1.5 rounded-lg bg-gray-50 px-4 py-2 text-sm font-medium text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-900"
                                 >
                                     Lihat Semua

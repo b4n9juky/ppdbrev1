@@ -1,8 +1,11 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
 
-export default function StudentActions({ registration, user }) {
+export default function StudentActions({ registration, user, routePrefix = 'admin' }) {
     const [showRejectConfirm, setShowRejectConfirm] = useState(false);
+    const [rejectNotes, setRejectNotes] = useState('');
+    const [showResetConfirm, setShowResetConfirm] = useState(false);
+    const [resetNotes, setResetNotes] = useState('');
 
     if (!registration) return null;
 
@@ -13,31 +16,45 @@ export default function StudentActions({ registration, user }) {
     const isCompleted = registration.processing_status === 'selesai';
 
     function handleClaim() {
-        router.post(route('admin.registrations.claim', registration.id), {}, {
+        router.post(route(`${routePrefix}.registrations.claim`, registration.id), {}, {
             preserveScroll: true,
             preserveState: true,
         });
     }
 
     function handleVerify() {
-        router.post(route('admin.registrations.verify', registration.id), {}, {
+        router.post(route(`${routePrefix}.registrations.verify`, registration.id), {}, {
             preserveScroll: true,
             preserveState: true,
         });
     }
 
     function handleReject() {
-        router.post(route('admin.registrations.reject-file', registration.id), {}, {
+        router.post(route(`${routePrefix}.registrations.reject-file`, registration.id), { notes: rejectNotes }, {
             preserveScroll: true,
             preserveState: true,
-            onSuccess: () => setShowRejectConfirm(false),
+            onSuccess: () => {
+                setShowRejectConfirm(false);
+                setRejectNotes('');
+            },
         });
     }
 
     function handleRelease() {
-        router.post(route('admin.registrations.release', registration.id), {}, {
+        router.post(route(`${routePrefix}.registrations.release`, registration.id), {}, {
             preserveScroll: true,
             preserveState: true,
+        });
+    }
+
+    function handleResetSubmit() {
+        router.patch(route(`${routePrefix}.registrations.reset`, registration.id), { notes: resetNotes }, {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                setShowResetConfirm(false);
+                setResetNotes('');
+            },
         });
     }
 
@@ -104,14 +121,29 @@ export default function StudentActions({ registration, user }) {
 
             {showRejectConfirm && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-gray-100">
                         <h3 className="text-base font-bold text-gray-900 mb-2">Tolak Berkas</h3>
-                        <p className="text-sm text-gray-500 mb-6">
-                            Apakah Anda yakin ingin menolak berkas pendaftar ini?
+                        <p className="text-sm text-gray-500 mb-4">
+                            Apakah Anda yakin ingin menolak berkas pendaftar <strong>{registration.student_biodata?.full_name || registration.user.name}</strong>?
                         </p>
+                        <div className="mb-4">
+                            <label className="block text-xs font-semibold text-gray-500 mb-2">
+                                Catatan Penolakan (Opsional)
+                            </label>
+                            <textarea
+                                value={rejectNotes}
+                                onChange={(e) => setRejectNotes(e.target.value)}
+                                placeholder="Masukkan alasan penolakan berkas pendaftar..."
+                                rows={3}
+                                className="block w-full rounded-xl border-gray-200 bg-white text-sm shadow-sm transition placeholder:text-gray-300 focus:border-red-400 focus:ring-2 focus:ring-red-100"
+                            />
+                        </div>
                         <div className="flex justify-end gap-3">
                             <button
-                                onClick={() => setShowRejectConfirm(false)}
+                                onClick={() => {
+                                    setShowRejectConfirm(false);
+                                    setRejectNotes('');
+                                }}
                                 className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50"
                             >
                                 Batal
@@ -125,6 +157,58 @@ export default function StudentActions({ registration, user }) {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {showResetConfirm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-gray-100">
+                        <h3 className="text-base font-bold text-gray-900 mb-2">Reset ke Draft</h3>
+                        <p className="text-sm text-gray-500 mb-4">
+                            Apakah Anda yakin ingin mengembalikan berkas pendaftar <strong>{registration.student_biodata?.full_name || registration.user.name}</strong> ke status Draft?
+                        </p>
+                        <div className="mb-4">
+                            <label className="block text-xs font-semibold text-gray-500 mb-2">
+                                Catatan Pengembalian (Opsional)
+                            </label>
+                            <textarea
+                                value={resetNotes}
+                                onChange={(e) => setResetNotes(e.target.value)}
+                                placeholder="Masukkan alasan pengembalian berkas pendaftar..."
+                                rows={3}
+                                className="block w-full rounded-xl border-gray-200 bg-white text-sm shadow-sm transition placeholder:text-gray-300 focus:border-red-400 focus:ring-2 focus:ring-red-100"
+                            />
+                        </div>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => {
+                                    setShowResetConfirm(false);
+                                    setResetNotes('');
+                                }}
+                                className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                onClick={handleResetSubmit}
+                                className="rounded-xl bg-gradient-to-r from-red-500 to-rose-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:from-red-600 hover:to-rose-700"
+                            >
+                                Ya, Reset ke Draft
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {registration.status !== 'draft' && (user.role === 'admin' || (user.role === 'operator' && registration.assigned_operator_id === user.id)) && (
+                <button
+                    onClick={() => setShowResetConfirm(true)}
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-xs font-semibold text-red-700 shadow-sm transition-all hover:bg-red-100 active:translate-y-px"
+                >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18.5" />
+                    </svg>
+                    Reset ke Draft
+                </button>
             )}
         </div>
     );

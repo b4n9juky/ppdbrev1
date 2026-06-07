@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Operator;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\ScoreStoreRequest;
 use App\Models\AcademicYear;
 use App\Models\Registration;
@@ -31,7 +32,7 @@ class ScoreController extends Controller
             ->where('is_active', true)
             ->get();
 
-        return Inertia::render('Admin/Score/Edit', [
+        return Inertia::render('Operator/Score/Edit', [
             'registration' => $registration,
             'subjects' => $subjects,
         ]);
@@ -43,7 +44,8 @@ class ScoreController extends Controller
 
         $this->scoringService->saveScores($registration, $request->validated()['scores']);
 
-        return Redirect::route('admin.workspace', ['tab' => 'selection'])
-            ->with('success', 'Nilai seleksi berhasil disimpan.');
+        return Redirect::route('operator.registrations.index', [
+            'selected_id' => $registration->id,
+        ])->with('success', 'Nilai seleksi berhasil disimpan.');
     }
 }

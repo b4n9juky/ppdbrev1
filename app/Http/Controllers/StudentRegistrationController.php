@@ -19,7 +19,7 @@ use Inertia\Response;
 
 class StudentRegistrationController extends Controller
 {
-    public function show(): Response
+    public function show(): Response|RedirectResponse
     {
         $activeYear = AcademicYear::where('is_active', true)->first();
 
@@ -34,6 +34,10 @@ class StudentRegistrationController extends Controller
                 ->where('user_id', auth()->id())
                 ->where('academic_year_id', $activeYear->id)
                 ->first();
+        }
+
+        if ($registration && $registration->status !== 'draft') {
+            return Redirect::route('student.dashboard');
         }
 
         $paths = AdmissionPath::where('is_active', true)->where('is_show', true)->get();
@@ -189,7 +193,7 @@ class StudentRegistrationController extends Controller
 
         $registration->update(['status' => 'pending']);
 
-        return Redirect::route('student.registration.show')
+        return Redirect::route('student.dashboard')
             ->with('success', 'Pendaftaran berhasil dikirim.');
     }
 

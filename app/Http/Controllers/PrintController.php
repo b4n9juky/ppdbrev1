@@ -5,10 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\AcademicYear;
 use App\Models\MadrasahSetting;
 use App\Models\Registration;
+use BaconQrCode\Common\ErrorCorrectionLevel;
+use BaconQrCode\Encoder\Encoder;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class PrintController extends Controller
 {
@@ -91,12 +92,7 @@ class PrintController extends Controller
         // Generate QR Code using NISN, base64 encode it
         $qrcodeBase64 = null;
         if ($registration->studentBiodata && $registration->studentBiodata->nisn) {
-            $qrcodeBase64 = base64_encode(
-                QrCode::format('svg')
-                    ->size(150)
-                    ->margin(1)
-                    ->generate($registration->studentBiodata->nisn)
-            );
+            $qrcodeBase64 = $this->generateQrCodePng($registration->studentBiodata->nisn, 150);
         }
 
         // Find student photo from documents
@@ -130,5 +126,45 @@ class PrintController extends Controller
         }
 
         return null;
+    }
+
+    private function generateQrCodePng(string $data, int $size = 150): string
+    {
+        $qrCode = Encoder::encode($data, ErrorCorrectionLevel::M());
+        $matrix = $qrCode->getMatrix();
+        $matrixWidth = $matrix->getWidth();
+
+        $marginPx = max(4, (int) round($size * 0.04));
+        $moduleCount = $matrixWidth;
+        $moduleSize = max(1, (int) floor(($size - 2 * $marginPx) / $moduleCount));
+        $actualSize = $moduleSize * $moduleCount + 2 * $marginPx;
+
+        $image = imagecreatetruecolor($actualSize, $actualSize);
+        $white = imagecolorallocate($image, 255, 255, 255);
+        $black = imagecolorallocate($image, 0, 0, 0);
+
+        imagefill($image, 0, 0, $white);
+
+        for ($y = 0; $y < $moduleCount; ++$y) {
+            for ($x = 0; $x < $moduleCount; ++$x) {
+                if ($matrix->get($x, $y) === 1) {
+                    imagefilledrectangle(
+                        $image,
+                        $marginPx + $x * $moduleSize,
+                        $marginPx + $y * $moduleSize,
+                        $marginPx + ($x + 1) * $moduleSize - 1,
+                        $marginPx + ($y + 1) * $moduleSize - 1,
+                        $black
+                    );
+                }
+            }
+        }
+
+        ob_start();
+        imagepng($image);
+        $pngData = ob_get_clean();
+        imagedestroy($image);
+
+        return base64_encode($pngData);
     }
 }

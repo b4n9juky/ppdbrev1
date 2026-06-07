@@ -28,7 +28,7 @@ function SortIcon({ field, filters }) {
     );
 }
 
-export default function StudentTable({ registrations, filters, selectedId, onSelect }) {
+export default function StudentTable({ registrations, filters, selectedId, onSelect, routePrefix = 'admin' }) {
     const [search, setSearch] = useState(filters.search || '');
     const debounceRef = useRef(null);
     const selectedRowRef = useRef(null);
@@ -37,7 +37,7 @@ export default function StudentTable({ registrations, filters, selectedId, onSel
         if (debounceRef.current) clearTimeout(debounceRef.current);
         debounceRef.current = setTimeout(() => {
             if (search !== (filters.search || '')) {
-                router.get(route('admin.registrations.index'), {
+                router.get(route(`${routePrefix}.registrations.index`), {
                     ...filters,
                     search,
                     page: 1,
@@ -56,7 +56,7 @@ export default function StudentTable({ registrations, filters, selectedId, onSel
 
     function handleSort(field) {
         const direction = filters.sort === field && filters.direction === 'asc' ? 'desc' : 'asc';
-        router.get(route('admin.registrations.index'), {
+        router.get(route(`${routePrefix}.registrations.index`), {
             ...filters,
             sort: field,
             direction,
@@ -65,7 +65,7 @@ export default function StudentTable({ registrations, filters, selectedId, onSel
     }
 
     function handlePerPage(value) {
-        router.get(route('admin.registrations.index'), {
+        router.get(route(`${routePrefix}.registrations.index`), {
             ...filters,
             per_page: value,
             page: 1,
@@ -74,7 +74,7 @@ export default function StudentTable({ registrations, filters, selectedId, onSel
     }
 
     function handleFilterStatus(status) {
-        router.get(route('admin.registrations.index'), {
+        router.get(route(`${routePrefix}.registrations.index`), {
             ...filters,
             processing_status: status,
             page: 1,
@@ -197,9 +197,16 @@ export default function StudentTable({ registrations, filters, selectedId, onSel
                                             )}
                                         </td>
                                         <td className="px-3 py-2.5">
-                                            <p className="text-sm font-medium text-gray-900 truncate max-w-[160px]">
-                                                {reg.student_biodata?.full_name || reg.user?.name || '-'}
-                                            </p>
+                                            <div className="flex flex-col">
+                                                <p className="text-sm font-medium text-gray-900 truncate max-w-[160px]" title={reg.student_biodata?.full_name || reg.user?.name}>
+                                                    {reg.student_biodata?.full_name || reg.user?.name || '-'}
+                                                </p>
+                                                {reg.student_biodata && (
+                                                    <p className="text-[10px] text-gray-400 truncate max-w-[160px] mt-0.5" title={`${reg.student_biodata.previous_school || '-'} | ${reg.student_biodata.gender === 'male' ? 'L' : 'P'} | ${reg.student_biodata.phone_number || '-'}`}>
+                                                        {reg.student_biodata.previous_school || '-'} ({reg.student_biodata.gender === 'male' ? 'L' : 'P'}) • {reg.student_biodata.phone_number || '-'}
+                                                    </p>
+                                                )}
+                                            </div>
                                         </td>
                                         <td className="px-3 py-2.5">
                                             <span className="text-xs text-gray-500 font-mono">

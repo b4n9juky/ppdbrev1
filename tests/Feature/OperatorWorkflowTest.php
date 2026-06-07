@@ -58,11 +58,11 @@ test('operator can view registration list and claim/complete/release registratio
         'file_path' => 'documents/test.pdf',
     ]);
 
-    $response = $this->actingAs($operator)->get(route('admin.registrations.index'));
+    $response = $this->actingAs($operator)->get(route('operator.registrations.index'));
     $response->assertOk();
     $response->assertSee('Student User');
 
-    $response = $this->actingAs($operator)->post(route('admin.registrations.claim', $registration->id));
+    $response = $this->actingAs($operator)->post(route('operator.registrations.claim', $registration->id));
     $response->assertSessionHas('success');
     expect($registration->fresh()->processing_status)->toBe('diproses');
     expect($registration->fresh()->assigned_operator_id)->toBe($operator->id);
@@ -81,18 +81,18 @@ test('operator can view registration list and claim/complete/release registratio
     $secondOperator->email_verified_at = now();
     $secondOperator->save();
 
-    $response = $this->actingAs($secondOperator)->post(route('admin.registrations.claim', $registration->id));
+    $response = $this->actingAs($secondOperator)->post(route('operator.registrations.claim', $registration->id));
     $response->assertSessionHas('error');
 
-    $response = $this->actingAs($operator)->post(route('admin.registrations.complete', $registration->id));
-    $response->assertRedirect(route('admin.registrations.index'));
+    $response = $this->actingAs($operator)->post(route('operator.registrations.complete', $registration->id));
+    $response->assertRedirect(route('operator.registrations.index', ['processing_status' => 'baru']));
     expect($registration->fresh()->processing_status)->toBe('selesai');
 
+    // Operator is forbidden from updating status (Admin only)
     $response = $this->actingAs($operator)->patch(route('admin.registrations.status.update', $registration->id), [
         'status' => 'accepted',
-    ], ['HTTP_REFERER' => route('admin.announcement.index')]);
-    $response->assertSessionHas('success');
-    expect($registration->fresh()->status)->toBe('accepted');
+    ], ['HTTP_REFERER' => route('admin.workspace')]);
+    $response->assertForbidden();
 
     $admin = User::create([
         'name' => 'Admin PPDB',
@@ -103,8 +103,20 @@ test('operator can view registration list and claim/complete/release registratio
     $admin->email_verified_at = now();
     $admin->save();
 
-    $response = $this->actingAs($admin)->post(route('admin.registrations.release', $registration->id));
-    $response->assertRedirect(route('admin.registrations.index'));
+    // Admin can update status successfully
+    $response = $this->actingAs($admin)->patch(route('admin.registrations.status.update', $registration->id), [
+        'status' => 'accepted',
+    ], ['HTTP_REFERER' => route('admin.workspace')]);
+    $response->assertSessionHas('success');
+    expect($registration->fresh()->status)->toBe('accepted');
+    expect($registration->fresh()->verification_notes)->toBe('Selamat! Anda dinyatakan DITERIMA pada jalur pendaftaran ini.');
+
+    $response = $this->actingAs($admin)->post(
+        route('admin.registrations.release', $registration->id),
+        [],
+        ['HTTP_REFERER' => route('admin.workspace')]
+    );
+    $response->assertRedirect(route('admin.workspace'));
     $registration = $registration->fresh();
     expect($registration->processing_status)->toBe('baru');
     expect($registration->assigned_operator_id)->toBeNull();
@@ -170,9 +182,10 @@ test('registrations passing score and document requirements are enforced', funct
     // Should auto-reject to rejected status
     $response = $this->actingAs($admin)->patch(route('admin.registrations.status.update', $registration->id), [
         'status' => 'accepted',
-    ], ['HTTP_REFERER' => route('admin.announcement.index')]);
+    ], ['HTTP_REFERER' => route('admin.workspace')]);
     $response->assertSessionHas('success');
     expect(Registration::find($registration->id)->status)->toBe('rejected');
+    expect(Registration::find($registration->id)->verification_notes)->toBe('Status Anda ditolak karena kuota penuh atau tidak memenuhi Syarat');
 
     // 3. Update score to pass (e.g. 80.00)
     app(ScoringService::class)->saveScores($registration, [
@@ -204,7 +217,7 @@ test('registrations passing score and document requirements are enforced', funct
     // 6. Change status to accepted with document and passing score - should succeed
     $response = $this->actingAs($admin)->patch(route('admin.registrations.status.update', $registration->id), [
         'status' => 'accepted',
-    ], ['HTTP_REFERER' => route('admin.announcement.index')]);
+    ], ['HTTP_REFERER' => route('admin.workspace')]);
     $response->assertSessionHas('success');
     expect($registration->fresh()->status)->toBe('accepted');
 });
@@ -289,10 +302,87 @@ test('auto-reserve when quota is full', function () {
         ['subject_id' => $subject->id, 'scores' => 85.00],
     ]);
 
-    // Try to accept ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â should auto-reserve because quota is full
+    // Try to accept - should auto-reserve because quota is full
     $response = $this->actingAs($admin)->patch(route('admin.registrations.status.update', $reg2->id), [
         'status' => 'accepted',
-    ], ['HTTP_REFERER' => route('admin.announcement.index')]);
+    ], ['HTTP_REFERER' => route('admin.workspace')]);
     $response->assertSessionHas('success');
     expect($reg2->fresh()->status)->toBe('reserve');
+    expect($reg2->fresh()->verification_notes)->toBe('Status Anda cadangan karena kuota telah penuh, pantau selanjutnya jika ada perubahan');
+});
+
+test('operator verifying registration does not automatically accept, and rejecting files sets status to rejected', function () {
+    $activeYear = AcademicYear::create([
+        'name' => '2026/2027',
+        'is_active' => true,
+    ]);
+
+    $operator = User::create([
+        'name' => 'Operator PPDB',
+        'email' => 'operator_verify@ppdb.ma',
+        'password' => bcrypt('password'),
+        'role' => 'operator',
+    ]);
+    $operator->email_verified_at = now();
+    $operator->save();
+
+    $student1 = User::create([
+        'name' => 'Student One',
+        'email' => 'student1_verify@ppdb.ma',
+        'password' => bcrypt('password'),
+        'role' => 'student',
+    ]);
+    $student1->email_verified_at = now();
+    $student1->save();
+
+    $student2 = User::create([
+        'name' => 'Student Two',
+        'email' => 'student2_verify@ppdb.ma',
+        'password' => bcrypt('password'),
+        'role' => 'student',
+    ]);
+    $student2->email_verified_at = now();
+    $student2->save();
+
+    $admissionPath = AdmissionPath::create([
+        'name' => 'Zonasi',
+        'quota' => 100,
+        'is_active' => true,
+    ]);
+
+    $reg1 = Registration::create([
+        'user_id' => $student1->id,
+        'academic_year_id' => $activeYear->id,
+        'admission_path_id' => $admissionPath->id,
+        'status' => 'pending',
+    ]);
+
+    $reg2 = Registration::create([
+        'user_id' => $student2->id,
+        'academic_year_id' => $activeYear->id,
+        'admission_path_id' => $admissionPath->id,
+        'status' => 'pending',
+    ]);
+
+    // 1. Claim and Verify reg1
+    $this->actingAs($operator)->post(route('operator.registrations.claim', $reg1->id));
+    $response = $this->actingAs($operator)->post(route('operator.registrations.verify', $reg1->id));
+    $response->assertSessionHas('success');
+
+    $reg1 = $reg1->fresh();
+    expect($reg1->processing_status)->toBe('selesai');
+    expect($reg1->status)->toBe('pending'); // REMAIN pending, not accepted!
+    expect($reg1->verification_notes)->toBe('verifikasi telah dilakukan data anda lolos verifikasi.');
+
+    // 2. Claim and Reject reg2
+    $this->actingAs($operator)->post(route('operator.registrations.claim', $reg2->id));
+    $response = $this->actingAs($operator)->post(route('operator.registrations.reject-file', $reg2->id), [
+        'notes' => 'Foto ijazah tidak terbaca.',
+    ]);
+    $response->assertSessionHas('success');
+
+    $reg2 = $reg2->fresh();
+    expect($reg2->processing_status)->toBe('selesai');
+    expect($reg2->status)->toBe('rejected'); // BECOMES rejected!
+    expect($reg2->verification_notes)->toBe('Foto ijazah tidak terbaca.');
 });

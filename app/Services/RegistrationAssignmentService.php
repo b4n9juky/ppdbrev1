@@ -34,6 +34,7 @@ class RegistrationAssignmentService
                 'assigned_operator_id' => $operator->id,
                 'assigned_at' => now(),
                 'processing_status' => 'diproses',
+                'verification_notes' => 'Berkas anda diproses operator.',
             ]);
 
             $studentName = $lockedReg->studentBiodata?->full_name ?? $lockedReg->user?->name ?? 'Siswa';
@@ -90,6 +91,7 @@ class RegistrationAssignmentService
                 'assigned_operator_id' => null,
                 'assigned_at' => null,
                 'processing_status' => 'baru',
+                'verification_notes' => 'berkas anda dalam antrian operator.',
             ]);
 
             $studentName = $registration->studentBiodata?->full_name ?? $registration->user?->name ?? 'Siswa';

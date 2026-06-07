@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 use App\Http\Controllers\AcademicYearController;
 use App\Http\Controllers\ActivityRequirementController;
@@ -12,8 +12,6 @@ use App\Http\Controllers\PrintController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\ScoreController;
-use App\Http\Controllers\VerificationController;
-use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\StudentDashboardController;
 use App\Http\Controllers\StudentRegistrationController;
 use App\Http\Controllers\StudentScoreController;
@@ -111,7 +109,7 @@ Route::get('/dashboard', function () {
     }
 
     if ($user->role === 'operator') {
-        return redirect()->route('admin.registrations.index');
+        return redirect()->route('operator.dashboard');
     }
 
     if ($user->role !== 'admin') {
@@ -200,21 +198,17 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
     Route::post('/backups/restore', [BackupController::class, 'restore'])->name('backups.restore');
     Route::delete('/backups/{filename}', [BackupController::class, 'destroy'])->name('backups.destroy');
 
-    Route::get('/announcement', [AnnouncementController::class, 'index'])
-        ->name('announcement.index');
+    Route::get('/workspace', [App\Http\Controllers\AdminWorkspaceController::class, 'index'])
+        ->name('workspace');
 
-    // Registration routes moved below to allow operator role as well
+    Route::post('/selection/generate', [App\Http\Controllers\AdminWorkspaceController::class, 'generateRanking'])
+        ->name('selection.generate');
+
 });
 
-Route::middleware(['auth', 'verified', 'role:admin,operator'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/verification', [VerificationController::class, 'index'])
-        ->name('verification.index');
-    Route::get('/registrations/by-path', [RegistrationController::class, 'byPath'])
-        ->name('registrations.by-path');
+Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/registrations/report/pdf', [RegistrationController::class, 'downloadReport'])
         ->name('registrations.report.pdf');
-    Route::get('/registrations', [RegistrationController::class, 'index'])
-        ->name('registrations.index');
     Route::post('/registrations/{registration}/claim', [RegistrationController::class, 'claim'])
         ->name('registrations.claim');
     Route::post('/registrations/{registration}/complete', [RegistrationController::class, 'complete'])
@@ -239,8 +233,25 @@ Route::middleware(['auth', 'verified', 'role:admin,operator'])->prefix('admin')-
         ->name('registrations.note');
     Route::post('/registrations/{registration}/verify', [RegistrationController::class, 'verify'])
         ->name('registrations.verify');
-    Route::post('/registrations/{registration}/reject-file', [RegistrationController::class, 'rejectFile'])
+    Route::post('/registrations/{registration}/reject-file', [RegistrationController::class, 'reject-file'])
         ->name('registrations.reject-file');
+});
+
+Route::middleware(['auth', 'verified', 'role:operator'])->prefix('operator')->name('operator.')->group(function () {
+    Route::get('/dashboard', [App\Http\Controllers\Operator\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/registrations', [App\Http\Controllers\Operator\RegistrationController::class, 'index'])->name('registrations.index');
+    Route::post('/registrations/{registration}/claim', [App\Http\Controllers\Operator\RegistrationController::class, 'claim'])->name('registrations.claim');
+    Route::post('/registrations/{registration}/complete', [App\Http\Controllers\Operator\RegistrationController::class, 'complete'])->name('registrations.complete');
+    Route::post('/registrations/{registration}/release', [App\Http\Controllers\Operator\RegistrationController::class, 'release'])->name('registrations.release');
+    Route::patch('/registrations/{registration}/biodata', [App\Http\Controllers\Operator\RegistrationController::class, 'updateBiodata'])->name('registrations.biodata.update');
+    Route::patch('/registrations/{registration}/reset', [App\Http\Controllers\Operator\RegistrationController::class, 'reset'])->name('registrations.reset');
+    Route::get('/registrations/{registration}/scores', [App\Http\Controllers\Operator\ScoreController::class, 'edit'])->name('registrations.scores.edit');
+    Route::patch('/registrations/{registration}/scores', [App\Http\Controllers\Operator\ScoreController::class, 'update'])->name('registrations.scores.update');
+    Route::post('/registrations/{registration}/note', [App\Http\Controllers\Operator\RegistrationController::class, 'saveNote'])->name('registrations.note');
+    Route::post('/registrations/{registration}/verify', [App\Http\Controllers\Operator\RegistrationController::class, 'verify'])->name('registrations.verify');
+    Route::post('/registrations/{registration}/reject-file', [App\Http\Controllers\Operator\RegistrationController::class, 'rejectFile'])->name('registrations.reject-file');
+    Route::get('/print/registration-proof/{registration}', [PrintController::class, 'registrationProof'])->name('print.registration-proof');
+    Route::get('/print/decision-letter/{registration}', [PrintController::class, 'decisionLetter'])->name('print.decision-letter');
 });
 
 Route::middleware(['auth', 'verified'])->prefix('student')->name('student.')->group(function () {

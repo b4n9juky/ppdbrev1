@@ -17,6 +17,7 @@ const icons = {
     'Pendaftar': 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
     'Verifikasi': 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
     'Pengumuman': 'M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z',
+    'Workspace': 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z',
     'Per Jalur': 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
     'Pengguna': 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z',
     'Tipe Dokumen': 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
@@ -33,6 +34,7 @@ export default function AuthenticatedLayout({ header, children, wide = false }) 
 
     const adminNav = [
         { type: 'link', name: 'Dashboard', href: route('dashboard'), routeName: 'dashboard' },
+        { type: 'link', name: 'Workspace', href: route('admin.workspace'), routeName: 'admin.workspace' },
         {
             type: 'group', name: 'Setting', children: [
                 { name: 'Tahun Ajaran', href: route('admin.academic-years.index'), routeName: 'admin.academic-years.*' },
@@ -46,17 +48,13 @@ export default function AuthenticatedLayout({ header, children, wide = false }) 
                 { name: 'Backup & Restore', href: route('admin.backups.index'), routeName: 'admin.backups.*' },
                 { type: 'link', name: 'Pengguna', href: route('admin.users.index'), routeName: 'admin.users.*' }
             ]
-        },
-        { type: 'link', name: 'Pendaftar', href: route('admin.registrations.index'), routeName: 'admin.registrations.*' },
-        { type: 'link', name: 'Verifikasi', href: route('admin.verification.index'), routeName: 'admin.verification.*' },
-        { type: 'link', name: 'Pengumuman', href: route('admin.announcement.index'), routeName: 'admin.announcement.*' }
+        }
 
     ];
 
     const operatorNav = [
-        { type: 'link', name: 'Dashboard', href: route('dashboard'), routeName: 'dashboard' },
-        { type: 'link', name: 'Pendaftar', href: route('admin.registrations.index'), routeName: 'admin.registrations.*' },
-        { type: 'link', name: 'Verifikasi', href: route('admin.verification.index'), routeName: 'admin.verification.*' },
+        { type: 'link', name: 'Dashboard', href: route('operator.dashboard'), routeName: 'operator.dashboard' },
+        { type: 'link', name: 'Pendaftar', href: route('operator.registrations.index'), routeName: 'operator.registrations.*' },
     ];
 
     const kepsekNav = [

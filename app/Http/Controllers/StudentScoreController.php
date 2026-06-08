@@ -14,17 +14,29 @@ use Inertia\Response;
 
 class StudentScoreController extends Controller
 {
-    public function edit(): Response
+    public function edit(): Response|RedirectResponse
     {
         $activeYear = AcademicYear::where('is_active', true)->first();
+
+        if (! $activeYear) {
+            return Redirect::route('student.dashboard')
+                ->with('error', 'Pendaftaran belum dibuka atau tidak ada tahun ajaran aktif.');
+        }
 
         $registration = Registration::with('subjectScores.subject')
             ->where('user_id', auth()->id())
             ->where('academic_year_id', $activeYear->id)
-            ->firstOrFail();
+            ->first();
+
+        if (! $registration) {
+            return Redirect::route('student.dashboard')
+                ->with('error', 'Silakan lakukan pendaftaran terlebih dahulu.');
+        }
 
         $subjects = Subject::where('academic_year_id', $activeYear->id)
             ->where('is_active', true)
+            ->orderBy('urut')
+            ->orderBy('name')
             ->get();
 
         return Inertia::render('Student/Scores', [
@@ -37,9 +49,19 @@ class StudentScoreController extends Controller
     {
         $activeYear = AcademicYear::where('is_active', true)->first();
 
+        if (! $activeYear) {
+            return Redirect::route('student.dashboard')
+                ->with('error', 'Pendaftaran belum dibuka atau tidak ada tahun ajaran aktif.');
+        }
+
         $registration = Registration::where('user_id', auth()->id())
             ->where('academic_year_id', $activeYear->id)
-            ->firstOrFail();
+            ->first();
+
+        if (! $registration) {
+            return Redirect::route('student.dashboard')
+                ->with('error', 'Silakan lakukan pendaftaran terlebih dahulu.');
+        }
 
         if ($registration->status !== 'draft') {
             return Redirect::back()->with('error', 'Tidak dapat mengubah nilai setelah pendaftaran dikirim.');

@@ -11,6 +11,7 @@ class SubjectRequest extends FormRequest
         return [
             'academic_year_id' => ['required', 'exists:academic_years,id'],
             'name' => ['required', 'string', 'max:255'],
+            'urut' => ['required', 'integer', 'min:0'],
             'is_active' => ['boolean'],
         ];
     }

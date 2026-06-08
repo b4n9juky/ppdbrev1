@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['academic_year_id', 'name', 'is_active'])]
+#[Fillable(['academic_year_id', 'name', 'urut', 'is_active'])]
 class Subject extends Model
 {
     protected function casts(): array

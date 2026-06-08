@@ -1,4 +1,4 @@
-import { Search, Eye, FileText, Users } from 'lucide-react';
+import { Search, Eye, FileText, Users, Printer } from 'lucide-react';
 import { Link, router } from '@inertiajs/react';
 import { useState, useEffect, useRef } from 'react';
 import ApplicantDetailDrawer from '@/Components/admin/ApplicantDetailDrawer';
@@ -190,13 +190,24 @@ export default function MonitoringTab({ registrations, operators, filters, activ
                                             {new Date(reg.created_at).toLocaleDateString('id-ID')}
                                         </td>
                                         <td className="whitespace-nowrap px-5 py-4 text-center">
-                                            <button
-                                                onClick={() => setSelectedApplicant(reg)}
-                                                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-600 shadow-sm transition hover:bg-gray-50 hover:text-gray-900"
-                                            >
-                                                <Eye className="h-3.5 w-3.5" />
-                                                View Details
-                                            </button>
+                                            <div className="flex items-center justify-center gap-2">
+                                                <button
+                                                    onClick={() => setSelectedApplicant(reg)}
+                                                    className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-600 shadow-sm transition hover:bg-gray-50 hover:text-gray-900"
+                                                >
+                                                    <Eye className="h-3.5 w-3.5" />
+                                                    Detail
+                                                </button>
+                                                <a
+                                                    href={route('admin.print.registration-proof', reg.id)}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 shadow-sm transition hover:bg-emerald-100 hover:text-emerald-800"
+                                                >
+                                                    <Printer className="h-3.5 w-3.5" />
+                                                    Cetak Bukti
+                                                </a>
+                                            </div>
                                         </td>
                                     </tr>
                                 );

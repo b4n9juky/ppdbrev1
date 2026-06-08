@@ -131,7 +131,7 @@ export default function Documents({ registration, activeYear, documentTypes = []
                                 <form onSubmit={handleUpload} className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
                                     <div className="border-b border-gray-100 bg-gray-50/50 px-5 py-3">
                                         <h4 className="text-sm font-bold text-gray-700">Upload Dokumen Baru</h4>
-                                        <p className="text-xs text-gray-400">Format: PDF, JPG, PNG — Maksimal ukuran file 5MB</p>
+                                        <p className="text-xs text-gray-400">Format: PDF, JPG, PNG — Maksimal ukuran file 2MB</p>
                                     </div>
                                     <div className="p-5 space-y-4">
                                         <div>

@@ -11,6 +11,7 @@ export default function Index({ subjects, academicYears }) {
     const { data, setData, post, put, processing, errors, reset } = useForm({
         academic_year_id: activeYear?.id || '',
         name: '',
+        urut: 0,
         is_active: true,
     });
 
@@ -34,6 +35,7 @@ export default function Index({ subjects, academicYears }) {
         setData({
             academic_year_id: subject.academic_year_id,
             name: subject.name,
+            urut: subject.urut ?? 0,
             is_active: subject.is_active,
         });
     }
@@ -53,6 +55,7 @@ export default function Index({ subjects, academicYears }) {
         router.put(route('admin.subjects.update', subject.id), {
             academic_year_id: subject.academic_year_id,
             name: subject.name,
+            urut: subject.urut ?? 0,
             is_active: !subject.is_active,
         }, {
             preserveScroll: true,
@@ -101,6 +104,17 @@ export default function Index({ subjects, academicYears }) {
                                     {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
                                 </div>
                                 <div>
+                                    <label className="block text-sm font-medium text-gray-700">No. Urut</label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        value={data.urut}
+                                        onChange={(e) => setData('urut', e.target.value)}
+                                        className="mt-1 block w-full rounded-xl border-gray-200 shadow-sm transition focus:border-emerald-400 focus:ring-emerald-400"
+                                    />
+                                    {errors.urut && <p className="mt-1 text-sm text-red-600">{errors.urut}</p>}
+                                </div>
+                                <div>
                                     <label className="block text-sm font-medium text-gray-700">Tahun Ajaran</label>
                                     <select
                                         value={data.academic_year_id}
@@ -143,6 +157,7 @@ export default function Index({ subjects, academicYears }) {
                         <table className="min-w-full divide-y divide-gray-100">
                             <thead>
                                 <tr className="bg-gray-50/50">
+                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 w-16">Urut</th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Nama Mapel</th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Tahun Ajaran</th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Status</th>
@@ -152,6 +167,7 @@ export default function Index({ subjects, academicYears }) {
                             <tbody className="divide-y divide-gray-50">
                                 {subjects.map((subject) => (
                                     <tr key={subject.id} className="transition-colors hover:bg-gray-50/50">
+                                        <td className="whitespace-nowrap px-6 py-4 text-sm font-semibold text-gray-700 text-center">{subject.urut ?? 0}</td>
                                         <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">{subject.name}</td>
                                         <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{subject.academic_year?.name}</td>
                                         <td className="whitespace-nowrap px-6 py-4">
@@ -174,7 +190,7 @@ export default function Index({ subjects, academicYears }) {
                                 ))}
                                 {subjects.length === 0 && (
                                     <tr>
-                                        <td colSpan={4} className="px-6 py-10 text-center text-sm text-gray-400">
+                                        <td colSpan={5} className="px-6 py-10 text-center text-sm text-gray-400">
                                             Belum ada mata pelajaran
                                         </td>
                                     </tr>

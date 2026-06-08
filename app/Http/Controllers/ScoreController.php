@@ -29,6 +29,8 @@ class ScoreController extends Controller
         $activeYear = AcademicYear::where('is_active', true)->first();
         $subjects = Subject::where('academic_year_id', $activeYear?->id)
             ->where('is_active', true)
+            ->orderBy('urut')
+            ->orderBy('name')
             ->get();
 
         return Inertia::render('Admin/Score/Edit', [

@@ -15,7 +15,7 @@ class SubjectController extends Controller
     public function index(): Response
     {
         return Inertia::render('Admin/Subject/Index', [
-            'subjects' => Subject::with('academicYear')->orderBy('name')->get(),
+            'subjects' => Subject::with('academicYear')->orderBy('urut')->orderBy('name')->get(),
             'academicYears' => AcademicYear::all(),
         ]);
     }

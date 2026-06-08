@@ -91,7 +91,7 @@ class RegistrationController extends Controller
 
         $user = auth()->user();
         $paths = AdmissionPath::where('is_active', true)->get(['id', 'name']);
-        $subjects = Subject::where('academic_year_id', $activeYear?->id)->get(['id', 'name']);
+        $subjects = Subject::where('academic_year_id', $activeYear?->id)->orderBy('urut')->orderBy('name')->get(['id', 'name', 'urut']);
 
         $myActivities = \App\Models\RegistrationAuditLog::where('user_id', $user->id)
             ->latest()
@@ -160,6 +160,11 @@ class RegistrationController extends Controller
     public function verify(Request $request, Registration $registration, RegistrationAssignmentService $service): RedirectResponse
     {
         Gate::authorize('update', $registration);
+
+        $requiredSubjects = Subject::where('academic_year_id', $registration->academic_year_id)->where('is_active', true)->count();
+        if ($registration->subjectScores->count() < $requiredSubjects || $registration->subjectScores->contains(fn($s) => is_null($s->score))) {
+            return Redirect::back()->with('error', 'Tidak dapat melakukan verifikasi, terdapat nilai mata pelajaran yang kosong atau belum diisi.');
+        }
 
         try {
             $service->complete($registration, $request->user());
@@ -263,7 +268,12 @@ class RegistrationController extends Controller
         Gate::authorize('update', $registration);
 
         $validated = $request->validate([
-            'nisn' => ['required', 'numeric', 'digits:10'],
+            'nisn' => [
+                'required', 
+                'numeric', 
+                'digits:10', 
+                \Illuminate\Validation\Rule::unique('student_biodatas', 'nisn')->ignore($registration->id, 'registration_id')
+            ],
             'full_name' => ['required', 'string', 'max:255'],
             'gender' => ['required', 'in:male,female'],
             'birth_place' => ['required', 'string', 'max:255'],
@@ -274,6 +284,7 @@ class RegistrationController extends Controller
         ], [
             'nisn.numeric' => 'NISN harus berupa angka.',
             'nisn.digits' => 'NISN harus terdiri dari 10 digit.',
+            'nisn.unique' => 'NISN ini sudah terdaftar. Silakan gunakan NISN yang lain.',
             'phone_number.required' => 'Nomor kontak / WhatsApp wajib diisi.',
             'phone_number.regex' => 'Nomor kontak / WhatsApp harus berupa angka dengan panjang antara 11 sampai 13 digit.',
         ]);

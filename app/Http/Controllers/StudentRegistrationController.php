@@ -44,7 +44,7 @@ class StudentRegistrationController extends Controller
         $settings = MadrasahSetting::first();
 
         $subjects = $activeYear
-            ? Subject::where('academic_year_id', $activeYear->id)->where('is_active', true)->get()
+            ? Subject::where('academic_year_id', $activeYear->id)->where('is_active', true)->orderBy('urut')->orderBy('name')->get()
             : collect();
 
         return Inertia::render('Student/Registration', [
@@ -98,7 +98,12 @@ class StudentRegistrationController extends Controller
         }
 
         $validated = $request->validate([
-            'nisn' => ['required', 'numeric', 'digits:10'],
+            'nisn' => [
+                'required', 
+                'numeric', 
+                'digits:10', 
+                \Illuminate\Validation\Rule::unique('student_biodatas', 'nisn')->ignore($registration->id, 'registration_id')
+            ],
             'full_name' => ['required', 'string', 'max:255'],
             'gender' => ['required', 'in:male,female'],
             'birth_place' => ['required', 'string', 'max:255'],
@@ -109,6 +114,7 @@ class StudentRegistrationController extends Controller
         ], [
             'nisn.numeric' => 'NISN harus berupa angka.',
             'nisn.digits' => 'NISN harus terdiri dari 10 digit.',
+            'nisn.unique' => 'NISN ini sudah terdaftar. Silakan gunakan NISN yang lain.',
             'phone_number.required' => 'Nomor kontak / WhatsApp wajib diisi.',
             'phone_number.regex' => 'Nomor kontak / WhatsApp harus berupa angka dengan panjang antara 11 sampai 13 digit.',
         ]);
@@ -133,7 +139,7 @@ class StudentRegistrationController extends Controller
 
         $validated = $request->validate([
             'document_type' => ['required', 'string', 'exists:document_types,code'],
-            'file' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
+            'file' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
         ]);
 
         if (StudentDocument::where('registration_id', $registration->id)

@@ -14,7 +14,7 @@ class MadrasahSettingController extends Controller
 {
     public function edit(): Response
     {
-        $setting = MadrasahSetting::firstOrCreate([
+        $setting = MadrasahSetting::first() ?? MadrasahSetting::create([
             'madrasah_name' => 'Madrasah Aliyah',
         ]);
 
@@ -25,7 +25,7 @@ class MadrasahSettingController extends Controller
 
     public function update(MadrasahSettingUpdateRequest $request): RedirectResponse
     {
-        $setting = MadrasahSetting::firstOrCreate([
+        $setting = MadrasahSetting::first() ?? MadrasahSetting::create([
             'madrasah_name' => 'Madrasah Aliyah',
         ]);
 

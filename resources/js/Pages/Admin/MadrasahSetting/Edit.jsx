@@ -3,7 +3,7 @@ import { Button } from '@/Components/ui/button';
 import { Head, useForm } from '@inertiajs/react';
 
 export default function Edit({ setting }) {
-    const { data, setData, patch, processing, errors } = useForm({
+    const { data, setData, post, processing, errors } = useForm({
         madrasah_name: setting.madrasah_name || '',
         address: setting.address || '',
         contact: setting.contact || '',
@@ -17,7 +17,7 @@ export default function Edit({ setting }) {
 
     function handleSubmit(e) {
         e.preventDefault();
-        patch(route('admin.madrasah-settings.update'), {
+        post(route('admin.madrasah-settings.update'), {
             preserveScroll: true,
         });
     }
@@ -121,12 +121,13 @@ export default function Edit({ setting }) {
                                     />
                                     {errors.kop_surat && <p className="mt-1 text-sm text-red-600">{errors.kop_surat}</p>}
                                     {setting.kop_surat_path && (
-                                        <p className="mt-1 flex items-center gap-1 text-xs text-emerald-600">
-                                            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                                            </svg>
-                                            File sudah ada
-                                        </p>
+                                        <div className="mt-2">
+                                            <img
+                                                src={`/storage/${setting.kop_surat_path}`}
+                                                className="max-h-16 w-full rounded-lg border border-gray-200 object-contain bg-white"
+                                                alt="Kop Surat preview"
+                                            />
+                                        </div>
                                     )}
                                 </div>
 
@@ -141,12 +142,13 @@ export default function Edit({ setting }) {
                                     />
                                     {errors.signature && <p className="mt-1 text-sm text-red-600">{errors.signature}</p>}
                                     {setting.signature_path && (
-                                        <p className="mt-1 flex items-center gap-1 text-xs text-emerald-600">
-                                            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                                            </svg>
-                                            File sudah ada
-                                        </p>
+                                        <div className="mt-2">
+                                            <img
+                                                src={`/storage/${setting.signature_path}`}
+                                                className="h-12 w-12 rounded-lg border border-gray-200 object-contain bg-white"
+                                                alt="Tanda Tangan preview"
+                                            />
+                                        </div>
                                     )}
                                 </div>
 
@@ -161,12 +163,13 @@ export default function Edit({ setting }) {
                                     />
                                     {errors.stamp && <p className="mt-1 text-sm text-red-600">{errors.stamp}</p>}
                                     {setting.stamp_path && (
-                                        <p className="mt-1 flex items-center gap-1 text-xs text-emerald-600">
-                                            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                                            </svg>
-                                            File sudah ada
-                                        </p>
+                                        <div className="mt-2">
+                                            <img
+                                                src={`/storage/${setting.stamp_path}`}
+                                                className="h-12 w-12 rounded-lg border border-gray-200 object-contain bg-white"
+                                                alt="Stempel preview"
+                                            />
+                                        </div>
                                     )}
                                 </div>
 

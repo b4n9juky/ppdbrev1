@@ -171,7 +171,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
 
     Route::get('/madrasah-settings', [MadrasahSettingController::class, 'edit'])
         ->name('madrasah-settings.edit');
-    Route::patch('/madrasah-settings', [MadrasahSettingController::class, 'update'])
+    Route::post('/madrasah-settings', [MadrasahSettingController::class, 'update'])
         ->name('madrasah-settings.update');
 
     Route::resource('admission-paths', AdmissionPathController::class)

@@ -6,6 +6,14 @@
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
+        @php
+            $madrasahSetting = \App\Models\MadrasahSetting::first();
+            $faviconUrl = $madrasahSetting && $madrasahSetting->logo_path 
+                ? asset('storage/' . $madrasahSetting->logo_path) 
+                : asset('favicon.ico');
+        @endphp
+        <link rel="icon" href="{{ $faviconUrl }}">
+
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />

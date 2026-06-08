@@ -1,5 +1,6 @@
 import StudentLayout from '@/Layouts/StudentLayout';
 import { Head, Link, router, useForm } from '@inertiajs/react';
+import React from 'react';
 
 export default function Biodata({ registration, activeYear }) {
     const isLocked = registration && registration.status !== 'draft';
@@ -15,6 +16,12 @@ export default function Biodata({ registration, activeYear }) {
         phone_number: bio?.phone_number || '',
         previous_school: bio?.previous_school || '',
     });
+
+    React.useEffect(() => {
+        if (errors.nisn) {
+            alert(`Peringatan: ${errors.nisn}`);
+        }
+    }, [errors.nisn]);
 
     function handleSubmit(e) {
         e.preventDefault();

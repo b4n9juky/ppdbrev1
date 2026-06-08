@@ -65,6 +65,8 @@ export default function StudentNotes({ registration, routePrefix = 'admin' }) {
                         onChange={(e) => setNotes(e.target.value)}
                         placeholder="Tulis catatan verifikasi baru untuk di-update..."
                         rows={3}
+                        data-gramm="false"
+                        data-gramm_editor="false"
                         className="block w-full rounded-xl border-gray-200 bg-white text-sm shadow-sm transition placeholder:text-gray-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
                     />
                     {hasChanged && (

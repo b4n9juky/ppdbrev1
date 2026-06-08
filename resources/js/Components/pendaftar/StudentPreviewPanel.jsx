@@ -272,10 +272,10 @@ export default function StudentPreviewPanel({ registration, user, documentTypes,
                 <StudentDocuments documents={registration.student_documents || []} documentTypes={documentTypes || []} />
 
                 {/* Catatan */}
-                <StudentNotes key={registration.id} registration={registration} routePrefix={routePrefix} />
+                <StudentNotes key={`notes-${registration.id}`} registration={registration} routePrefix={routePrefix} />
 
                 {/* Aksi */}
-                <StudentActions key={registration.id} registration={registration} user={user} routePrefix={routePrefix} />
+                <StudentActions key={`actions-${registration.id}`} registration={registration} user={user} routePrefix={routePrefix} />
             </div>
     );
 }

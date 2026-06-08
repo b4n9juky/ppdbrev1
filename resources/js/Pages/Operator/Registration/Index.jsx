@@ -179,6 +179,7 @@ export default function OperatorIndex({ registrations, selectedRegistration, pat
 
                         <div className="flex-1 overflow-y-auto min-w-0">
                             <StudentPreviewPanel
+                                key={selectedRegistration?.id}
                                 registration={selectedRegistration}
                                 user={user}
                                 documentTypes={documentTypes}
@@ -224,6 +225,7 @@ export default function OperatorIndex({ registrations, selectedRegistration, pat
                                         </button>
                                     </div>
                                     <StudentPreviewPanel
+                                        key={selectedRegistration?.id}
                                         registration={selectedRegistration}
                                         user={user}
                                         documentTypes={documentTypes}

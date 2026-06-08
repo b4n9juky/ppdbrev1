@@ -58,6 +58,8 @@ export default function StudentActions({ registration, user, routePrefix = 'admi
         });
     }
 
+    const hasNullScores = !registration.subject_scores || registration.subject_scores.length === 0 || registration.subject_scores.some(s => s.score === null || s.score === undefined || s.score === '');
+
     return (
         <div className="space-y-3">
             <p className="text-xs font-semibold text-gray-500 mb-1">Aksi</p>
@@ -86,7 +88,9 @@ export default function StudentActions({ registration, user, routePrefix = 'admi
                 <div className="space-y-2">
                     <button
                         onClick={handleVerify}
-                        className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:from-emerald-600 hover:to-green-700 hover:shadow-md active:translate-y-px"
+                        disabled={hasNullScores}
+                        title={hasNullScores ? "Tidak dapat melakukan verifikasi, terdapat nilai mata pelajaran yang kosong atau belum diisi." : ""}
+                        className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:from-emerald-600 hover:to-green-700 hover:shadow-md active:translate-y-px disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
@@ -135,6 +139,8 @@ export default function StudentActions({ registration, user, routePrefix = 'admi
                                 onChange={(e) => setRejectNotes(e.target.value)}
                                 placeholder="Masukkan alasan penolakan berkas pendaftar..."
                                 rows={3}
+                                data-gramm="false"
+                                data-gramm_editor="false"
                                 className="block w-full rounded-xl border-gray-200 bg-white text-sm shadow-sm transition placeholder:text-gray-300 focus:border-red-400 focus:ring-2 focus:ring-red-100"
                             />
                         </div>
@@ -175,6 +181,8 @@ export default function StudentActions({ registration, user, routePrefix = 'admi
                                 onChange={(e) => setResetNotes(e.target.value)}
                                 placeholder="Masukkan alasan pengembalian berkas pendaftar..."
                                 rows={3}
+                                data-gramm="false"
+                                data-gramm_editor="false"
                                 className="block w-full rounded-xl border-gray-200 bg-white text-sm shadow-sm transition placeholder:text-gray-300 focus:border-red-400 focus:ring-2 focus:ring-red-100"
                             />
                         </div>

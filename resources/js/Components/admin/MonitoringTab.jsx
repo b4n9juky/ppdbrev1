@@ -205,7 +205,7 @@ export default function MonitoringTab({ registrations, operators, filters, activ
                                                     className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 shadow-sm transition hover:bg-emerald-100 hover:text-emerald-800"
                                                 >
                                                     <Printer className="h-3.5 w-3.5" />
-                                                    Cetak Bukti
+                                                    Cetak Bukti Daftar
                                                 </a>
                                             </div>
                                         </td>

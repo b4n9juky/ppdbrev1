@@ -37,6 +37,15 @@ export default function Documents({ registration, activeYear, documentTypes = []
 
     function handleFileChange(e) {
         const f = e.target.files[0] || null;
+        
+        if (f && f.size > 2 * 1024 * 1024) {
+            alert('Ukuran file maksimal adalah 2MB. Silakan pilih file yang lebih kecil.');
+            e.target.value = '';
+            setFile(null);
+            setPreviewUrl(null);
+            return;
+        }
+
         setFile(f);
         if (f && f.type.startsWith('image/')) {
             setPreviewUrl(URL.createObjectURL(f));

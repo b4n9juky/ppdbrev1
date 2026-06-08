@@ -436,29 +436,12 @@
                                     <div class="value">{{ $registration->studentBiodata->address ?? '-' }}</div>
                                 </td>
                             </tr>
-                            <tr class="highlight-row">
-                                <td>
+                            <tr class="highlight-row" >
+                                <td colspan="2">
                                     <div class="label">Jalur Pendaftaran</div>
                                     <div class="value">{{ $registration->admissionPath->name ?? '-' }}</div>
                                 </td>
-                                <td>
-                                    <div class="label">Status</div>
-                                    <div class="value">
-                                        <span class="status-badge status-{{ $registration->status }}">
-                                            @if($registration->status === 'pending')
-                                                Menunggu
-                                            @elseif($registration->status === 'accepted')
-                                                Diterima
-                                            @elseif($registration->status === 'reserve')
-                                                Cadangan
-                                            @elseif($registration->status === 'rejected')
-                                                Ditolak
-                                            @else
-                                                {{ $registration->status }}
-                                            @endif
-                                        </span>
-                                    </div>
-                                </td>
+                                
                             </tr>
                         </table>
                     </td>

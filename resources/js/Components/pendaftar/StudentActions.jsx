@@ -58,7 +58,7 @@ export default function StudentActions({ registration, user, routePrefix = 'admi
         });
     }
 
-    const hasNullScores = !registration.subject_scores || registration.subject_scores.length === 0 || registration.subject_scores.some(s => s.score === null || s.score === undefined || s.score === '');
+    const hasNullScores = !registration.subject_scores || registration.subject_scores.length === 0 || registration.subject_scores.some(s => s.scores === null || s.scores === undefined || s.scores === '');
 
     return (
         <div className="space-y-3">

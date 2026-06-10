@@ -162,7 +162,7 @@ class RegistrationController extends Controller
         Gate::authorize('update', $registration);
 
         $requiredSubjects = Subject::where('academic_year_id', $registration->academic_year_id)->where('is_active', true)->count();
-        if ($registration->subjectScores->count() < $requiredSubjects || $registration->subjectScores->contains(fn($s) => is_null($s->score))) {
+        if ($registration->subjectScores->count() < $requiredSubjects || $registration->subjectScores->contains(fn($s) => is_null($s->scores))) {
             return Redirect::back()->with('error', 'Tidak dapat melakukan verifikasi, terdapat nilai mata pelajaran yang kosong atau belum diisi.');
         }
 

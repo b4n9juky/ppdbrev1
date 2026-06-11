@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['name', 'is_active', 'passing_score'])]
+#[Fillable(['name', 'is_active', 'passing_score', 'registration_start', 'registration_end'])]
 class AcademicYear extends Model
 {
     protected function casts(): array
@@ -14,6 +14,8 @@ class AcademicYear extends Model
         return [
             'is_active' => 'boolean',
             'passing_score' => 'float',
+            'registration_start' => 'datetime',
+            'registration_end' => 'datetime',
         ];
     }
 

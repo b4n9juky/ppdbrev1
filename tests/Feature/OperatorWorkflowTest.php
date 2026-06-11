@@ -386,3 +386,147 @@ test('operator verifying registration does not automatically accept, and rejecti
     expect($reg2->status)->toBe('rejected'); // BECOMES rejected!
     expect($reg2->verification_notes)->toBe('Foto ijazah tidak terbaca.');
 });
+
+test('operator and admin can edit registration scores even when academic year is inactive (closed)', function () {
+    $academicYear = AcademicYear::create([
+        'name' => '2026/2027',
+        'is_active' => false, // Set to false (closed/inactive)
+    ]);
+
+    $operator = User::create([
+        'name' => 'Operator User',
+        'email' => 'operator_inactive@ppdb.ma',
+        'password' => bcrypt('password'),
+        'role' => 'operator',
+    ]);
+    $operator->email_verified_at = now();
+    $operator->save();
+
+    $admin = User::create([
+        'name' => 'Admin User',
+        'email' => 'admin_inactive@ppdb.ma',
+        'password' => bcrypt('password'),
+        'role' => 'admin',
+    ]);
+    $admin->email_verified_at = now();
+    $admin->save();
+
+    $student = User::create([
+        'name' => 'Student User',
+        'email' => 'student_inactive@ppdb.ma',
+        'password' => bcrypt('password'),
+        'role' => 'student',
+    ]);
+    $student->email_verified_at = now();
+    $student->save();
+
+    $admissionPath = AdmissionPath::create([
+        'name' => 'Zonasi',
+        'quota' => 100,
+        'is_active' => true,
+    ]);
+
+    $registration = Registration::create([
+        'user_id' => $student->id,
+        'academic_year_id' => $academicYear->id,
+        'admission_path_id' => $admissionPath->id,
+        'status' => 'pending',
+        'assigned_operator_id' => $operator->id, // Assign to operator so operator can edit
+    ]);
+
+    $subject = Subject::create([
+        'academic_year_id' => $academicYear->id,
+        'name' => 'Matematika',
+        'urut' => 1,
+        'is_active' => true,
+    ]);
+
+    // Operator can access edit page and see subjects of registration's academic year
+    $response = $this->actingAs($operator)->get(route('operator.registrations.scores.edit', $registration->id));
+    $response->assertOk();
+    $subjects = collect($response->original->getData()['page']['props']['subjects']);
+    expect($subjects->contains('id', $subject->id))->toBeTrue();
+
+    // Operator can save scores
+    $response = $this->actingAs($operator)->patch(route('operator.registrations.scores.update', $registration->id), [
+        'scores' => [
+            ['subject_id' => $subject->id, 'scores' => 85.00],
+        ],
+    ]);
+    $response->assertSessionHas('success');
+    expect($registration->fresh()->total_score)->toBe('85.00');
+
+    // Admin can also access edit page and see subjects
+    $response = $this->actingAs($admin)->get(route('admin.registrations.scores.edit', $registration->id));
+    $response->assertOk();
+    $subjectsAdmin = collect($response->original->getData()['page']['props']['subjects']);
+    expect($subjectsAdmin->contains('id', $subject->id))->toBeTrue();
+
+    // Admin can save scores
+    $response = $this->actingAs($admin)->patch(route('admin.registrations.scores.update', $registration->id), [
+        'scores' => [
+            ['subject_id' => $subject->id, 'scores' => 90.00],
+        ],
+    ]);
+    $response->assertSessionHas('success');
+    expect($registration->fresh()->total_score)->toBe('90.00');
+});
+
+test('operator index page loads subjects of selected registration even when academic year is inactive (closed)', function () {
+    $academicYear = AcademicYear::create([
+        'name' => '2026/2027',
+        'is_active' => false, // Set to false (closed/inactive)
+    ]);
+
+    $operator = User::create([
+        'name' => 'Operator User',
+        'email' => 'operator_index_inactive@ppdb.ma',
+        'password' => bcrypt('password'),
+        'role' => 'operator',
+    ]);
+    $operator->email_verified_at = now();
+    $operator->save();
+
+    $student = User::create([
+        'name' => 'Student User',
+        'email' => 'student_index_inactive@ppdb.ma',
+        'password' => bcrypt('password'),
+        'role' => 'student',
+    ]);
+    $student->email_verified_at = now();
+    $student->save();
+
+    $admissionPath = AdmissionPath::create([
+        'name' => 'Zonasi',
+        'quota' => 100,
+        'is_active' => true,
+    ]);
+
+    $registration = Registration::create([
+        'user_id' => $student->id,
+        'academic_year_id' => $academicYear->id,
+        'admission_path_id' => $admissionPath->id,
+        'status' => 'pending',
+    ]);
+
+    $subject = Subject::create([
+        'academic_year_id' => $academicYear->id,
+        'name' => 'Matematika',
+        'urut' => 1,
+        'is_active' => true,
+    ]);
+
+    // When no student selected, subjects should be empty because active year is inactive (null)
+    $response = $this->actingAs($operator)->get(route('operator.registrations.index'));
+    $response->assertOk();
+    $subjects = collect($response->original->getData()['page']['props']['subjects']);
+    expect($subjects)->toBeEmpty();
+
+    // When registration is selected, subjects of that registration\'s academic year should be loaded
+    $responseWithSelected = $this->actingAs($operator)->get(route('operator.registrations.index', [
+        'selected_id' => $registration->id,
+    ]));
+    $responseWithSelected->assertOk();
+    $subjectsSelected = collect($responseWithSelected->original->getData()['page']['props']['subjects']);
+    expect($subjectsSelected->contains('id', $subject->id))->toBeTrue();
+});

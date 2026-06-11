@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { FileText, CheckCircle, XCircle, Clock, Users, UserCheck, ArrowRight, Search, RotateCcw } from 'lucide-react';
+import { FileText, CheckCircle, XCircle, Clock, Users, UserCheck, ArrowRight, Search, RotateCcw, FileSpreadsheet } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 
 const statusConfig = {
@@ -148,6 +148,17 @@ export default function AnnouncementTab({ registrations, paths, stats, filters }
                             <option value="reserve">Cadangan</option>
                             <option value="rejected">Ditolak</option>
                         </select>
+                        <a
+                            href={route('admin.registrations.export-accepted', {
+                                announcement_search: search,
+                                announcement_path: pathFilter,
+                                announcement_status: statusFilter,
+                            })}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 shadow-sm transition hover:bg-emerald-100 hover:text-emerald-800 focus:ring-2 focus:ring-emerald-100 focus:outline-none active:scale-[0.98]"
+                        >
+                            <FileSpreadsheet className="h-4 w-4" />
+                            Ekspor Excel
+                        </a>
                     </div>
                     <div className="flex items-center gap-3">
                         <label className="text-sm text-gray-600 whitespace-nowrap">Tampilkan</label>

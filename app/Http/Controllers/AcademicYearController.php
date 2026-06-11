@@ -25,6 +25,8 @@ class AcademicYearController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255', 'unique:academic_years,name'],
             'passing_score' => ['required', 'numeric', 'min:0'],
+            'registration_start' => ['required', 'date'],
+            'registration_end' => ['required', 'date', 'after:registration_start'],
         ]);
 
         AcademicYear::create($validated);
@@ -38,6 +40,8 @@ class AcademicYearController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255', 'unique:academic_years,name,'.$academicYear->id],
             'passing_score' => ['required', 'numeric', 'min:0'],
+            'registration_start' => ['required', 'date'],
+            'registration_end' => ['required', 'date', 'after:registration_start'],
         ]);
 
         $academicYear->update($validated);

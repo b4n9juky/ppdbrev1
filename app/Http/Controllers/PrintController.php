@@ -32,6 +32,21 @@ class PrintController extends Controller
         return $this->generateRegistrationProofPdf($registration);
     }
 
+    public function studentDecisionLetter(): Response
+    {
+        $activeYear = AcademicYear::where('is_active', true)->first();
+        if (! $activeYear) {
+            abort(404, 'Tidak ada tahun ajaran aktif.');
+        }
+
+        $registration = Registration::where('user_id', auth()->id())
+            ->where('academic_year_id', $activeYear->id)
+            ->where('status', 'accepted')
+            ->firstOrFail();
+
+        return $this->decisionLetter($registration);
+    }
+
     public function decisionLetter(Registration $registration): Response
     {
         $registration->loadSum('subjectScores as total_score', 'scores');
@@ -70,6 +85,155 @@ class PrintController extends Controller
         ]);
 
         return $pdf->stream('sk-kelulusan-'.str_pad($registration->id, 5, '0', STR_PAD_LEFT).'.pdf');
+    }
+
+    public function studentPrintStudentStatement(): Response
+    {
+        $activeYear = AcademicYear::where('is_active', true)->first();
+        if (! $activeYear) {
+            abort(404, 'Tidak ada tahun ajaran aktif.');
+        }
+
+        $registration = Registration::where('user_id', auth()->id())
+            ->where('academic_year_id', $activeYear->id)
+            ->where('status', 'accepted')
+            ->firstOrFail();
+
+        return $this->studentStatement($registration);
+    }
+
+    public function studentPrintParentStatement(): Response
+    {
+        $activeYear = AcademicYear::where('is_active', true)->first();
+        if (! $activeYear) {
+            abort(404, 'Tidak ada tahun ajaran aktif.');
+        }
+
+        $registration = Registration::where('user_id', auth()->id())
+            ->where('academic_year_id', $activeYear->id)
+            ->where('status', 'accepted')
+            ->firstOrFail();
+
+        return $this->parentStatement($registration);
+    }
+
+    public function studentPrintParticipationStatement(): Response
+    {
+        $activeYear = AcademicYear::where('is_active', true)->first();
+        if (! $activeYear) {
+            abort(404, 'Tidak ada tahun ajaran aktif.');
+        }
+
+        $registration = Registration::where('user_id', auth()->id())
+            ->where('academic_year_id', $activeYear->id)
+            ->where('status', 'accepted')
+            ->firstOrFail();
+
+        return $this->participationStatement($registration);
+    }
+
+    public function studentStatement(Registration $registration): Response
+    {
+        $registration->load([
+            'studentBiodata',
+            'admissionPath',
+            'academicYear',
+            'user',
+        ]);
+
+        $madrasah = MadrasahSetting::first();
+
+        // Convert images to Base64
+        $kopSuratBase64 = $madrasah ? $this->imageToBase64($madrasah->kop_surat_path) : null;
+        $signatureBase64 = $madrasah ? $this->imageToBase64($madrasah->signature_path) : null;
+        $stampBase64 = $madrasah ? $this->imageToBase64($madrasah->stamp_path) : null;
+
+        // Explode statement points by newline
+        $points = [];
+        if ($madrasah && $madrasah->student_statement_points) {
+            $points = array_filter(array_map('trim', explode("\n", $madrasah->student_statement_points)));
+        }
+
+        $pdf = Pdf::loadView('pdf.student-statement', [
+            'registration' => $registration,
+            'madrasah' => $madrasah,
+            'kop_surat_base64' => $kopSuratBase64,
+            'signature_base64' => $signatureBase64,
+            'stamp_base64' => $stampBase64,
+            'points' => $points,
+        ]);
+
+        return $pdf->stream('surat-pernyataan-siswa-'.str_pad($registration->id, 5, '0', STR_PAD_LEFT).'.pdf');
+    }
+
+    public function parentStatement(Registration $registration): Response
+    {
+        $registration->load([
+            'studentBiodata',
+            'studentParent',
+            'admissionPath',
+            'academicYear',
+            'user',
+        ]);
+
+        $madrasah = MadrasahSetting::first();
+
+        // Convert images to Base64
+        $kopSuratBase64 = $madrasah ? $this->imageToBase64($madrasah->kop_surat_path) : null;
+        $signatureBase64 = $madrasah ? $this->imageToBase64($madrasah->signature_path) : null;
+        $stampBase64 = $madrasah ? $this->imageToBase64($madrasah->stamp_path) : null;
+
+        // Explode statement points by newline
+        $points = [];
+        if ($madrasah && $madrasah->parent_statement_points) {
+            $points = array_filter(array_map('trim', explode("\n", $madrasah->parent_statement_points)));
+        }
+
+        $pdf = Pdf::loadView('pdf.parent-statement', [
+            'registration' => $registration,
+            'madrasah' => $madrasah,
+            'kop_surat_base64' => $kopSuratBase64,
+            'signature_base64' => $signatureBase64,
+            'stamp_base64' => $stampBase64,
+            'points' => $points,
+        ]);
+
+        return $pdf->stream('surat-pernyataan-orangtua-'.str_pad($registration->id, 5, '0', STR_PAD_LEFT).'.pdf');
+    }
+
+    public function participationStatement(Registration $registration): Response
+    {
+        $registration->load([
+            'studentBiodata',
+            'studentParent',
+            'admissionPath',
+            'academicYear',
+            'user',
+        ]);
+
+        $madrasah = MadrasahSetting::first();
+
+        // Convert images to Base64
+        $kopSuratBase64 = $madrasah ? $this->imageToBase64($madrasah->kop_surat_path) : null;
+        $signatureBase64 = $madrasah ? $this->imageToBase64($madrasah->signature_path) : null;
+        $stampBase64 = $madrasah ? $this->imageToBase64($madrasah->stamp_path) : null;
+
+        // Explode statement points by newline
+        $points = [];
+        if ($madrasah && $madrasah->participation_statement_points) {
+            $points = array_filter(array_map('trim', explode("\n", $madrasah->participation_statement_points)));
+        }
+
+        $pdf = Pdf::loadView('pdf.participation-statement', [
+            'registration' => $registration,
+            'madrasah' => $madrasah,
+            'kop_surat_base64' => $kopSuratBase64,
+            'signature_base64' => $signatureBase64,
+            'stamp_base64' => $stampBase64,
+            'points' => $points,
+        ]);
+
+        return $pdf->stream('surat-pernyataan-partisipasi-'.str_pad($registration->id, 5, '0', STR_PAD_LEFT).'.pdf');
     }
 
     private function generateRegistrationProofPdf(Registration $registration): Response

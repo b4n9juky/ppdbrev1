@@ -171,6 +171,131 @@ export default function Dashboard({ activeYear, registration, madrasah, document
                                 </div>
                             )}
 
+                            {/* SK Kelulusan Card */}
+                            {registration.status === 'accepted' && (
+                                <div className="mb-8 overflow-hidden rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50">
+                                            <svg className="h-6 w-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h4 className="text-sm font-bold text-gray-900">Surat Keputusan (SK) Kelulusan</h4>
+                                            <p className="text-xs text-gray-500">Anda dapat mengunduh dan mencetak Surat Keputusan Kelulusan resmi Anda.</p>
+                                        </div>
+                                    </div>
+                                    <a
+                                        href={route('student.print.decision-letter')}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 hover:opacity-95 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition-all"
+                                    >
+                                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                        </svg>
+                                        Cetak SK Kelulusan
+                                    </a>
+                                </div>
+                            )}
+
+                            {/* Re-registration Progress Card */}
+                            {registration.status === 'accepted' && (
+                                <div className="mb-8 overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50/50 to-indigo-50/30 p-6 shadow-sm">
+                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                        <div className="flex items-start gap-4">
+                                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-600 shrink-0">
+                                                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-slate-900 text-base">Proses Daftar Ulang</h3>
+                                                <p className="text-sm text-slate-600 mt-0.5">
+                                                    Lengkapi biodata lengkap beserta data orang tua kandung/wali untuk pendaftaran ulang.
+                                                </p>
+                                                {registration.re_registration_notes && (
+                                                    <div className="mt-2 text-xs font-semibold text-red-800 bg-red-50 p-2.5 rounded-lg border border-red-100">
+                                                        <span className="font-bold block text-red-900">Catatan Perbaikan:</span>
+                                                        <span className="text-red-850 font-normal">{registration.re_registration_notes}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 shrink-0">
+                                            <div className="text-left sm:text-right">
+                                                <span className="text-xs text-gray-500 block">Status Daftar Ulang</span>
+                                                <span className={`inline-block mt-1 px-3 py-1 rounded-full text-xs font-bold ${
+                                                    registration.re_registration_status === 'verified'
+                                                        ? 'bg-emerald-100 text-emerald-800'
+                                                        : registration.re_registration_status === 'submitted'
+                                                        ? 'bg-amber-100 text-amber-800'
+                                                        : 'bg-red-100 text-red-800'
+                                                }`}>
+                                                    {registration.re_registration_status === 'verified'
+                                                        ? 'Selesai (Diverifikasi)'
+                                                        : registration.re_registration_status === 'submitted'
+                                                        ? 'Menunggu Verifikasi'
+                                                        : 'Belum Selesai'}
+                                                </span>
+                                            </div>
+
+                                            {registration.re_registration_status !== 'verified' && (
+                                                <Link
+                                                    href={route('student.re-registration')}
+                                                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-95 px-5 py-3 text-xs font-bold text-white shadow-sm shadow-blue-200 transition"
+                                                >
+                                                    {registration.re_registration_status === 'submitted' ? 'Edit / Perbaiki Data' : 'Isi Form Daftar Ulang'}
+                                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                                    </svg>
+                                                </Link>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Statement downloads */}
+                                    {(registration.re_registration_status === 'submitted' || registration.re_registration_status === 'verified') && (
+                                        <div className="mt-5 border-t border-slate-150 pt-4">
+                                            <span className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Unduh / Cetak Surat Pernyataan:</span>
+                                            <div className="flex flex-wrap gap-3">
+                                                <a
+                                                    href={route('student.print.student-statement')}
+                                                    target="_blank"
+                                                    className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm transition-all"
+                                                >
+                                                    <svg className="h-4 w-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                    </svg>
+                                                    Pernyataan Siswa
+                                                </a>
+                                                <a
+                                                    href={route('student.print.parent-statement')}
+                                                    target="_blank"
+                                                    className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm transition-all"
+                                                >
+                                                    <svg className="h-4 w-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                    </svg>
+                                                    Pernyataan Orang Tua
+                                                </a>
+                                                <a
+                                                    href={route('student.print.participation-statement')}
+                                                    target="_blank"
+                                                    className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm transition-all"
+                                                >
+                                                    <svg className="h-4 w-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                    </svg>
+                                                    Pernyataan Partisipasi
+                                                </a>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
                             {/* Status Card */}
                             <div className="mb-8 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
                                 <div className="bg-gradient-to-r from-emerald-600 to-green-600 px-6 py-4">

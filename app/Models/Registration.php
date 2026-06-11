@@ -8,7 +8,20 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['user_id', 'academic_year_id', 'admission_path_id', 'status', 'total_score', 'assigned_operator_id', 'assigned_at', 'processing_status', 'verification_notes'])]
+#[Fillable([
+    'user_id',
+    'academic_year_id',
+    'admission_path_id',
+    'status',
+    'total_score',
+    'assigned_operator_id',
+    'assigned_at',
+    'processing_status',
+    'verification_notes',
+    're_registration_status',
+    're_registration_notes',
+    're_registered_at',
+])]
 class Registration extends Model
 {
     public function assignedOperator(): BelongsTo
@@ -41,6 +54,11 @@ class Registration extends Model
     public function studentBiodata(): HasOne
     {
         return $this->hasOne(StudentBiodata::class);
+    }
+
+    public function studentParent(): HasOne
+    {
+        return $this->hasOne(StudentParent::class);
     }
 
     public function studentDocuments(): HasMany

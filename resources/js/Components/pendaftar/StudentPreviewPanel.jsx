@@ -2,7 +2,7 @@ import StudentStatusCard from '@/Components/pendaftar/StudentStatusCard';
 import StudentDocuments from '@/Components/pendaftar/StudentDocuments';
 import StudentActions from '@/Components/pendaftar/StudentActions';
 import StudentNotes from '@/Components/pendaftar/StudentNotes';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
 import { Pencil, Check, X } from 'lucide-react';
 
@@ -10,6 +10,11 @@ export default function StudentPreviewPanel({ registration, user, documentTypes,
     const [isEditingScores, setIsEditingScores] = useState(false);
     const [editScores, setEditScores] = useState([]);
     const [saving, setSaving] = useState(false);
+    const [activeTab, setActiveTab] = useState('pendaftaran');
+
+    useEffect(() => {
+        setActiveTab('pendaftaran');
+    }, [registration?.id]);
 
     if (!registration) {
         return (
@@ -141,129 +146,334 @@ export default function StudentPreviewPanel({ registration, user, documentTypes,
                                 SK Kelulusan
                             </a>
                         )}
-                    </div>
-                </div>
-
-                {/* Biodata Card */}
-                <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-                    <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Biodata Calon Siswa</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                            <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Asal Sekolah</span>
-                            <span className="text-sm font-semibold text-gray-800">{bio.previous_school || '-'}</span>
-                        </div>
-                        <div className="space-y-1">
-                            <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">No. WhatsApp / Kontak</span>
-                            <span className="text-sm font-semibold text-gray-800 font-mono">{bio.phone_number || '-'}</span>
-                        </div>
-                        <div className="space-y-1">
-                            <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Jenis Kelamin</span>
-                            <span className="text-sm font-semibold text-gray-800">{bio.gender === 'male' ? 'Laki-laki' : bio.gender === 'female' ? 'Perempuan' : '-'}</span>
-                        </div>
-                        <div className="space-y-1">
-                            <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Tempat, Tanggal Lahir</span>
-                            <span className="text-sm font-semibold text-gray-800">
-                                {bio.birth_place || '-'}, {bio.birth_date ? (() => {
-                                    try {
-                                        const d = new Date(bio.birth_date);
-                                        return isNaN(d.getTime()) ? bio.birth_date : d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-                                    } catch {
-                                        return bio.birth_date || '-';
-                                    }
-                                })() : '-'}
-                            </span>
-                        </div>
-                        <div className="space-y-1 sm:col-span-2">
-                            <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Alamat Lengkap</span>
-                            <span className="text-sm font-semibold text-gray-800 leading-relaxed">{bio.address || '-'}</span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Nilai */}
-                <div className={`rounded-xl border p-4 ${isEditingScores ? 'bg-white border-emerald-300' : 'bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-100'}`}>
-                    <div className="flex items-center justify-between mb-3">
-                        <p className="text-xs font-semibold text-emerald-800 uppercase tracking-wider">Nilai Seleksi</p>
-                        {!isEditingScores && registration.processing_status !== 'baru' && subjects.length > 0 && (
-                            <button
-                                onClick={startEditing}
-                                className="inline-flex items-center gap-1 rounded-lg bg-white px-2.5 py-1.5 text-xs font-semibold text-emerald-700 shadow-sm ring-1 ring-emerald-200 transition hover:bg-emerald-50"
-                            >
-                                <Pencil className="h-3 w-3" />
-                                Edit Nilai
-                            </button>
+                        {registration.status === 'accepted' && (registration.re_registration_status === 'submitted' || registration.re_registration_status === 'verified') && (
+                            <>
+                                <a
+                                    href={route(`${routePrefix}.print.student-statement`, registration.id)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 rounded-lg bg-white px-2.5 py-1.5 text-xs font-semibold text-[#468432] shadow-sm ring-1 ring-emerald-100 transition hover:bg-emerald-50"
+                                >
+                                    Pern. Siswa
+                                </a>
+                                <a
+                                    href={route(`${routePrefix}.print.parent-statement`, registration.id)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 rounded-lg bg-white px-2.5 py-1.5 text-xs font-semibold text-[#468432] shadow-sm ring-1 ring-emerald-100 transition hover:bg-emerald-50"
+                                >
+                                    Pern. Ortu
+                                </a>
+                                <a
+                                    href={route(`${routePrefix}.print.participation-statement`, registration.id)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 rounded-lg bg-white px-2.5 py-1.5 text-xs font-semibold text-[#468432] shadow-sm ring-1 ring-emerald-100 transition hover:bg-emerald-50"
+                                >
+                                    Pern. Partisipasi
+                                </a>
+                            </>
                         )}
                     </div>
+                </div>
 
-                    {!isEditingScores ? (
-                        <>
-                            <div className="grid grid-cols-2 gap-4 text-center">
-                                <div>
-                                    <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Nilai Rata-rata</p>
-                                    <p className="text-2xl font-bold text-emerald-700 mt-1">
-                                        {avgScore || '-'}
-                                    </p>
+                {/* Tab Switcher */}
+                {registration.status === 'accepted' && registration.re_registration_status !== null && (
+                    <div className="flex border-b border-gray-250 gap-4 mb-4">
+                        <button
+                            onClick={() => setActiveTab('pendaftaran')}
+                            className={`pb-2 text-sm font-bold border-b-2 transition ${
+                                activeTab === 'pendaftaran'
+                                    ? 'border-[#468432] text-[#468432]'
+                                    : 'border-transparent text-gray-400 hover:text-gray-650'
+                            }`}
+                        >
+                            Pendaftaran Utama
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('re_registration')}
+                            className={`pb-2 text-sm font-bold border-b-2 transition ${
+                                activeTab === 're_registration'
+                                    ? 'border-[#468432] text-[#468432]'
+                                    : 'border-transparent text-gray-400 hover:text-gray-650'
+                            }`}
+                        >
+                            Daftar Ulang & Ortu
+                            {registration.re_registration_status === 'submitted' && (
+                                <span className="ml-1.5 inline-block h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+                            )}
+                        </button>
+                    </div>
+                )}
+
+                {activeTab === 'pendaftaran' ? (
+                    <>
+                        {/* Biodata Card */}
+                        <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+                            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Biodata Calon Siswa</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Asal Sekolah</span>
+                                    <span className="text-sm font-semibold text-gray-800">{bio.previous_school || '-'}</span>
                                 </div>
-                                <div>
-                                    <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Ranking</p>
-                                    <p className="text-2xl font-bold text-emerald-700 mt-1">
-                                        {registration.ranking || '-'}
-                                    </p>
+                                <div className="space-y-1">
+                                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">No. WhatsApp / Kontak</span>
+                                    <span className="text-sm font-semibold text-gray-800 font-mono">{bio.phone_number || '-'}</span>
+                                </div>
+                                <div className="space-y-1">
+                                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Jenis Kelamin</span>
+                                    <span className="text-sm font-semibold text-gray-800">{bio.gender === 'male' ? 'Laki-laki' : bio.gender === 'female' ? 'Perempuan' : '-'}</span>
+                                </div>
+                                <div className="space-y-1">
+                                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Tempat, Tanggal Lahir</span>
+                                    <span className="text-sm font-semibold text-gray-800">
+                                        {bio.birth_place || '-'}, {bio.birth_date ? (() => {
+                                            try {
+                                                const d = new Date(bio.birth_date);
+                                                return isNaN(d.getTime()) ? bio.birth_date : d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+                                            } catch {
+                                                return bio.birth_date || '-';
+                                            }
+                                        })() : '-'}
+                                    </span>
+                                </div>
+                                <div className="space-y-1 sm:col-span-2">
+                                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Alamat Lengkap</span>
+                                    <span className="text-sm font-semibold text-gray-800 leading-relaxed">{bio.address || '-'}</span>
                                 </div>
                             </div>
-                            {scores.length > 0 && (
-                                <div className="mt-3 pt-3 border-t border-emerald-200/50">
-                                    <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                                        {scores.map((s) => (
-                                            <div key={s.id || s.subject_id} className="flex justify-between text-xs">
-                                                <span className="text-gray-600">{s.subject?.name || 'Mapel'}</span>
-                                                <span className="font-semibold text-gray-900">{s.scores ?? '-'}</span>
+                        </div>
+
+                        {/* Nilai */}
+                        <div className={`rounded-xl border p-4 ${isEditingScores ? 'bg-white border-emerald-300' : 'bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-100'}`}>
+                            <div className="flex items-center justify-between mb-3">
+                                <p className="text-xs font-semibold text-emerald-800 uppercase tracking-wider">Nilai Seleksi</p>
+                                {!isEditingScores && registration.processing_status !== 'baru' && subjects.length > 0 && (
+                                    <button
+                                        onClick={startEditing}
+                                        className="inline-flex items-center gap-1 rounded-lg bg-white px-2.5 py-1.5 text-xs font-semibold text-emerald-700 shadow-sm ring-1 ring-emerald-200 transition hover:bg-emerald-50"
+                                    >
+                                        <Pencil className="h-3 w-3" />
+                                        Edit Nilai
+                                    </button>
+                                )}
+                            </div>
+
+                            {!isEditingScores ? (
+                                <>
+                                    <div className="grid grid-cols-2 gap-4 text-center">
+                                        <div>
+                                            <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Nilai Rata-rata</p>
+                                            <p className="text-2xl font-bold text-emerald-700 mt-1">
+                                                {avgScore || '-'}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Ranking</p>
+                                            <p className="text-2xl font-bold text-emerald-700 mt-1">
+                                                {registration.ranking || '-'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    {scores.length > 0 && (
+                                        <div className="mt-3 pt-3 border-t border-emerald-200/50">
+                                            <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                                                {scores.map((s) => (
+                                                    <div key={s.id || s.subject_id} className="flex justify-between text-xs">
+                                                        <span className="text-gray-600">{s.subject?.name || 'Mapel'}</span>
+                                                        <span className="font-semibold text-gray-900">{s.scores ?? '-'}</span>
+                                                    </div>
+                                                ))}
                                             </div>
-                                        ))}
+                                        </div>
+                                    )}
+                                </>
+                            ) : (
+                                <div className="space-y-3">
+                                    {editScores.map((score, index) => (
+                                        <div key={score.subject_id}>
+                                            <label className="mb-1 block text-xs font-semibold text-gray-600">
+                                                {subjects.find((s) => s.id === score.subject_id)?.name || 'Mapel'}
+                                            </label>
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                max="100"
+                                                value={score.scores}
+                                                onChange={(e) => handleScoreChange(index, e.target.value)}
+                                                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 shadow-sm transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 focus:outline-none"
+                                                placeholder="0 - 100"
+                                            />
+                                        </div>
+                                    ))}
+                                    <div className="flex items-center justify-end gap-2 pt-2">
+                                        <button
+                                            onClick={cancelEditing}
+                                            disabled={saving}
+                                            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-600 shadow-sm transition hover:bg-gray-50 disabled:opacity-50"
+                                        >
+                                            <X className="h-3.5 w-3.5" />
+                                            Batal
+                                        </button>
+                                        <button
+                                            onClick={handleSave}
+                                            disabled={saving}
+                                            className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-500 to-green-600 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:from-emerald-600 hover:to-green-700 disabled:opacity-60"
+                                        >
+                                            <Check className="h-3.5 w-3.5" />
+                                            {saving ? 'Menyimpan...' : 'Simpan'}
+                                        </button>
                                     </div>
                                 </div>
                             )}
-                        </>
-                    ) : (
-                        <div className="space-y-3">
-                            {editScores.map((score, index) => (
-                                <div key={score.subject_id}>
-                                    <label className="mb-1 block text-xs font-semibold text-gray-600">
-                                        {subjects.find((s) => s.id === score.subject_id)?.name || 'Mapel'}
-                                    </label>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                        max="100"
-                                        value={score.scores}
-                                        onChange={(e) => handleScoreChange(index, e.target.value)}
-                                        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 shadow-sm transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 focus:outline-none"
-                                        placeholder="0 - 100"
-                                    />
+                        </div>
+                    </>
+                ) : (
+                    <div className="space-y-6 animate-fade-in">
+                        {/* Re-registration: Biodata Siswa */}
+                        <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+                            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Biodata Lengkap Daftar Ulang</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">NIK Siswa</span>
+                                    <span className="text-sm font-semibold text-gray-800">{bio.nik || '-'}</span>
                                 </div>
-                            ))}
-                            <div className="flex items-center justify-end gap-2 pt-2">
-                                <button
-                                    onClick={cancelEditing}
-                                    disabled={saving}
-                                    className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-600 shadow-sm transition hover:bg-gray-50 disabled:opacity-50"
-                                >
-                                    <X className="h-3.5 w-3.5" />
-                                    Batal
-                                </button>
-                                <button
-                                    onClick={handleSave}
-                                    disabled={saving}
-                                    className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-500 to-green-600 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:from-emerald-600 hover:to-green-700 disabled:opacity-60"
-                                >
-                                    <Check className="h-3.5 w-3.5" />
-                                    {saving ? 'Menyimpan...' : 'Simpan'}
-                                </button>
+                                <div className="space-y-1">
+                                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Status Anak</span>
+                                    <span className="text-sm font-semibold text-gray-800">{bio.student_status || '-'}</span>
+                                </div>
+                                <div className="space-y-1">
+                                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Anak Ke / Jumlah Saudara</span>
+                                    <span className="text-sm font-semibold text-gray-800">{bio.child_order || '-'} dari {bio.siblings_count ?? '-'} bersaudara</span>
+                                </div>
+                                <div className="space-y-1">
+                                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Golongan Darah / Kelainan</span>
+                                    <span className="text-sm font-semibold text-gray-800">{bio.blood_type || '-'} / {bio.disability || 'Tidak Ada'}</span>
+                                </div>
+                                <div className="space-y-1">
+                                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Alamat Lengkap</span>
+                                    <span className="text-sm font-semibold text-gray-800 leading-relaxed">
+                                        {bio.address || '-'}, Kel. {bio.subdistrict || '-'}, Kec. {bio.district || '-'}
+                                    </span>
+                                </div>
+                                <div className="space-y-1">
+                                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Tinggal Dengan / Jarak</span>
+                                    <span className="text-sm font-semibold text-gray-800">{bio.living_status || '-'} ({bio.distance_to_school || '-'})</span>
+                                </div>
                             </div>
                         </div>
-                    )}
-                </div>
+
+                        {/* Re-registration: Asal Sekolah */}
+                        <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+                            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Pendidikan Asal Sekolah</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Nama & Status Sekolah</span>
+                                    <span className="text-sm font-semibold text-gray-800">{bio.previous_school || '-'} ({bio.previous_school_status || '-'})</span>
+                                </div>
+                                <div className="space-y-1">
+                                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">NPSN Asal Sekolah</span>
+                                    <span className="text-sm font-semibold text-gray-800 font-mono">{bio.previous_school_npsn || '-'}</span>
+                                </div>
+                                <div className="space-y-1 sm:col-span-2">
+                                    <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Alamat Lengkap Sekolah</span>
+                                    <span className="text-sm font-semibold text-gray-800 leading-relaxed">
+                                        {bio.previous_school_address || '-'}, Kel. {bio.previous_school_subdistrict || '-'}, Kec. {bio.previous_school_district || '-'}, {bio.previous_school_city || '-'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Re-registration: Orang Tua */}
+                        {registration.student_parent && (registration.student_parent.father_name || registration.student_parent.mother_name) && (
+                            <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm space-y-5">
+                                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest border-b border-gray-100 pb-2 mb-0">Data Orang Tua Kandung</p>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 divide-y md:divide-y-0 md:divide-x divide-gray-100">
+                                    {/* Ayah */}
+                                    <div className="space-y-3">
+                                        <h4 className="text-sm font-bold text-[#468432] flex items-center gap-1.5">
+                                            <span className="h-2 w-2 rounded-full bg-[#468432]" />
+                                            Ayah Kandung ({registration.student_parent.father_status || 'Masih Hidup'})
+                                        </h4>
+                                        <div className="space-y-2 text-xs">
+                                            <p className="text-gray-500">Nama: <span className="font-semibold text-gray-800 block text-sm">{registration.student_parent.father_name || '-'}</span></p>
+                                            <p className="text-gray-500">NIK: <span className="font-semibold text-gray-700 font-mono block">{registration.student_parent.father_nik || '-'}</span></p>
+                                            <p className="text-gray-500">TTL: <span className="font-semibold text-gray-700 block">{registration.student_parent.father_birth_place || '-'}, {registration.student_parent.father_birth_date ? new Date(registration.student_parent.father_birth_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}</span></p>
+                                            <p className="text-gray-500">Pendidikan: <span className="font-semibold text-gray-700 block">{registration.student_parent.father_education || '-'}</span></p>
+                                            {registration.student_parent.father_status === 'Masih Hidup' && (
+                                                <>
+                                                    <p className="text-gray-500">Pekerjaan: <span className="font-semibold text-gray-700 block">{registration.student_parent.father_occupation || '-'}</span></p>
+                                                    <p className="text-gray-500">Penghasilan: <span className="font-semibold text-gray-700 block">{registration.student_parent.father_income || '-'}</span></p>
+                                                    <p className="text-gray-500">No. HP Ayah: <span className="font-semibold text-gray-700 font-mono block">{registration.student_parent.father_phone || '-'}</span></p>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Ibu */}
+                                    <div className="space-y-3 md:pl-6 pt-4 md:pt-0">
+                                        <h4 className="text-sm font-bold text-[#468432] flex items-center gap-1.5">
+                                            <span className="h-2 w-2 rounded-full bg-[#468432]" />
+                                            Ibu Kandung ({registration.student_parent.mother_status || 'Masih Hidup'})
+                                        </h4>
+                                        <div className="space-y-2 text-xs">
+                                            <p className="text-gray-500">Nama: <span className="font-semibold text-gray-800 block text-sm">{registration.student_parent.mother_name || '-'}</span></p>
+                                            <p className="text-gray-500">NIK: <span className="font-semibold text-gray-700 font-mono block">{registration.student_parent.mother_nik || '-'}</span></p>
+                                            <p className="text-gray-500">TTL: <span className="font-semibold text-gray-700 block">{registration.student_parent.mother_birth_place || '-'}, {registration.student_parent.mother_birth_date ? new Date(registration.student_parent.mother_birth_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}</span></p>
+                                            <p className="text-gray-500">Pendidikan: <span className="font-semibold text-gray-700 block">{registration.student_parent.mother_education || '-'}</span></p>
+                                            {registration.student_parent.mother_status === 'Masih Hidup' && (
+                                                <>
+                                                    <p className="text-gray-500">Pekerjaan: <span className="font-semibold text-gray-700 block">{registration.student_parent.mother_occupation || '-'}</span></p>
+                                                    <p className="text-gray-500">Penghasilan: <span className="font-semibold text-gray-700 block">{registration.student_parent.mother_income || '-'}</span></p>
+                                                    <p className="text-gray-500">No. HP Ibu: <span className="font-semibold text-gray-700 font-mono block">{registration.student_parent.mother_phone || '-'}</span></p>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Re-registration: Wali */}
+                        {registration.student_parent && registration.student_parent.guardian_name && (
+                            <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+                                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Data Wali Siswa</p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                        <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Nama Lengkap Wali</span>
+                                        <span className="text-sm font-semibold text-gray-800">{registration.student_parent.guardian_name || '-'}</span>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">NIK Wali</span>
+                                        <span className="text-sm font-semibold text-gray-800 font-mono">{registration.student_parent.guardian_nik || '-'}</span>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">TTL Wali</span>
+                                        <span className="text-sm font-semibold text-gray-800">
+                                            {registration.student_parent.guardian_birth_place || '-'}, {registration.student_parent.guardian_birth_date ? new Date(registration.student_parent.guardian_birth_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
+                                        </span>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Pendidikan / Pekerjaan / Penghasilan</span>
+                                        <span className="text-sm font-semibold text-gray-800">
+                                            {registration.student_parent.guardian_education || '-'} / {registration.student_parent.guardian_occupation || '-'} / {registration.student_parent.guardian_income || '-'}
+                                        </span>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Nomor HP Wali</span>
+                                        <span className="text-sm font-semibold text-gray-800 font-mono">{registration.student_parent.guardian_phone || '-'}</span>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Alamat Wali</span>
+                                        <span className="text-sm font-semibold text-gray-800">{registration.student_parent.guardian_address || '-'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* Status */}
                 <StudentStatusCard registration={registration} />

@@ -94,6 +94,15 @@ class RegistrationController extends Controller
 
         $notes = $request->input('notes') ?: 'berkas anda tidak memenuhi syarat, silahkan perbaiki';
 
+        if ($registration->status === 'accepted') {
+            $registration->update([
+                're_registration_status' => 'pending',
+                're_registration_notes' => $notes,
+            ]);
+
+            return Redirect::back()->with('success', 'Pendaftaran ulang berhasil direset untuk perbaikan kelengkapan data.');
+        }
+
         $registration->update([
             'status' => 'draft',
             'processing_status' => 'baru',
@@ -354,6 +363,34 @@ class RegistrationController extends Controller
             ->with('success', 'Catatan verifikasi berhasil disimpan.');
     }
 
+    public function verifyReRegistration(Request $request, Registration $registration): RedirectResponse
+    {
+        Gate::authorize('update', $registration);
+
+        $registration->update([
+            're_registration_status' => 'verified',
+            're_registration_notes' => 'Pendaftaran ulang Anda telah diverifikasi oleh operator.',
+        ]);
+
+        return Redirect::back()->with('success', 'Pendaftaran ulang siswa berhasil diverifikasi.');
+    }
+
+    public function rejectReRegistration(Request $request, Registration $registration): RedirectResponse
+    {
+        Gate::authorize('update', $registration);
+
+        $request->validate([
+            'notes' => ['required', 'string', 'max:5000'],
+        ]);
+
+        $registration->update([
+            're_registration_status' => 'pending', // send back to pending for editing
+            're_registration_notes' => $request->input('notes'),
+        ]);
+
+        return Redirect::back()->with('success', 'Pendaftaran ulang siswa ditolak untuk perbaikan.');
+    }
+
     public function downloadReport(): \Illuminate\Http\Response
     {
         $activeYear = AcademicYear::where('is_active', true)->first();
@@ -377,5 +414,85 @@ class RegistrationController extends Controller
         ]);
 
         return $pdf->download('laporan-pendaftaran-' . str_replace('/', '-', $activeYear->name) . '.pdf');
+    }
+
+    public function exportAcceptedExcel(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $activeYear = AcademicYear::where('is_active', true)->first();
+        if (!$activeYear) {
+            abort(404, 'Tidak ada tahun ajaran aktif.');
+        }
+
+        $search = $request->query('search') ?? $request->query('announcement_search', '');
+        $pathFilter = $request->query('path') ?? $request->query('announcement_path', '');
+        $statusFilter = $request->query('status') ?? $request->query('announcement_status', '');
+
+        $query = Registration::with(['studentBiodata', 'admissionPath', 'user'])
+            ->where('academic_year_id', $activeYear->id)
+            ->where('status', '!=', 'draft')
+            ->where('processing_status', 'selesai');
+
+        $query->when($pathFilter, fn ($q) => $q->where('admission_path_id', $pathFilter))
+            ->when($statusFilter, fn ($q) => $q->where('status', $statusFilter))
+            ->when($search, function ($q) use ($search) {
+                $q->where(function ($sub) use ($search) {
+                    $sub->whereHas('studentBiodata', fn ($sb) => $sb->where('full_name', 'like', "%{$search}%")->orWhere('nisn', 'like', "%{$search}%"))
+                        ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$search}%"));
+                });
+            });
+
+        $registrations = $query->orderBy('total_score', 'desc')
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="data-pendaftar-' . str_replace('/', '-', $activeYear->name) . '.csv"',
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0'
+        ];
+
+        $callback = function () use ($registrations) {
+            $file = fopen('php://output', 'w');
+            
+            // Prepend UTF-8 BOM for Excel
+            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+            // Headers
+            fputcsv($file, [
+                'NISN',
+                'Nama Siswa',
+                'Asal Sekolah',
+                'Jalur Pendaftaran',
+                'Total Nilai',
+                'Status'
+            ]);
+
+            $statusLabels = [
+                'accepted' => 'Diterima',
+                'reserve' => 'Cadangan',
+                'rejected' => 'Ditolak',
+                'pending' => 'Menunggu',
+                'draft' => 'Draft',
+            ];
+
+            foreach ($registrations as $reg) {
+                $statusText = $statusLabels[$reg->status] ?? $reg->status;
+
+                fputcsv($file, [
+                    $reg->studentBiodata?->nisn ?? '-',
+                    $reg->studentBiodata?->full_name ?? $reg->user?->name ?? '-',
+                    $reg->studentBiodata?->previous_school ?? '-',
+                    $reg->admissionPath?->name ?? '-',
+                    $reg->total_score ?? '0',
+                    $statusText
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

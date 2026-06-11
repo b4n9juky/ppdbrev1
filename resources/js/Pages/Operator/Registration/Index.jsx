@@ -110,13 +110,14 @@ export default function OperatorIndex({ registrations, selectedRegistration, pat
             <Head title="Workspace Operator" />
 
             {/* Tab Navigation */}
-            <div className="mb-6 flex gap-1 rounded-2xl border border-gray-100 bg-white p-1.5 shadow-sm max-w-md">
+            <div className="mb-6 flex gap-1 rounded-2xl border border-gray-100 bg-white p-1.5 shadow-sm max-w-lg">
                 <button
                     onClick={() => {
-                        setActiveTab('workspace');
-                        const params = new URLSearchParams(window.location.search);
-                        params.set('tab', 'workspace');
-                        window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+                        router.get(route('operator.registrations.index'), {
+                            tab: 'workspace',
+                            processing_status: 'all',
+                            selected_id: null,
+                        });
                     }}
                     className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 ${
                         activeTab === 'workspace'
@@ -128,6 +129,25 @@ export default function OperatorIndex({ registrations, selectedRegistration, pat
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                     </svg>
                     Verifikasi Pendaftar
+                </button>
+                <button
+                    onClick={() => {
+                        router.get(route('operator.registrations.index'), {
+                            tab: 're_registration',
+                            processing_status: 'all',
+                            selected_id: null,
+                        });
+                    }}
+                    className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 ${
+                        activeTab === 're_registration'
+                            ? 'bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-md shadow-orange-100'
+                            : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
+                    }`}
+                >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                    </svg>
+                    Daftar Ulang
                 </button>
                 <button
                     onClick={() => {
@@ -149,7 +169,7 @@ export default function OperatorIndex({ registrations, selectedRegistration, pat
                 </button>
             </div>
 
-            {activeTab === 'workspace' ? (
+            {(activeTab === 'workspace' || activeTab === 're_registration') ? (
                 <>
                     {/* Desktop Layout */}
                     <div

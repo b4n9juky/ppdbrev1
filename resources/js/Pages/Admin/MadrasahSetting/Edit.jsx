@@ -13,6 +13,9 @@ export default function Edit({ setting }) {
         signature: null,
         stamp: null,
         logo: null,
+        student_statement_points: setting.student_statement_points || '',
+        parent_statement_points: setting.parent_statement_points || '',
+        participation_statement_points: setting.participation_statement_points || '',
     });
 
     function handleSubmit(e) {
@@ -192,6 +195,49 @@ export default function Edit({ setting }) {
                                             />
                                         </div>
                                     )}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="border-t border-gray-100 pt-6">
+                            <h3 className="mb-2 text-base font-semibold text-gray-905">Poin Surat Pernyataan</h3>
+                            <p className="mb-4 text-xs text-gray-400">Masukkan poin-poin pernyataan. Pisahkan setiap poin dengan baris baru (tekan Enter).</p>
+                            
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Surat Pernyataan Siswa</label>
+                                    <textarea
+                                        value={data.student_statement_points}
+                                        onChange={(e) => setData('student_statement_points', e.target.value)}
+                                        rows={5}
+                                        placeholder="Poin 1&#10;Poin 2&#10;Poin 3..."
+                                        className="mt-1 block w-full rounded-xl border-gray-200 shadow-sm transition focus:border-emerald-400 focus:ring-emerald-400 text-sm"
+                                    />
+                                    {errors.student_statement_points && <p className="mt-1 text-sm text-red-650">{errors.student_statement_points}</p>}
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Surat Pernyataan Orang Tua / Wali</label>
+                                    <textarea
+                                        value={data.parent_statement_points}
+                                        onChange={(e) => setData('parent_statement_points', e.target.value)}
+                                        rows={5}
+                                        placeholder="Poin 1&#10;Poin 2&#10;Poin 3..."
+                                        className="mt-1 block w-full rounded-xl border-gray-200 shadow-sm transition focus:border-emerald-400 focus:ring-emerald-400 text-sm"
+                                    />
+                                    {errors.parent_statement_points && <p className="mt-1 text-sm text-red-650">{errors.parent_statement_points}</p>}
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Surat Pernyataan Partisipasi Orang Tua / Wali</label>
+                                    <textarea
+                                        value={data.participation_statement_points}
+                                        onChange={(e) => setData('participation_statement_points', e.target.value)}
+                                        rows={5}
+                                        placeholder="Poin 1&#10;Poin 2&#10;Poin 3..."
+                                        className="mt-1 block w-full rounded-xl border-gray-200 shadow-sm transition focus:border-emerald-400 focus:ring-emerald-400 text-sm"
+                                    />
+                                    {errors.participation_statement_points && <p className="mt-1 text-sm text-red-650">{errors.participation_statement_points}</p>}
                                 </div>
                             </div>
                         </div>

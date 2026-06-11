@@ -15,6 +15,9 @@ use Illuminate\Database\Eloquent\Model;
     'signature_path',
     'stamp_path',
     'logo_path',
+    'student_statement_points',
+    'parent_statement_points',
+    'participation_statement_points',
 ])]
 class MadrasahSetting extends Model
 {

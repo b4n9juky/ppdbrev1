@@ -27,8 +27,7 @@ class ScoreController extends Controller
         $registration->loadSum('subjectScores as total_score', 'scores');
         $registration->load(['subjectScores.subject', 'studentBiodata', 'admissionPath']);
 
-        $activeYear = AcademicYear::where('is_active', true)->first();
-        $subjects = Subject::where('academic_year_id', $activeYear?->id)
+        $subjects = Subject::where('academic_year_id', $registration->academic_year_id)
             ->where('is_active', true)
             ->orderBy('urut')
             ->orderBy('name')

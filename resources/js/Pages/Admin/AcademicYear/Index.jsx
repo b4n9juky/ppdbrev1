@@ -7,9 +7,27 @@ import Switch from '@/Components/Switch';
 export default function Index({ years }) {
     const [editing, setEditing] = useState(null);
 
+    const formatForDateTimeLocal = (dateString) => {
+        if (!dateString) return '';
+        if (dateString.includes('T')) {
+            return dateString.slice(0, 16);
+        }
+        return dateString.slice(0, 16).replace(' ', 'T');
+    };
+
+    const formatTableDate = (dateString) => {
+        if (!dateString) return '-';
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return '-';
+        const pad = (num) => String(num).padStart(2, '0');
+        return `${pad(date.getDate())}-${pad(date.getMonth() + 1)}-${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    };
+
     const { data, setData, post, put, processing, errors, reset } = useForm({
         name: '',
         passing_score: '',
+        registration_start: '',
+        registration_end: '',
     });
 
     function handleSubmit(e) {
@@ -32,6 +50,8 @@ export default function Index({ years }) {
         setData({
             name: year.name,
             passing_score: year.passing_score ?? '',
+            registration_start: formatForDateTimeLocal(year.registration_start),
+            registration_end: formatForDateTimeLocal(year.registration_end),
         });
     }
 
@@ -130,8 +150,8 @@ export default function Index({ years }) {
                             </h3>
                         </div>
                         <form onSubmit={handleSubmit} className="px-6 py-5">
-                            <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-                                <div className="flex-1">
+                            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                                <div>
                                     <label className="block text-sm font-medium text-gray-700">Nama Tahun Ajaran</label>
                                     <input
                                         type="text"
@@ -142,7 +162,7 @@ export default function Index({ years }) {
                                     />
                                     {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
                                 </div>
-                                <div className="w-full sm:w-48">
+                                <div>
                                     <label className="block text-sm font-medium text-gray-700">Nilai Minimal Kelulusan</label>
                                     <input
                                         type="number"
@@ -154,16 +174,36 @@ export default function Index({ years }) {
                                     />
                                     {errors.passing_score && <p className="mt-1 text-sm text-red-600">{errors.passing_score}</p>}
                                 </div>
-                                <div className="flex gap-2">
-                                    <Button type="submit" disabled={processing} className="shrink-0 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 shadow-sm shadow-emerald-200">
-                                        {editing ? 'Update' : 'Simpan'}
-                                    </Button>
-                                    {editing && (
-                                        <Button type="button" variant="outline" onClick={handleCancel} className="shrink-0 border-gray-200 text-gray-600 hover:bg-gray-50">
-                                            Batal
-                                        </Button>
-                                    )}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Tanggal Buka Pendaftaran</label>
+                                    <input
+                                        type="datetime-local"
+                                        value={data.registration_start}
+                                        onChange={(e) => setData('registration_start', e.target.value)}
+                                        className="mt-1 block w-full rounded-xl border-gray-200 shadow-sm transition focus:border-emerald-400 focus:ring-emerald-400"
+                                    />
+                                    {errors.registration_start && <p className="mt-1 text-sm text-red-600">{errors.registration_start}</p>}
                                 </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Tanggal Tutup Pendaftaran</label>
+                                    <input
+                                        type="datetime-local"
+                                        value={data.registration_end}
+                                        onChange={(e) => setData('registration_end', e.target.value)}
+                                        className="mt-1 block w-full rounded-xl border-gray-200 shadow-sm transition focus:border-emerald-400 focus:ring-emerald-400"
+                                    />
+                                    {errors.registration_end && <p className="mt-1 text-sm text-red-600">{errors.registration_end}</p>}
+                                </div>
+                            </div>
+                            <div className="mt-6 flex justify-end gap-2 border-t border-gray-100 pt-4">
+                                {editing && (
+                                    <Button type="button" variant="outline" onClick={handleCancel} className="shrink-0 border-gray-200 text-gray-600 hover:bg-gray-50">
+                                        Batal
+                                    </Button>
+                                )}
+                                <Button type="submit" disabled={processing} className="shrink-0 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 shadow-sm shadow-emerald-200">
+                                    {editing ? 'Update' : 'Simpan'}
+                                </Button>
                             </div>
                         </form>
                     </div>
@@ -178,6 +218,7 @@ export default function Index({ years }) {
                                 <tr className="bg-gray-50/50">
                                     <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Tahun Ajaran</th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Nilai Minimal</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Jadwal Pendaftaran</th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Status</th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Pendaftaran</th>
                                     <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">Aksi</th>
@@ -198,6 +239,12 @@ export default function Index({ years }) {
                                         </td>
                                         <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900 font-medium">
                                             {year.passing_score}
+                                        </td>
+                                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">
+                                            <div className="flex flex-col gap-0.5">
+                                                <span className="font-medium text-xs text-gray-700">Buka: {formatTableDate(year.registration_start)}</span>
+                                                <span className="text-xs text-gray-500">Tutup: {formatTableDate(year.registration_end)}</span>
+                                            </div>
                                         </td>
                                         <td className="whitespace-nowrap px-6 py-4">
                                             <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${year.is_active ? 'bg-emerald-50 text-emerald-700 ring-emerald-300' : 'bg-gray-100 text-gray-700 ring-gray-300'}`}>
@@ -224,7 +271,7 @@ export default function Index({ years }) {
                                 ))}
                                 {years.length === 0 && (
                                     <tr>
-                                        <td colSpan={4} className="px-6 py-10 text-center text-sm text-gray-400">
+                                        <td colSpan={6} className="px-6 py-10 text-center text-sm text-gray-400">
                                             Belum ada tahun ajaran
                                         </td>
                                     </tr>

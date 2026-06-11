@@ -35,19 +35,30 @@ class RegistrationController extends Controller
         $processingStatus = $request->query('processing_status', 'all');
         $selectedId = $request->query('selected_id');
 
+        $tab = $request->query('tab', 'workspace');
+
         $registrations = Registration::withSum('subjectScores as total_score', 'scores')
             ->with([
                 'studentBiodata',
+                'studentParent',
                 'admissionPath',
                 'user',
                 'studentDocuments',
                 'assignedOperator',
                 'subjectScores.subject',
             ])
-            ->where('processing_status', '!=', 'selesai')
             ->when($activeYear, fn($q) => $q->where('academic_year_id', $activeYear->id))
-            ->when($processingStatus === 'baru', fn($q) => $q->where('processing_status', 'baru'))
-            ->when($processingStatus === 'my_processing', fn($q) => $q->where('processing_status', 'diproses')->where('assigned_operator_id', auth()->id()))
+            ->when($tab === 're_registration', function ($q) use ($processingStatus) {
+                $q->where('status', 'accepted')
+                    ->when($processingStatus === 'submitted', fn($q) => $q->where('re_registration_status', 'submitted'))
+                    ->when($processingStatus === 'verified', fn($q) => $q->where('re_registration_status', 'verified'))
+                    ->when($processingStatus === 'pending', fn($q) => $q->where('re_registration_status', 'pending'));
+            }, function ($q) use ($processingStatus) {
+                $q->where('status', '!=', 'accepted')
+                    ->where('processing_status', '!=', 'selesai')
+                    ->when($processingStatus === 'baru', fn($q) => $q->where('processing_status', 'baru'))
+                    ->when($processingStatus === 'my_processing', fn($q) => $q->where('processing_status', 'diproses')->where('assigned_operator_id', auth()->id()));
+            })
             ->when($search, function ($q) use ($search) {
                 $q->where(function ($sub) use ($search) {
                     $sub->whereHas('studentBiodata', function ($sb) use ($search) {
@@ -69,6 +80,7 @@ class RegistrationController extends Controller
             $selectedRegistration = Registration::withSum('subjectScores as total_score', 'scores')
                 ->with([
                     'studentBiodata',
+                    'studentParent',
                     'admissionPath',
                     'user',
                     'studentDocuments',
@@ -91,7 +103,20 @@ class RegistrationController extends Controller
 
         $user = auth()->user();
         $paths = AdmissionPath::where('is_active', true)->get(['id', 'name']);
-        $subjects = Subject::where('academic_year_id', $activeYear?->id)->orderBy('urut')->orderBy('name')->get(['id', 'name', 'urut']);
+        $subjects = collect();
+        if ($selectedRegistration) {
+            $subjects = Subject::where('academic_year_id', $selectedRegistration->academic_year_id)
+                ->where('is_active', true)
+                ->orderBy('urut')
+                ->orderBy('name')
+                ->get(['id', 'name', 'urut']);
+        } elseif ($activeYear) {
+            $subjects = Subject::where('academic_year_id', $activeYear->id)
+                ->where('is_active', true)
+                ->orderBy('urut')
+                ->orderBy('name')
+                ->get(['id', 'name', 'urut']);
+        }
 
         $myActivities = \App\Models\RegistrationAuditLog::where('user_id', $user->id)
             ->latest()
@@ -252,6 +277,15 @@ class RegistrationController extends Controller
 
         $notes = $request->input('notes') ?: 'berkas anda tidak memenuhi syarat, silahkan perbaiki';
 
+        if ($registration->status === 'accepted') {
+            $registration->update([
+                're_registration_status' => 'pending',
+                're_registration_notes' => $notes,
+            ]);
+
+            return Redirect::back()->with('success', 'Pendaftaran ulang berhasil direset untuk perbaikan kelengkapan data.');
+        }
+
         $registration->update([
             'status' => 'draft',
             'processing_status' => 'baru',
@@ -310,5 +344,33 @@ class RegistrationController extends Controller
         ]);
 
         return Redirect::back()->with('success', 'Catatan verifikasi berhasil disimpan.');
+    }
+
+    public function verifyReRegistration(Request $request, Registration $registration): RedirectResponse
+    {
+        Gate::authorize('update', $registration);
+
+        $registration->update([
+            're_registration_status' => 'verified',
+            're_registration_notes' => 'Pendaftaran ulang Anda telah diverifikasi oleh operator.',
+        ]);
+
+        return Redirect::back()->with('success', 'Pendaftaran ulang siswa berhasil diverifikasi.');
+    }
+
+    public function rejectReRegistration(Request $request, Registration $registration): RedirectResponse
+    {
+        Gate::authorize('update', $registration);
+
+        $request->validate([
+            'notes' => ['required', 'string', 'max:5000'],
+        ]);
+
+        $registration->update([
+            're_registration_status' => 'pending', // send back to pending for editing
+            're_registration_notes' => $request->input('notes'),
+        ]);
+
+        return Redirect::back()->with('success', 'Pendaftaran ulang siswa ditolak untuk perbaikan.');
     }
 }

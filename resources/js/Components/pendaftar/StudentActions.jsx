@@ -7,6 +7,9 @@ export default function StudentActions({ registration, user, routePrefix = 'admi
     const [showResetConfirm, setShowResetConfirm] = useState(false);
     const [resetNotes, setResetNotes] = useState('');
 
+    const [showRejectReRegConfirm, setShowRejectReRegConfirm] = useState(false);
+    const [rejectReRegNotes, setRejectReRegNotes] = useState('');
+
     if (!registration) return null;
 
     const isAssignedToMe = registration.assigned_operator_id === user.id;
@@ -36,6 +39,25 @@ export default function StudentActions({ registration, user, routePrefix = 'admi
             onSuccess: () => {
                 setShowRejectConfirm(false);
                 setRejectNotes('');
+            },
+        });
+    }
+
+    function handleVerifyReRegistration() {
+        if (!confirm('Apakah Anda yakin ingin memverifikasi pendaftaran ulang siswa ini?')) return;
+        router.post(route(`${routePrefix}.registrations.verify-re-registration`, registration.id), {}, {
+            preserveScroll: true,
+            preserveState: true,
+        });
+    }
+
+    function handleRejectReRegistration() {
+        router.post(route(`${routePrefix}.registrations.reject-re-registration`, registration.id), { notes: rejectReRegNotes }, {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                setShowRejectReRegConfirm(false);
+                setRejectReRegNotes('');
             },
         });
     }
@@ -123,6 +145,33 @@ export default function StudentActions({ registration, user, routePrefix = 'admi
                 </div>
             )}
 
+            {/* Aksi Daftar Ulang */}
+            {registration.status === 'accepted' && registration.re_registration_status === 'submitted' && (user.role === 'admin' || (user.role === 'operator' && registration.assigned_operator_id === user.id)) && (
+                <div className="space-y-2 border-t border-gray-100 pt-3">
+                    <p className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider mb-2">Aksi Daftar Ulang</p>
+                    
+                    <button
+                        onClick={handleVerifyReRegistration}
+                        className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:from-emerald-600 hover:to-green-700 hover:shadow-md active:translate-y-px"
+                    >
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Setujui Daftar Ulang
+                    </button>
+
+                    <button
+                        onClick={() => setShowRejectReRegConfirm(true)}
+                        className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 shadow-sm transition-all hover:bg-red-100 active:translate-y-px"
+                    >
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        Tolak / Perbaikan Data
+                    </button>
+                </div>
+            )}
+
             {showRejectConfirm && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
                     <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-gray-100">
@@ -165,21 +214,68 @@ export default function StudentActions({ registration, user, routePrefix = 'admi
                 </div>
             )}
 
+            {showRejectReRegConfirm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-gray-100">
+                        <h3 className="text-base font-bold text-gray-900 mb-2">Catatan Perbaikan Daftar Ulang</h3>
+                        <p className="text-sm text-gray-500 mb-4">
+                            Masukkan catatan perbaikan daftar ulang untuk <strong>{registration.student_biodata?.full_name || registration.user.name}</strong>.
+                        </p>
+                        <div className="mb-4">
+                            <textarea
+                                value={rejectReRegNotes}
+                                onChange={(e) => setRejectReRegNotes(e.target.value)}
+                                placeholder="Contoh: NIK Ayah salah ketik atau data KK tidak sesuai..."
+                                rows={3}
+                                required
+                                className="block w-full rounded-xl border-gray-200 bg-white text-sm shadow-sm transition placeholder:text-gray-300 focus:border-red-400 focus:ring-2 focus:ring-red-100"
+                            />
+                        </div>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => {
+                                    setShowRejectReRegConfirm(false);
+                                    setRejectReRegNotes('');
+                                }}
+                                className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                onClick={handleRejectReRegistration}
+                                disabled={!rejectReRegNotes.trim()}
+                                className="rounded-xl bg-gradient-to-r from-red-500 to-rose-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:from-red-600 hover:to-rose-700 disabled:opacity-50"
+                            >
+                                Ya, Kirim Catatan
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {showResetConfirm && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
                     <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-gray-100">
-                        <h3 className="text-base font-bold text-gray-900 mb-2">Reset ke Draft</h3>
+                        <h3 className="text-base font-bold text-gray-900 mb-2">
+                            {registration.status === 'accepted' ? 'Reset Kelengkapan Data' : 'Reset ke Draft'}
+                        </h3>
                         <p className="text-sm text-gray-500 mb-4">
-                            Apakah Anda yakin ingin mengembalikan berkas pendaftar <strong>{registration.student_biodata?.full_name || registration.user.name}</strong> ke status Draft?
+                            {registration.status === 'accepted'
+                                ? <>Apakah Anda yakin ingin mereset kelengkapan data daftar ulang pendaftar <strong>{registration.student_biodata?.full_name || registration.user.name}</strong>?</>
+                                : <>Apakah Anda yakin ingin mengembalikan berkas pendaftar <strong>{registration.student_biodata?.full_name || registration.user.name}</strong> ke status Draft?</>
+                            }
                         </p>
                         <div className="mb-4">
                             <label className="block text-xs font-semibold text-gray-500 mb-2">
-                                Catatan Pengembalian (Opsional)
+                                {registration.status === 'accepted' ? 'Catatan Perbaikan (Opsional)' : 'Catatan Pengembalian (Opsional)'}
                             </label>
                             <textarea
                                 value={resetNotes}
                                 onChange={(e) => setResetNotes(e.target.value)}
-                                placeholder="Masukkan alasan pengembalian berkas pendaftar..."
+                                placeholder={registration.status === 'accepted'
+                                    ? "Masukkan alasan perbaikan data..."
+                                    : "Masukkan alasan pengembalian berkas pendaftar..."
+                                }
                                 rows={3}
                                 data-gramm="false"
                                 data-gramm_editor="false"
@@ -200,7 +296,7 @@ export default function StudentActions({ registration, user, routePrefix = 'admi
                                 onClick={handleResetSubmit}
                                 className="rounded-xl bg-gradient-to-r from-red-500 to-rose-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:from-red-600 hover:to-rose-700"
                             >
-                                Ya, Reset ke Draft
+                                {registration.status === 'accepted' ? 'Ya, Reset Kelengkapan' : 'Ya, Reset ke Draft'}
                             </button>
                         </div>
                     </div>
@@ -215,9 +311,10 @@ export default function StudentActions({ registration, user, routePrefix = 'admi
                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18.5" />
                     </svg>
-                    Reset ke Draft
+                    {registration.status === 'accepted' ? 'Reset Kelengkapan Data' : 'Reset ke Draft'}
                 </button>
             )}
         </div>
     );
 }
+

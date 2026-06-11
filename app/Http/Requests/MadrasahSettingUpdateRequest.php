@@ -18,6 +18,9 @@ class MadrasahSettingUpdateRequest extends FormRequest
             'signature' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:2048'],
             'stamp' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:2048'],
             'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:2048'],
+            'student_statement_points' => ['nullable', 'string'],
+            'parent_statement_points' => ['nullable', 'string'],
+            'participation_statement_points' => ['nullable', 'string'],
         ];
     }
 }

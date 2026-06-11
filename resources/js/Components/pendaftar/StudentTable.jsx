@@ -87,12 +87,20 @@ export default function StudentTable({ registrations, filters, selectedId, onSel
     return (
         <div className="flex flex-col h-full">
             {/* Filter tabs */}
-            <div className="flex gap-1.5 p-3 border-b border-gray-100 bg-gray-50/30">
-                {[
-                    { key: 'all', label: 'Semua' },
-                    { key: 'baru', label: 'Belum Diproses' },
-                    { key: 'my_processing', label: 'Proses Saya' },
-                ].map((tab) => {
+            <div className="flex gap-1.5 p-3 border-b border-gray-100 bg-gray-50/30 overflow-x-auto whitespace-nowrap">
+                {(filters.tab === 're_registration'
+                    ? [
+                        { key: 'all', label: 'Semua' },
+                        { key: 'submitted', label: 'Menunggu Verifikasi' },
+                        { key: 'verified', label: 'Terverifikasi' },
+                        { key: 'pending', label: 'Butuh Perbaikan' },
+                      ]
+                    : [
+                        { key: 'all', label: 'Semua' },
+                        { key: 'baru', label: 'Belum Diproses' },
+                        { key: 'my_processing', label: 'Proses Saya' },
+                      ]
+                ).map((tab) => {
                     const isActive = (filters.processing_status || 'all') === tab.key;
                     return (
                         <button
@@ -161,7 +169,9 @@ export default function StudentTable({ registrations, filters, selectedId, onSel
                             </th>
                             <th className="px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider text-gray-500">NISN</th>
                             <th className="px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider text-gray-500">Jalur</th>
-                            <th className="px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider text-gray-500">Berkas</th>
+                            <th className="px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider text-gray-500">
+                                {filters.tab === 're_registration' ? 'Daftar Ulang' : 'Berkas'}
+                            </th>
                             <th className="px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider text-gray-500">Seleksi</th>
                             <th className="px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider text-gray-500">Operator</th>
                         </tr>
@@ -219,9 +229,29 @@ export default function StudentTable({ registrations, filters, selectedId, onSel
                                             </span>
                                         </td>
                                         <td className="px-3 py-2.5">
-                                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ring-inset ${ps.bg}`}>
-                                                {ps.label}
-                                            </span>
+                                            {filters.tab === 're_registration' ? (
+                                                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ring-inset ${
+                                                    reg.re_registration_status === 'verified'
+                                                        ? 'bg-emerald-50 text-emerald-800 ring-emerald-300'
+                                                        : reg.re_registration_status === 'submitted'
+                                                        ? 'bg-amber-50 text-amber-700 ring-amber-300'
+                                                        : reg.re_registration_status === 'pending'
+                                                        ? 'bg-red-50 text-red-700 ring-red-300'
+                                                        : 'bg-gray-100 text-gray-700 ring-gray-300'
+                                                }`}>
+                                                    {reg.re_registration_status === 'verified'
+                                                        ? 'Terverifikasi'
+                                                        : reg.re_registration_status === 'submitted'
+                                                        ? 'Menunggu Verifikasi'
+                                                        : reg.re_registration_status === 'pending'
+                                                        ? 'Butuh Perbaikan'
+                                                        : 'Belum Daftar'}
+                                                </span>
+                                            ) : (
+                                                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ring-inset ${ps.bg}`}>
+                                                    {ps.label}
+                                                </span>
+                                            )}
                                         </td>
                                         <td className="px-3 py-2.5">
                                             <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ring-inset ${

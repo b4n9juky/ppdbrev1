@@ -66,6 +66,8 @@ Route::get('/', function () {
     ]);
 })->name('welcome');
 
+Route::get('/pengumuman', [App\Http\Controllers\AnnouncementController::class, 'index'])->name('announcement');
+
 Route::get('/dashboard', function () {
     $user = auth()->user();
 
@@ -209,6 +211,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
 Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/registrations/report/pdf', [RegistrationController::class, 'downloadReport'])
         ->name('registrations.report.pdf');
+    Route::get('/registrations/export-accepted', [RegistrationController::class, 'exportAcceptedExcel'])
+        ->name('registrations.export-accepted');
     Route::post('/registrations/{registration}/claim', [RegistrationController::class, 'claim'])
         ->name('registrations.claim');
     Route::post('/registrations/{registration}/complete', [RegistrationController::class, 'complete'])
@@ -225,6 +229,12 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
         ->name('print.registration-proof');
     Route::get('/print/decision-letter/{registration}', [PrintController::class, 'decisionLetter'])
         ->name('print.decision-letter');
+    Route::get('/print/student-statement/{registration}', [PrintController::class, 'studentStatement'])
+        ->name('print.student-statement');
+    Route::get('/print/parent-statement/{registration}', [PrintController::class, 'parentStatement'])
+        ->name('print.parent-statement');
+    Route::get('/print/participation-statement/{registration}', [PrintController::class, 'participationStatement'])
+        ->name('print.participation-statement');
     Route::get('/registrations/{registration}/scores', [ScoreController::class, 'edit'])
         ->name('registrations.scores.edit');
     Route::patch('/registrations/{registration}/scores', [ScoreController::class, 'update'])
@@ -235,6 +245,10 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
         ->name('registrations.verify');
     Route::post('/registrations/{registration}/reject-file', [RegistrationController::class, 'reject-file'])
         ->name('registrations.reject-file');
+    Route::post('/registrations/{registration}/verify-re-registration', [RegistrationController::class, 'verifyReRegistration'])
+        ->name('registrations.verify-re-registration');
+    Route::post('/registrations/{registration}/reject-re-registration', [RegistrationController::class, 'rejectReRegistration'])
+        ->name('registrations.reject-re-registration');
 });
 
 Route::middleware(['auth', 'verified', 'role:operator'])->prefix('operator')->name('operator.')->group(function () {
@@ -250,8 +264,13 @@ Route::middleware(['auth', 'verified', 'role:operator'])->prefix('operator')->na
     Route::post('/registrations/{registration}/note', [App\Http\Controllers\Operator\RegistrationController::class, 'saveNote'])->name('registrations.note');
     Route::post('/registrations/{registration}/verify', [App\Http\Controllers\Operator\RegistrationController::class, 'verify'])->name('registrations.verify');
     Route::post('/registrations/{registration}/reject-file', [App\Http\Controllers\Operator\RegistrationController::class, 'rejectFile'])->name('registrations.reject-file');
+    Route::post('/registrations/{registration}/verify-re-registration', [App\Http\Controllers\Operator\RegistrationController::class, 'verifyReRegistration'])->name('registrations.verify-re-registration');
+    Route::post('/registrations/{registration}/reject-re-registration', [App\Http\Controllers\Operator\RegistrationController::class, 'rejectReRegistration'])->name('registrations.reject-re-registration');
     Route::get('/print/registration-proof/{registration}', [PrintController::class, 'registrationProof'])->name('print.registration-proof');
     Route::get('/print/decision-letter/{registration}', [PrintController::class, 'decisionLetter'])->name('print.decision-letter');
+    Route::get('/print/student-statement/{registration}', [PrintController::class, 'studentStatement'])->name('print.student-statement');
+    Route::get('/print/parent-statement/{registration}', [PrintController::class, 'parentStatement'])->name('print.parent-statement');
+    Route::get('/print/participation-statement/{registration}', [PrintController::class, 'participationStatement'])->name('print.participation-statement');
 });
 
 Route::middleware(['auth', 'verified'])->prefix('student')->name('student.')->group(function () {
@@ -267,6 +286,18 @@ Route::middleware(['auth', 'verified'])->prefix('student')->name('student.')->gr
         ->name('scores.update');
     Route::get('/print', [PrintController::class, 'studentRegistrationProof'])
         ->name('print.proof');
+    Route::get('/re-registration', [StudentDashboardController::class, 'reRegistration'])
+        ->name('re-registration');
+    Route::post('/re-registration', [StudentDashboardController::class, 'submitReRegistration'])
+        ->name('re-registration.submit');
+    Route::get('/print/decision-letter', [PrintController::class, 'studentDecisionLetter'])
+        ->name('print.decision-letter');
+    Route::get('/print/student-statement', [PrintController::class, 'studentPrintStudentStatement'])
+        ->name('print.student-statement');
+    Route::get('/print/parent-statement', [PrintController::class, 'studentPrintParentStatement'])
+        ->name('print.parent-statement');
+    Route::get('/print/participation-statement', [PrintController::class, 'studentPrintParticipationStatement'])
+        ->name('print.participation-statement');
 });
 
 Route::middleware(['auth', 'registration.open'])->prefix('daftar')->name('student.registration.')->group(function () {

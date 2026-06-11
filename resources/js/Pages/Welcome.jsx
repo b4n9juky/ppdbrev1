@@ -4,6 +4,29 @@ import { useState, useEffect, useCallback } from 'react';
 import { formatDate } from '@/lib/utils';
 
 export default function Welcome({ auth, madrasah, activeYear, schedules, activityRequirements, popUpBanners, paths = [] }) {
+    const now = new Date();
+    const registrationStart = activeYear?.registration_start ? new Date(activeYear.registration_start) : null;
+    const registrationEnd = activeYear?.registration_end ? new Date(activeYear.registration_end) : null;
+    
+    const isNotOpenedYet = registrationStart && now < registrationStart;
+    const isAlreadyClosed = registrationEnd && now > registrationEnd;
+    const isRegistrationOpen = activeYear && activeYear.is_active && !isNotOpenedYet && !isAlreadyClosed;
+
+    const formatIndonesianDateTime = (dateObj) => {
+        if (!dateObj) return '';
+        const months = [
+            'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+            'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+        ];
+        const date = dateObj.getDate();
+        const month = months[dateObj.getMonth()];
+        const year = dateObj.getFullYear();
+        const hours = String(dateObj.getHours()).padStart(2, '0');
+        const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+        
+        return `${date} ${month} ${year} pukul ${hours}:${minutes} WIB`;
+    };
+
     const phaseColors = [
         { border: 'border-l-emerald-500', bg: 'bg-emerald-50', dot: 'bg-emerald-500' },
         { border: 'border-l-blue-500', bg: 'bg-blue-50', dot: 'bg-blue-500' },
@@ -126,7 +149,13 @@ export default function Welcome({ auth, madrasah, activeYear, schedules, activit
                             </div>
                         </div>
 
-                        <nav className="flex items-center gap-4">
+                        <nav className="flex items-center gap-5">
+                            <Link
+                                href={route('announcement')}
+                                className="text-sm font-medium text-green-700 transition hover:text-green-800"
+                            >
+                                Pengumuman
+                            </Link>
                             {auth.user ? (
                                 <>
                                     <Link
@@ -144,7 +173,7 @@ export default function Welcome({ auth, madrasah, activeYear, schedules, activit
                                     >
                                         Masuk
                                     </Link>
-                                    {activeYear && (
+                                    {isRegistrationOpen && (
                                         <Link
                                             href={route('register')}
                                             className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-700"
@@ -174,34 +203,65 @@ export default function Welcome({ auth, madrasah, activeYear, schedules, activit
                                     Sistem Penerimaan Peserta Didik Baru terintegrasi. Daftarkan diri Anda secara online dengan mudah, cepat, dan transparan.
                                 </p>
                                 
-                                <div className="pt-4 flex flex-wrap items-center gap-4">
-                                    {activeYear ? (
-                                        auth.user ? (
-                                            <Link
-                                                href={route('student.registration.show')}
-                                                className="inline-flex items-center rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 px-8 py-3.5 text-base font-bold text-white shadow-lg shadow-emerald-200 transition hover:opacity-95 hover:shadow-xl"
-                                            >
-                                                Daftar Sekarang
-                                            </Link>
+                                <div>
+                                    <div className="pt-4 flex flex-wrap items-center gap-4">
+                                        {activeYear ? (
+                                            isRegistrationOpen ? (
+                                                auth.user ? (
+                                                    <Link
+                                                        href={route('student.registration.show')}
+                                                        className="inline-flex items-center rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 px-8 py-3.5 text-base font-bold text-white shadow-lg shadow-emerald-200 transition hover:opacity-95 hover:shadow-xl"
+                                                    >
+                                                        Daftar Sekarang
+                                                    </Link>
+                                                ) : (
+                                                    <Link
+                                                        href={route('register')}
+                                                        className="inline-flex items-center rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 px-8 py-3.5 text-base font-bold text-white shadow-lg shadow-emerald-200 transition hover:opacity-95 hover:shadow-xl"
+                                                    >
+                                                        Daftar Sekarang
+                                                    </Link>
+                                                )
+                                            ) : isNotOpenedYet ? (
+                                                <button
+                                                    disabled
+                                                    className="inline-flex items-center rounded-xl bg-gray-100 border border-gray-200 px-8 py-3.5 text-base font-bold text-gray-400 cursor-not-allowed shadow-none"
+                                                >
+                                                    Belum Dibuka
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    disabled
+                                                    className="inline-flex items-center rounded-xl bg-gray-100 border border-gray-200 px-8 py-3.5 text-base font-bold text-gray-400 cursor-not-allowed shadow-none"
+                                                >
+                                                    Pendaftaran Ditutup
+                                                </button>
+                                            )
                                         ) : (
-                                            <Link
-                                                href={route('register')}
-                                                className="inline-flex items-center rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 px-8 py-3.5 text-base font-bold text-white shadow-lg shadow-emerald-200 transition hover:opacity-95 hover:shadow-xl"
+                                            <button
+                                                disabled
+                                                className="inline-flex items-center rounded-xl bg-gray-100 border border-gray-200 px-8 py-3.5 text-base font-bold text-gray-400 cursor-not-allowed shadow-none"
                                             >
-                                                Daftar Sekarang
-                                            </Link>
-                                        )
-                                    ) : (
-                                        <span className="text-lg font-medium text-amber-600 bg-amber-50 px-4 py-2 rounded-xl border border-amber-100 inline-block">
-                                            Pendaftaran Belum Dibuka
-                                        </span>
+                                                Pendaftaran Belum Tersedia
+                                            </button>
+                                        )}
+                                        <a
+                                            href="#stepper-section"
+                                            className="inline-flex items-center gap-1.5 rounded-xl border border-green-200 bg-white px-6 py-3.5 text-base font-semibold text-green-700 shadow-sm transition hover:bg-green-50"
+                                        >
+                                            Lihat Alur Pendaftaran
+                                        </a>
+                                    </div>
+                                    {activeYear && registrationStart && registrationEnd && (
+                                        <p className="mt-4 text-xs text-green-800 font-medium flex items-center gap-1.5 bg-green-50/50 border border-green-100/30 rounded-xl px-4 py-2.5 max-w-xl">
+                                            <svg className="h-4 w-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                            <span>
+                                                Jadwal Pendaftaran: <span className="font-semibold text-emerald-800">{formatIndonesianDateTime(registrationStart)}</span> s.d. <span className="font-semibold text-emerald-800">{formatIndonesianDateTime(registrationEnd)}</span>
+                                            </span>
+                                        </p>
                                     )}
-                                    <a
-                                        href="#stepper-section"
-                                        className="inline-flex items-center gap-1.5 rounded-xl border border-green-200 bg-white px-6 py-3.5 text-base font-semibold text-green-700 shadow-sm transition hover:bg-green-50"
-                                    >
-                                        Lihat Alur Pendaftaran
-                                    </a>
                                 </div>
                             </div>
                             

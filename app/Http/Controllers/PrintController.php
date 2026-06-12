@@ -283,10 +283,20 @@ class PrintController extends Controller
 
     private function imageToBase64($path)
     {
-        if ($path && Storage::disk('public')->exists($path)) {
-            $fullPath = Storage::disk('public')->path($path);
+        if ($path) {
+            // Check local disk first (student documents)
+            if (Storage::disk('local')->exists($path)) {
+                $fullPath = Storage::disk('local')->path($path);
 
-            return 'data:'.mime_content_type($fullPath).';base64,'.base64_encode(file_get_contents($fullPath));
+                return 'data:'.mime_content_type($fullPath).';base64,'.base64_encode(file_get_contents($fullPath));
+            }
+
+            // Check public disk (logos, signatures, stamps)
+            if (Storage::disk('public')->exists($path)) {
+                $fullPath = Storage::disk('public')->path($path);
+
+                return 'data:'.mime_content_type($fullPath).';base64,'.base64_encode(file_get_contents($fullPath));
+            }
         }
 
         return null;

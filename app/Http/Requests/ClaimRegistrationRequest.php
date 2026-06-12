@@ -8,7 +8,7 @@ class ClaimRegistrationRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->role === 'operator';
+        return in_array($this->user()->role, ['operator', 'admin']);
     }
 
     public function rules(): array

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -35,8 +36,8 @@ class User extends Authenticatable
         return $this->hasMany(Registration::class, 'assigned_operator_id');
     }
 
-    public function assignedPendaftars(): HasMany
+    public function latestAuditLog(): HasOne
     {
-        return $this->hasMany(Registration::class, 'assigned_operator_id');
+        return $this->hasOne(RegistrationAuditLog::class, 'user_id')->latestOfMany();
     }
 }

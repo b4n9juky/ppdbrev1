@@ -69,7 +69,12 @@ class StudentScoreController extends Controller
 
         $validated = $request->validate([
             'scores' => ['required', 'array'],
-            'scores.*.subject_id' => ['required', 'exists:subjects,id'],
+            'scores.*.subject_id' => [
+                'required',
+                \Illuminate\Validation\Rule::exists('subjects', 'id')->where(function ($query) use ($activeYear) {
+                    $query->where('academic_year_id', $activeYear->id)->where('is_active', true);
+                }),
+            ],
             'scores.*.scores' => ['nullable', 'numeric', 'min:0', 'max:100'],
         ]);
 

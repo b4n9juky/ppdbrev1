@@ -19,19 +19,21 @@ class AdminWorkspaceController extends Controller
         $activeYearId = $activeYear?->id;
 
         // === Shared: Path quota data ===
-        $paths = AdmissionPath::where('is_active', true)->get()->map(fn ($path) => [
-            'id' => $path->id,
-            'name' => $path->name,
-            'quota' => $path->quota,
-            'total_registered' => $path->registrations()
-                ->where('academic_year_id', $activeYearId)
-                ->where('status', '!=', 'draft')
-                ->count(),
-            'available_quota' => max(0, $path->quota - $path->registrations()
-                ->where('academic_year_id', $activeYearId)
-                ->where('status', '!=', 'draft')
-                ->count()),
-        ]);
+        $paths = AdmissionPath::where('is_active', true)
+            ->withCount([
+                'registrations as total_registered' => function ($query) use ($activeYearId) {
+                    $query->where('academic_year_id', $activeYearId)
+                        ->where('status', '!=', 'draft');
+                }
+            ])
+            ->get()
+            ->map(fn ($path) => [
+                'id' => $path->id,
+                'name' => $path->name,
+                'quota' => $path->quota,
+                'total_registered' => $path->total_registered,
+                'available_quota' => max(0, $path->quota - $path->total_registered),
+            ]);
 
         // === Dashboard Tab ===
         $dashboardStats = [
@@ -44,16 +46,23 @@ class AdminWorkspaceController extends Controller
             'reserve' => Registration::where('academic_year_id', $activeYearId)->where('status', 'reserve')->count(),
         ];
 
-        $operatorActivity = User::where('role', 'operator')->get()->map(function ($operator) {
-            $lastLog = RegistrationAuditLog::where('user_id', $operator->id)->latest()->first();
-            return [
-                'id' => $operator->id,
-                'name' => $operator->name,
-                'processed' => Registration::where('assigned_operator_id', $operator->id)->count(),
-                'verified' => Registration::where('assigned_operator_id', $operator->id)->where('processing_status', 'selesai')->count(),
-                'last_activity' => $lastLog?->created_at,
-            ];
-        });
+        $operators = User::where('role', 'operator')
+            ->withCount([
+                'assignedRegistrations as processed',
+                'assignedRegistrations as verified' => function ($query) {
+                    $query->where('processing_status', 'selesai');
+                }
+            ])
+            ->with(['latestAuditLog'])
+            ->get();
+
+        $operatorActivity = $operators->map(fn ($operator) => [
+            'id' => $operator->id,
+            'name' => $operator->name,
+            'processed' => $operator->processed,
+            'verified' => $operator->verified,
+            'last_activity' => $operator->latestAuditLog?->created_at,
+        ]);
 
         $recentActivities = RegistrationAuditLog::with('user')
             ->latest()
@@ -102,20 +111,33 @@ class AdminWorkspaceController extends Controller
         $selectionPathFilter = $request->query('selection_path', '');
         $selectionStatusFilter = $request->query('selection_status', '');
 
-        $selectionPaths = AdmissionPath::where('is_active', true)->get()->map(function ($path) use ($activeYearId) {
-            $verifiedQuery = $path->registrations()
-                ->where('academic_year_id', $activeYearId)
-                ->where('processing_status', 'selesai');
-            return [
+        $selectionPaths = AdmissionPath::where('is_active', true)
+            ->withCount([
+                'registrations as verified' => function ($query) use ($activeYearId) {
+                    $query->where('academic_year_id', $activeYearId)
+                        ->where('processing_status', 'selesai');
+                },
+                'registrations as accepted' => function ($query) use ($activeYearId) {
+                    $query->where('academic_year_id', $activeYearId)
+                        ->where('processing_status', 'selesai')
+                        ->where('status', 'accepted');
+                },
+                'registrations as pending' => function ($query) use ($activeYearId) {
+                    $query->where('academic_year_id', $activeYearId)
+                        ->where('processing_status', 'selesai')
+                        ->where('status', 'pending');
+                }
+            ])
+            ->get()
+            ->map(fn ($path) => [
                 'id' => $path->id,
                 'name' => $path->name,
                 'quota' => $path->quota,
-                'verified' => (clone $verifiedQuery)->count(),
-                'accepted' => (clone $verifiedQuery)->where('status', 'accepted')->count(),
-                'pending' => (clone $verifiedQuery)->where('status', 'pending')->count(),
-                'remaining' => max(0, $path->quota - (clone $verifiedQuery)->where('status', 'accepted')->count()),
-            ];
-        });
+                'verified' => $path->verified,
+                'accepted' => $path->accepted,
+                'pending' => $path->pending,
+                'remaining' => max(0, $path->quota - $path->accepted),
+            ]);
 
         $rankings = Registration::with(['studentBiodata', 'admissionPath', 'user'])
             ->where('academic_year_id', $activeYearId)

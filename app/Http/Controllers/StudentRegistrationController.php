@@ -149,7 +149,7 @@ class StudentRegistrationController extends Controller
             return Redirect::back()->with('error', 'Dokumen jenis '.str_replace('_', ' ', $validated['document_type']).' sudah diupload.');
         }
 
-        $path = $request->file('file')->store('documents/'.$registration->id, 'public');
+        $path = $request->file('file')->store('documents/'.$registration->id, 'local');
 
         StudentDocument::create([
             'registration_id' => $registration->id,
@@ -169,7 +169,7 @@ class StudentRegistrationController extends Controller
             return Redirect::back()->with('error', 'Tidak dapat menghapus dokumen.');
         }
 
-        Storage::disk('public')->delete($document->file_path);
+        Storage::disk('local')->delete($document->file_path);
         $document->delete();
 
         return Redirect::route('student.registration.show')

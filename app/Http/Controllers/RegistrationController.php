@@ -176,6 +176,7 @@ class RegistrationController extends Controller
                 $nextRegistration = Registration::where('processing_status', 'baru')
                     ->where('academic_year_id', $activeYear?->id)
                     ->where('status', '!=', 'draft')
+                    ->whereHas('admissionPath', fn ($q) => $q->where('is_active', true))
                     ->orderBy('created_at', 'asc')
                     ->first();
 
@@ -195,6 +196,7 @@ class RegistrationController extends Controller
             $nextRegistration = Registration::where('processing_status', 'baru')
                 ->where('academic_year_id', $activeYear?->id)
                 ->where('status', '!=', 'draft')
+                ->whereHas('admissionPath', fn ($q) => $q->where('is_active', true))
                 ->orderBy('created_at', 'asc')
                 ->first();
 
@@ -237,6 +239,7 @@ class RegistrationController extends Controller
                 $nextRegistration = Registration::where('processing_status', 'baru')
                     ->where('academic_year_id', $activeYear?->id)
                     ->where('status', '!=', 'draft')
+                    ->whereHas('admissionPath', fn ($q) => $q->where('is_active', true))
                     ->orderBy('created_at', 'asc')
                     ->first();
 
@@ -256,6 +259,7 @@ class RegistrationController extends Controller
             $nextRegistration = Registration::where('processing_status', 'baru')
                 ->where('academic_year_id', $activeYear?->id)
                 ->where('status', '!=', 'draft')
+                ->whereHas('admissionPath', fn ($q) => $q->where('is_active', true))
                 ->orderBy('created_at', 'asc')
                 ->first();
 
@@ -296,6 +300,7 @@ class RegistrationController extends Controller
                 $nextRegistration = Registration::where('processing_status', 'baru')
                     ->where('academic_year_id', $activeYear?->id)
                     ->where('status', '!=', 'draft')
+                    ->whereHas('admissionPath', fn ($q) => $q->where('is_active', true))
                     ->orderBy('created_at', 'asc')
                     ->first();
 
@@ -315,6 +320,7 @@ class RegistrationController extends Controller
             $nextRegistration = Registration::where('processing_status', 'baru')
                 ->where('academic_year_id', $activeYear?->id)
                 ->where('status', '!=', 'draft')
+                ->whereHas('admissionPath', fn ($q) => $q->where('is_active', true))
                 ->orderBy('created_at', 'asc')
                 ->first();
 
@@ -402,6 +408,7 @@ class RegistrationController extends Controller
             ->with(['studentBiodata', 'admissionPath', 'user'])
             ->where('academic_year_id', $activeYear->id)
             ->where('status', '!=', 'draft')
+            ->whereHas('admissionPath', fn ($q) => $q->where('is_active', true))
             ->orderBy('id', 'asc')
             ->get();
 
@@ -430,7 +437,8 @@ class RegistrationController extends Controller
         $query = Registration::with(['studentBiodata', 'admissionPath', 'user'])
             ->where('academic_year_id', $activeYear->id)
             ->where('status', '!=', 'draft')
-            ->where('processing_status', 'selesai');
+            ->where('processing_status', 'selesai')
+            ->whereHas('admissionPath', fn ($q) => $q->where('is_active', true));
 
         $query->when($pathFilter, fn ($q) => $q->where('admission_path_id', $pathFilter))
             ->when($statusFilter, fn ($q) => $q->where('status', $statusFilter))

@@ -5,12 +5,14 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
+import Turnstile from '@/Components/Turnstile';
 
-export default function Login({ status, canResetPassword }) {
+export default function Login({ status, canResetPassword, turnstileSiteKey }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
         password: '',
         remember: false,
+        cf_turnstile_response: '',
     });
 
     const submit = (e) => {
@@ -105,6 +107,20 @@ export default function Login({ status, canResetPassword }) {
                         </span>
                     </label>
                 </div>
+
+                {turnstileSiteKey && (
+                    <div className="mt-4">
+                        <Turnstile
+                            siteKey={turnstileSiteKey}
+                            onSuccess={(token) => setData('cf_turnstile_response', token)}
+                        />
+                    </div>
+                )}
+                {errors.cf_turnstile_response && (
+                    <div className="text-center my-2">
+                        <InputError message={errors.cf_turnstile_response} />
+                    </div>
+                )}
 
                 <div className="mt-4 flex items-center justify-end">
                     {canResetPassword && (

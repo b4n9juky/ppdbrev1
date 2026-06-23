@@ -30,6 +30,37 @@ class LoginRequest extends FormRequest
         return [
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
+            'cf_turnstile_response' => [
+                \Illuminate\Validation\Rule::requiredIf(config('services.turnstile.enabled') && !app()->environment('testing')),
+                'nullable',
+                'string',
+                function ($attribute, $value, $fail) {
+                    if (!config('services.turnstile.enabled') || app()->environment('testing')) {
+                        return;
+                    }
+
+                    $secret = config('services.turnstile.secret_key');
+                    $response = \Illuminate\Support\Facades\Http::asForm()->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
+                        'secret' => $secret,
+                        'response' => $value,
+                        'remoteip' => $this->ip(),
+                    ]);
+
+                    if (!$response->successful() || !$response->json('success')) {
+                        $fail('Verifikasi keamanan Turnstile gagal. Silakan coba lagi.');
+                    }
+                }
+            ],
+        ];
+    }
+
+    /**
+     * Get the custom validation error messages.
+     */
+    public function messages(): array
+    {
+        return [
+            'cf_turnstile_response.required' => 'Selesaikan verifikasi keamanan Cloudflare Turnstile.',
         ];
     }
 

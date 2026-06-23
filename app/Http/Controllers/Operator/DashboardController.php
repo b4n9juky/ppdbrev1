@@ -17,16 +17,20 @@ class DashboardController extends Controller
         $user = auth()->user();
         $activeYear = AcademicYear::where('is_active', true)->first();
 
+        $activePathFilter = fn ($q) => $q->whereHas('admissionPath', fn ($ap) => $ap->where('is_active', true));
+
         // 1. Antrean Pendaftar (baru & not draft)
         $totalQueue = Registration::when($activeYear, fn ($q) => $q->where('academic_year_id', $activeYear->id))
             ->where('processing_status', 'baru')
             ->where('status', '!=', 'draft')
+            ->where($activePathFilter)
             ->count();
 
         // 2. Sedang diproses oleh Operator bersangkutan
         $myProcessingCount = Registration::when($activeYear, fn ($q) => $q->where('academic_year_id', $activeYear->id))
             ->where('processing_status', 'diproses')
             ->where('assigned_operator_id', $user->id)
+            ->where($activePathFilter)
             ->count();
 
         // 3. Selesai diverifikasi oleh Operator bersangkutan (unik pendaftar)

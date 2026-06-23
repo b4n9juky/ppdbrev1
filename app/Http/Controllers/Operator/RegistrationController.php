@@ -48,6 +48,7 @@ class RegistrationController extends Controller
                 'subjectScores.subject',
             ])
             ->when($activeYear, fn($q) => $q->where('academic_year_id', $activeYear->id))
+            ->whereHas('admissionPath', fn ($q) => $q->where('is_active', true))
             ->when($tab === 're_registration', function ($q) use ($processingStatus) {
                 $q->where('status', 'accepted')
                     ->when($processingStatus === 'submitted', fn($q) => $q->where('re_registration_status', 'submitted'))
@@ -87,6 +88,7 @@ class RegistrationController extends Controller
                     'assignedOperator',
                     'subjectScores.subject',
                 ])
+                ->whereHas('admissionPath', fn ($q) => $q->where('is_active', true))
                 ->find($selectedId);
         }
 
@@ -164,6 +166,7 @@ class RegistrationController extends Controller
             $nextRegistration = Registration::where('processing_status', 'baru')
                 ->where('academic_year_id', $activeYear?->id)
                 ->where('status', '!=', 'draft')
+                ->whereHas('admissionPath', fn ($q) => $q->where('is_active', true))
                 ->orderBy('created_at', 'asc')
                 ->first();
 
@@ -202,6 +205,7 @@ class RegistrationController extends Controller
             $nextRegistration = Registration::where('processing_status', 'baru')
                 ->where('academic_year_id', $activeYear?->id)
                 ->where('status', '!=', 'draft')
+                ->whereHas('admissionPath', fn ($q) => $q->where('is_active', true))
                 ->orderBy('created_at', 'asc')
                 ->first();
 
@@ -238,6 +242,7 @@ class RegistrationController extends Controller
             $nextRegistration = Registration::where('processing_status', 'baru')
                 ->where('academic_year_id', $activeYear?->id)
                 ->where('status', '!=', 'draft')
+                ->whereHas('admissionPath', fn ($q) => $q->where('is_active', true))
                 ->orderBy('created_at', 'asc')
                 ->first();
 

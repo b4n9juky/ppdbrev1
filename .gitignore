@@ -26,3 +26,6 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 /agent-skills
+agent.md
+prd.md
+workflow_operator.md

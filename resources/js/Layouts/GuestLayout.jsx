@@ -1,12 +1,16 @@
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import Toast from '@/Components/Toast';
-import { Link, usePage } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 
 export default function GuestLayout({ children }) {
     const { madrasah_setting } = usePage().props;
 
     return (
-        <div className="flex min-h-screen flex-col items-center justify-center bg-[#e9ecef] font-sans antialiased text-gray-800 px-4 py-8">
+        <>
+            <Head>
+                <link rel="preconnect" href="https://challenges.cloudflare.com" />
+            </Head>
+            <div className="flex min-h-screen flex-col items-center justify-center bg-[#e9ecef] font-sans antialiased text-gray-800 px-4 py-8">
             <div className="w-full max-w-md">
                 {/* Brand Header (AdminLTE login-logo style) */}
                 <div className="text-center mb-6">
@@ -32,6 +36,7 @@ export default function GuestLayout({ children }) {
                 </div>
             </div>
             <Toast />
-        </div>
+            </div>
+        </>
     );
 }

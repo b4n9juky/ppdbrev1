@@ -6,6 +6,7 @@ import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import Turnstile from '@/Components/Turnstile';
+import { useCallback } from 'react';
 
 export default function Login({ status, canResetPassword, turnstileSiteKey }) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -14,6 +15,10 @@ export default function Login({ status, canResetPassword, turnstileSiteKey }) {
         remember: false,
         cf_turnstile_response: '',
     });
+
+    const handleTurnstileSuccess = useCallback((token) => {
+        setData('cf_turnstile_response', token);
+    }, []);
 
     const submit = (e) => {
         e.preventDefault();
@@ -112,7 +117,7 @@ export default function Login({ status, canResetPassword, turnstileSiteKey }) {
                     <div className="mt-4">
                         <Turnstile
                             siteKey={turnstileSiteKey}
-                            onSuccess={(token) => setData('cf_turnstile_response', token)}
+                            onSuccess={handleTurnstileSuccess}
                         />
                     </div>
                 )}

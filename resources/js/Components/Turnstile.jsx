@@ -3,26 +3,26 @@ import React, { useEffect, useRef } from 'react';
 export default function Turnstile({ siteKey, onSuccess }) {
     const containerRef = useRef(null);
     const widgetIdRef = useRef(null);
+    const onSuccessRef = useRef(onSuccess);
 
     useEffect(() => {
-        // Define global callback when the script loads
-        window.onloadTurnstileCallback = () => {
-            renderWidget();
-        };
+        onSuccessRef.current = onSuccess;
+    }, [onSuccess]);
 
+    useEffect(() => {
         const renderWidget = () => {
             if (window.turnstile && containerRef.current && !widgetIdRef.current) {
                 try {
                     widgetIdRef.current = window.turnstile.render(containerRef.current, {
                         sitekey: siteKey,
                         callback: (token) => {
-                            onSuccess(token);
+                            onSuccessRef.current(token);
                         },
                         'expired-callback': () => {
-                            onSuccess('');
+                            onSuccessRef.current('');
                         },
                         'error-callback': () => {
-                            onSuccess('');
+                            onSuccessRef.current('');
                         }
                     });
                 } catch (e) {
@@ -39,18 +39,16 @@ export default function Turnstile({ siteKey, onSuccess }) {
             script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback&render=explicit';
             script.async = true;
             script.defer = true;
+            window.onloadTurnstileCallback = renderWidget;
             document.body.appendChild(script);
         } else {
-            // Script already exists, check if global turnstile object is available
             if (window.turnstile) {
                 renderWidget();
             } else {
-                // If script exists but turnstile is not loaded yet, wait for onload callback
                 window.onloadTurnstileCallback = renderWidget;
             }
         }
 
-        // Cleanup widget on unmount
         return () => {
             if (window.turnstile && widgetIdRef.current) {
                 try {
@@ -61,7 +59,7 @@ export default function Turnstile({ siteKey, onSuccess }) {
                 }
             }
         };
-    }, [siteKey, onSuccess]);
+    }, [siteKey]);
 
     return (
         <div className="flex justify-center my-4">

@@ -1,4 +1,5 @@
 import ApplicationLogo from '@/Components/ApplicationLogo';
+import ScrollToTop from '@/Components/ScrollToTop';
 import Toast from '@/Components/Toast';
 import { Head, Link, usePage } from '@inertiajs/react';
 
@@ -36,6 +37,7 @@ export default function GuestLayout({ children }) {
                 </div>
             </div>
             <Toast />
+            <ScrollToTop />
             </div>
         </>
     );

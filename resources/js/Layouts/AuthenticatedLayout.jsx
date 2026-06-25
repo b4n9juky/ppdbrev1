@@ -1,5 +1,6 @@
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import Dropdown from '@/Components/Dropdown';
+import ScrollToTop from '@/Components/ScrollToTop';
 import Toast from '@/Components/Toast';
 import { Link, usePage } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
@@ -311,6 +312,7 @@ export default function AuthenticatedLayout({ header, children, wide = false }) 
             </div>
 
             <Toast />
+            <ScrollToTop />
         </div>
     );
 }

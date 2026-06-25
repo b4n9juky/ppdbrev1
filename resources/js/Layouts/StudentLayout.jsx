@@ -1,5 +1,6 @@
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import Dropdown from '@/Components/Dropdown';
+import ScrollToTop from '@/Components/ScrollToTop';
 import Toast from '@/Components/Toast';
 import { Link, usePage } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
@@ -10,7 +11,6 @@ const icons = {
     'Biodata': 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
     'Nilai': 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z',
     'Dokumen': 'M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z',
-    'Cetak Bukti': 'M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z',
 };
 
 export default function StudentLayout({ header, children }) {
@@ -28,7 +28,6 @@ export default function StudentLayout({ header, children }) {
         { name: 'Biodata', href: route('student.biodata'), routeName: 'student.biodata' },
         { name: 'Nilai', href: route('student.scores.edit'), routeName: 'student.scores.*' },
         { name: 'Dokumen', href: route('student.documents'), routeName: 'student.documents' },
-        { name: 'Cetak Bukti', href: route('student.print.proof'), routeName: 'student.print.*' },
     ];
 
     // Close sidebar on mobile navigation change
@@ -103,14 +102,10 @@ export default function StudentLayout({ header, children }) {
                     </div>
                     {studentNav.map((item) => {
                         const active = route().current(item.routeName);
-                        const isPrint = item.name === 'Cetak Bukti';
-                        const NavTag = isPrint ? 'a' : Link;
                         return (
-                            <NavTag
+                            <Link
                                 key={item.routeName}
                                 href={item.href}
-                                target={isPrint ? "_blank" : undefined}
-                                rel={isPrint ? "noopener noreferrer" : undefined}
                                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-150 ${
                                     active 
                                         ? 'bg-[#468432] text-white font-medium shadow-md shadow-[#468432]/25' 
@@ -121,7 +116,7 @@ export default function StudentLayout({ header, children }) {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={icons[item.name]} />
                                 </svg>
                                 <span>{item.name}</span>
-                            </NavTag>
+                            </Link>
                         );
                     })}
                 </nav>
@@ -212,6 +207,7 @@ export default function StudentLayout({ header, children }) {
             </div>
             
             <Toast />
+            <ScrollToTop />
         </div>
     );
 }

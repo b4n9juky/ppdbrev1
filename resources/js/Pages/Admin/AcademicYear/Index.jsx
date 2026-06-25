@@ -9,10 +9,10 @@ export default function Index({ years }) {
 
     const formatForDateTimeLocal = (dateString) => {
         if (!dateString) return '';
-        if (dateString.includes('T')) {
-            return dateString.slice(0, 16);
-        }
-        return dateString.slice(0, 16).replace(' ', 'T');
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return '';
+        const pad = (num) => String(num).padStart(2, '0');
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
     };
 
     const formatTableDate = (dateString) => {

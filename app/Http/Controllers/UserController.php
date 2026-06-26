@@ -89,7 +89,7 @@ class UserController extends Controller
         $user->delete();
 
         return Redirect::route('admin.users.index')
-            ->with('success', 'Pengguna berhasil dihapus.');
+            ->with('success', 'Pengguna beserta seluruh data pendaftaran terkait berhasil dihapus.');
     }
 
     public function resetPassword(Request $request, User $user): RedirectResponse

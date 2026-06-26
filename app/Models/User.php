@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 
 #[Fillable(['name', 'email', 'password', 'role', 'google_id', 'avatar'])]
 #[Hidden(['password', 'remember_token'])]
@@ -24,6 +25,21 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::deleting(function (User $user) {
+            $user->load('registrations.studentDocuments');
+
+            foreach ($user->registrations as $registration) {
+                foreach ($registration->studentDocuments as $document) {
+                    if ($document->file_path && Storage::disk('public')->exists($document->file_path)) {
+                        Storage::disk('public')->delete($document->file_path);
+                    }
+                }
+            }
+        });
     }
 
     public function registrations(): HasMany

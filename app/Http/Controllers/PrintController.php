@@ -238,6 +238,10 @@ class PrintController extends Controller
 
     private function generateRegistrationProofPdf(Registration $registration): Response
     {
+        if (! $registration->studentBiodata) {
+            abort(422, 'Biodata siswa belum dilengkapi. Pendaftar harus mengisi biodata terlebih dahulu.');
+        }
+
         $registration->load([
             'studentBiodata',
             'admissionPath',

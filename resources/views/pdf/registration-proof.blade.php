@@ -334,9 +334,9 @@
             @if($kop_surat_base64)
                 <img src="{{ $kop_surat_base64 }}" alt="Kop Surat">
             @else
-                <h1>{{ $madrasah->madrasah_name ?? 'MADRASAH ALIYAH' }}</h1>
-                <p>{{ $madrasah->address ?? '' }}</p>
-                <p>{{ $madrasah->contact ?? '' }}</p>
+                <h1>{{ $madrasah?->madrasah_name ?? 'MADRASAH ALIYAH' }}</h1>
+                <p>{{ $madrasah?->address ?? '' }}</p>
+                <p>{{ $madrasah?->contact ?? '' }}</p>
             @endif
         </div>
 
@@ -463,8 +463,8 @@
                                 {{ \Carbon\Carbon::now()->locale('id')->settings(['formatFunction' => 'translatedFormat'])->format('d F Y') }}
                             </div>
                             <div class="title-text">
-                                Panitia PPDB {{ $registration->academicYear->name ?? '' }}<br>
-                                {{ $madrasah->madrasah_name ?? 'Madrasah' }},
+                                Panitia PPDB {{ $registration->academicYear?->name ?? '' }}<br>
+                                {{ $madrasah?->madrasah_name ?? 'Madrasah' }},
                             </div>
 
                             <div class="stamp-overlay">

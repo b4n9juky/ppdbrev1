@@ -238,10 +238,6 @@ class PrintController extends Controller
 
     private function generateRegistrationProofPdf(Registration $registration): Response
     {
-        if (! $registration->studentBiodata) {
-            abort(422, 'Biodata siswa belum dilengkapi. Pendaftar harus mengisi biodata terlebih dahulu.');
-        }
-
         $registration->load([
             'studentBiodata',
             'admissionPath',
@@ -249,6 +245,18 @@ class PrintController extends Controller
             'academicYear',
             'user',
         ]);
+
+        if (! $registration->studentBiodata) {
+            abort(422, 'Biodata siswa belum dilengkapi. Pendaftar harus mengisi biodata terlebih dahulu.');
+        }
+
+        if (! $registration->academicYear) {
+            abort(422, 'Tahun ajaran terkait pendaftaran ini tidak ditemukan.');
+        }
+
+        if (! $registration->admissionPath) {
+            abort(422, 'Jalur pendaftaran terkait pendaftaran ini tidak ditemukan.');
+        }
 
         $madrasah = MadrasahSetting::first();
 

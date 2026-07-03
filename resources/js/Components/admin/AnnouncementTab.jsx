@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { FileText, CheckCircle, XCircle, Clock, Users, UserCheck, ArrowRight, Search, RotateCcw, FileSpreadsheet } from 'lucide-react';
+import { FileText, CheckCircle, XCircle, Clock, Users, UserCheck, ArrowRight, Search, RotateCcw, FileSpreadsheet, Download } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 
 const statusConfig = {
@@ -167,6 +167,13 @@ export default function AnnouncementTab({ registrations, paths, stats, filters }
                         >
                             <FileSpreadsheet className="h-4 w-4" />
                             Ekspor Excel
+                        </a>
+                        <a
+                            href={route('admin.registrations.download-all-documents')}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 shadow-sm transition hover:bg-blue-100 hover:text-blue-800 focus:ring-2 focus:ring-blue-100 focus:outline-none active:scale-[0.98]"
+                        >
+                            <Download className="h-4 w-4" />
+                            Download Berkas
                         </a>
                     </div>
                     <div className="flex items-center gap-3">

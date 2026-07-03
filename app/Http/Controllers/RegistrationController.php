@@ -22,8 +22,10 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
+use ZipArchive;
 
 class RegistrationController extends Controller
 {
@@ -512,5 +514,59 @@ class RegistrationController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    public function downloadAllDocuments(): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        $activeYear = AcademicYear::where('is_active', true)->first();
+        if (!$activeYear) {
+            abort(404, 'Tidak ada tahun ajaran aktif.');
+        }
+
+        $registrations = Registration::with(['studentBiodata', 'studentDocuments'])
+            ->where('academic_year_id', $activeYear->id)
+            ->where('status', 'accepted')
+            ->get();
+
+        $zipFileName = 'berkas-siswa-diterima-' . str_replace('/', '-', $activeYear->name) . '.zip';
+        $zipPath = storage_path('app/private/temp/' . $zipFileName);
+
+        if (!is_dir(storage_path('app/private/temp'))) {
+            mkdir(storage_path('app/private/temp'), 0755, true);
+        }
+
+        $zip = new ZipArchive;
+        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+            abort(500, 'Gagal membuat file zip.');
+        }
+
+        $added = 0;
+        foreach ($registrations as $reg) {
+            $nisn = $reg->studentBiodata?->nisn;
+            if (!$nisn) {
+                continue;
+            }
+
+            foreach ($reg->studentDocuments as $doc) {
+                $filePath = Storage::disk('local')->path($doc->file_path);
+                if (!file_exists($filePath)) {
+                    continue;
+                }
+
+                $ext = pathinfo($filePath, PATHINFO_EXTENSION);
+                $zipEntryName = $nisn . '/' . $doc->document_type . '.' . $ext;
+                $zip->addFile($filePath, $zipEntryName);
+                $added++;
+            }
+        }
+
+        $zip->close();
+
+        if ($added === 0) {
+            unlink($zipPath);
+            abort(404, 'Tidak ada berkas yang ditemukan untuk siswa diterima.');
+        }
+
+        return response()->download($zipPath, $zipFileName)->deleteFileAfterSend(true);
     }
 }

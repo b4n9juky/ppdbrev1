@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Button } from '@/Components/ui/button';
 import { Head, useForm } from '@inertiajs/react';
+import Switch from '@/Components/Switch';
 
 export default function Edit({ setting }) {
     const { data, setData, post, processing, errors } = useForm({
@@ -16,6 +17,7 @@ export default function Edit({ setting }) {
         student_statement_points: setting.student_statement_points || '',
         parent_statement_points: setting.parent_statement_points || '',
         participation_statement_points: setting.participation_statement_points || '',
+        show_announcement: setting.show_announcement ?? true,
     });
 
     function handleSubmit(e) {
@@ -239,6 +241,17 @@ export default function Edit({ setting }) {
                                     />
                                     {errors.participation_statement_points && <p className="mt-1 text-sm text-red-650">{errors.participation_statement_points}</p>}
                                 </div>
+                            </div>
+                        </div>
+
+                        <div className="border-t border-gray-100 pt-6">
+                            <h3 className="mb-2 text-base font-semibold text-gray-905">Pengaturan Tampilan</h3>
+                            <div className="flex items-center gap-2">
+                                <Switch
+                                    checked={data.show_announcement}
+                                    onChange={(checked) => setData('show_announcement', checked)}
+                                />
+                                <span className="text-sm font-medium text-gray-700">Tampilkan menu Pengumuman di halaman depan</span>
                             </div>
                         </div>
 

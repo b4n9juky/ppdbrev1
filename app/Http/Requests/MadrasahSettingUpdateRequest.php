@@ -21,6 +21,7 @@ class MadrasahSettingUpdateRequest extends FormRequest
             'student_statement_points' => ['nullable', 'string'],
             'parent_statement_points' => ['nullable', 'string'],
             'participation_statement_points' => ['nullable', 'string'],
+            'show_announcement' => ['boolean'],
         ];
     }
 }

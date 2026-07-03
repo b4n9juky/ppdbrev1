@@ -150,12 +150,14 @@ export default function Welcome({ auth, madrasah, activeYear, schedules, activit
                         </div>
 
                         <nav className="flex items-center gap-5">
-                            <Link
-                                href={route('announcement')}
-                                className="text-sm font-medium text-green-700 transition hover:text-green-800"
-                            >
-                                Pengumuman
-                            </Link>
+                            {(madrasah?.show_announcement ?? true) && (
+                                <Link
+                                    href={route('announcement')}
+                                    className="text-sm font-medium text-green-700 transition hover:text-green-800"
+                                >
+                                    Pengumuman
+                                </Link>
+                            )}
                             {auth.user ? (
                                 <>
                                     <Link

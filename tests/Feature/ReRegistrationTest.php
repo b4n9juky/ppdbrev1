@@ -462,10 +462,10 @@ test('operator/admin can reset accepted student re-registration instead of reset
     $response->assertSessionHas('success');
 
     $registration->refresh();
-    // Verify status is STILL accepted, and re_registration_status is pending
-    expect($registration->status)->toBe('accepted');
-    expect($registration->re_registration_status)->toBe('pending');
-    expect($registration->re_registration_notes)->toBe('Tolong lengkapi surat pernyataan orang tua.');
+    // Verify status is reset to pending, re_registration is cleared, and processing goes back to antrian
+    expect($registration->status)->toBe('pending');
+    expect($registration->processing_status)->toBe('baru');
+    expect($registration->assigned_operator_id)->toBeNull();
 });
 
 test('admin can export accepted registrations as CSV with filters', function () {

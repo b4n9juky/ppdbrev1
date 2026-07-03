@@ -92,7 +92,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
 
 });
 
-Route::middleware(['auth', 'verified', 'role:admin', 'path.active'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/registrations/report/pdf', [RegistrationController::class, 'downloadReport'])
         ->name('registrations.report.pdf');
     Route::get('/registrations/export-accepted', [RegistrationController::class, 'exportAcceptedExcel'])
@@ -109,6 +109,8 @@ Route::middleware(['auth', 'verified', 'role:admin', 'path.active'])->prefix('ad
         ->name('registrations.biodata.update');
     Route::patch('/registrations/{registration}/reset', [RegistrationController::class, 'reset'])
         ->name('registrations.reset');
+    Route::patch('/registrations/{registration}/cancel-selection', [RegistrationController::class, 'cancelSelection'])
+        ->name('registrations.cancel-selection');
     Route::get('/print/registration-proof/{registration}', [PrintController::class, 'registrationProof'])
         ->name('print.registration-proof');
     Route::get('/print/decision-letter/{registration}', [PrintController::class, 'decisionLetter'])
@@ -135,7 +137,7 @@ Route::middleware(['auth', 'verified', 'role:admin', 'path.active'])->prefix('ad
         ->name('registrations.reject-re-registration');
 });
 
-Route::middleware(['auth', 'verified', 'role:operator', 'path.active'])->prefix('operator')->name('operator.')->group(function () {
+Route::middleware(['auth', 'verified', 'role:operator'])->prefix('operator')->name('operator.')->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\Operator\DashboardController::class, 'index'])->name('dashboard');
     Route::get('/registrations', [App\Http\Controllers\Operator\RegistrationController::class, 'index'])->name('registrations.index');
     Route::post('/registrations/{registration}/claim', [App\Http\Controllers\Operator\RegistrationController::class, 'claim'])->name('registrations.claim');

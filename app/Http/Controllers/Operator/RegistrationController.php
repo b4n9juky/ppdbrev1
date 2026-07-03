@@ -48,7 +48,6 @@ class RegistrationController extends Controller
                 'subjectScores.subject',
             ])
             ->when($activeYear, fn($q) => $q->where('academic_year_id', $activeYear->id))
-            ->whereHas('admissionPath', fn ($q) => $q->where('is_active', true))
             ->when($tab === 're_registration', function ($q) use ($processingStatus) {
                 $q->where('status', 'accepted')
                     ->when($processingStatus === 'submitted', fn($q) => $q->where('re_registration_status', 'submitted'))
@@ -88,7 +87,6 @@ class RegistrationController extends Controller
                     'assignedOperator',
                     'subjectScores.subject',
                 ])
-                ->whereHas('admissionPath', fn ($q) => $q->where('is_active', true))
                 ->find($selectedId);
         }
 
@@ -104,7 +102,7 @@ class RegistrationController extends Controller
         }
 
         $user = auth()->user();
-        $paths = AdmissionPath::where('is_active', true)->get(['id', 'name']);
+        $paths = AdmissionPath::all(['id', 'name']);
         $subjects = collect();
         if ($selectedRegistration) {
             $subjects = Subject::where('academic_year_id', $selectedRegistration->academic_year_id)
@@ -282,24 +280,17 @@ class RegistrationController extends Controller
 
         $notes = $request->input('notes') ?: 'berkas anda tidak memenuhi syarat, silahkan perbaiki';
 
-        if ($registration->status === 'accepted') {
-            $registration->update([
-                're_registration_status' => 'pending',
-                're_registration_notes' => $notes,
-            ]);
-
-            return Redirect::back()->with('success', 'Pendaftaran ulang berhasil direset untuk perbaikan kelengkapan data.');
-        }
-
         $registration->update([
-            'status' => 'draft',
+            'status' => 'pending',
             'processing_status' => 'baru',
             'assigned_operator_id' => null,
             'assigned_at' => null,
+            're_registration_status' => null,
+            're_registration_notes' => null,
             'verification_notes' => $notes,
         ]);
 
-        return Redirect::back()->with('success', 'Pendaftar berhasil direset ke status Draft.');
+        return Redirect::back()->with('success', 'Pendaftar berhasil direset ke status Pending.');
     }
 
     public function updateBiodata(Request $request, Registration $registration): RedirectResponse

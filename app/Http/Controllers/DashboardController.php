@@ -18,16 +18,13 @@ class DashboardController extends Controller
         if ($user->role === 'kepala_madrasah') {
             $activeYear = AcademicYear::where('is_active', true)->first();
 
-            $activePathFilter = fn ($q) => $q->whereHas('admissionPath', fn ($ap) => $ap->where('is_active', true));
-
-            $totalRegistrations = Registration::when($activeYear, fn ($q) => $q->where('academic_year_id', $activeYear->id))->where($activePathFilter)->count();
+            $totalRegistrations = Registration::when($activeYear, fn ($q) => $q->where('academic_year_id', $activeYear->id))->count();
             $statusCounts = Registration::when($activeYear, fn ($q) => $q->where('academic_year_id', $activeYear->id))
-                ->where($activePathFilter)
                 ->selectRaw('status, count(*) as count')
                 ->groupBy('status')
                 ->pluck('count', 'status');
 
-            $perPath = AdmissionPath::where('is_active', true)->get()->map(function ($path) use ($activeYear) {
+            $perPath = AdmissionPath::all()->map(function ($path) use ($activeYear) {
                 $regs = $path->registrations()->where('academic_year_id', $activeYear?->id);
 
                 return [
@@ -68,7 +65,7 @@ class DashboardController extends Controller
 
         $activeYear = AcademicYear::where('is_active', true)->first();
 
-        $paths = AdmissionPath::where('is_active', true)->get()->map(function ($path) {
+        $paths = AdmissionPath::all()->map(function ($path) {
             return [
                 'id' => $path->id,
                 'name' => $path->name,
@@ -78,17 +75,13 @@ class DashboardController extends Controller
             ];
         });
 
-        $activePathFilter = fn ($q) => $q->whereHas('admissionPath', fn ($ap) => $ap->where('is_active', true));
-
-        $totalRegistrations = Registration::when($activeYear, fn ($q) => $q->where('academic_year_id', $activeYear->id))->where($activePathFilter)->count();
+        $totalRegistrations = Registration::when($activeYear, fn ($q) => $q->where('academic_year_id', $activeYear->id))->count();
         $statusCounts = Registration::when($activeYear, fn ($q) => $q->where('academic_year_id', $activeYear->id))
-            ->where($activePathFilter)
             ->selectRaw('status, count(*) as count')
             ->groupBy('status')
             ->pluck('count', 'status');
 
         $recentRegistrations = Registration::when($activeYear, fn ($q) => $q->where('academic_year_id', $activeYear->id))
-            ->where($activePathFilter)
             ->with(['user', 'studentBiodata', 'admissionPath'])
             ->latest()
             ->take(5)

@@ -94,25 +94,35 @@ class RegistrationController extends Controller
 
         $notes = $request->input('notes') ?: 'berkas anda tidak memenuhi syarat, silahkan perbaiki';
 
-        if ($registration->status === 'accepted') {
-            $registration->update([
-                're_registration_status' => 'pending',
-                're_registration_notes' => $notes,
-            ]);
-
-            return Redirect::back()->with('success', 'Pendaftaran ulang berhasil direset untuk perbaikan kelengkapan data.');
-        }
-
         $registration->update([
-            'status' => 'draft',
+            'status' => 'pending',
             'processing_status' => 'baru',
             'assigned_operator_id' => null,
             'assigned_at' => null,
+            're_registration_status' => null,
+            're_registration_notes' => null,
             'verification_notes' => $notes,
         ]);
 
         return Redirect::back()
-            ->with('success', 'Pendaftar berhasil direset ke status Draft.');
+            ->with('success', 'Pendaftar berhasil direset ke status Pending.');
+    }
+
+    public function cancelSelection(Request $request, Registration $registration): RedirectResponse
+    {
+        Gate::authorize('update', $registration);
+
+        if (in_array($registration->status, ['draft', 'pending'])) {
+            return Redirect::back()->with('error', 'Pendaftar tidak dalam status seleksi.');
+        }
+
+        $registration->update([
+            'status' => 'pending',
+            'verification_notes' => 'Status seleksi dibatalkan oleh operator.',
+        ]);
+
+        return Redirect::back()
+            ->with('success', 'Status seleksi berhasil dibatalkan, pendaftar kembali ke status menunggu.');
     }
 
     public function updateBiodata(Request $request, Registration $registration): RedirectResponse
@@ -176,7 +186,7 @@ class RegistrationController extends Controller
                 $nextRegistration = Registration::where('processing_status', 'baru')
                     ->where('academic_year_id', $activeYear?->id)
                     ->where('status', '!=', 'draft')
-                    ->whereHas('admissionPath', fn ($q) => $q->where('is_active', true))
+
                     ->orderBy('created_at', 'asc')
                     ->first();
 
@@ -239,7 +249,7 @@ class RegistrationController extends Controller
                 $nextRegistration = Registration::where('processing_status', 'baru')
                     ->where('academic_year_id', $activeYear?->id)
                     ->where('status', '!=', 'draft')
-                    ->whereHas('admissionPath', fn ($q) => $q->where('is_active', true))
+
                     ->orderBy('created_at', 'asc')
                     ->first();
 
@@ -300,7 +310,7 @@ class RegistrationController extends Controller
                 $nextRegistration = Registration::where('processing_status', 'baru')
                     ->where('academic_year_id', $activeYear?->id)
                     ->where('status', '!=', 'draft')
-                    ->whereHas('admissionPath', fn ($q) => $q->where('is_active', true))
+
                     ->orderBy('created_at', 'asc')
                     ->first();
 

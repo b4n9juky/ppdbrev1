@@ -43,8 +43,17 @@ export default function AnnouncementTab({ registrations, paths, stats, filters }
 
     function handleReset(registration) {
         const name = registration.student_biodata?.full_name || registration.user.name;
-        if (confirm(`Reset pendaftar "${name}"? Semua nilai akan dihapus dan pendaftar kembali ke halaman pendaftar.`)) {
+        if (confirm(`Reset pendaftar "${name}"? Pendaftar akan dikembalikan ke antrian operator dengan status menunggu, biodata dan berkas akan tetap tersimpan.`)) {
             router.patch(route('admin.registrations.reset', registration.id), {}, {
+                preserveScroll: true,
+            });
+        }
+    }
+
+    function handleCancelSelection(registration) {
+        const name = registration.student_biodata?.full_name || registration.user.name;
+        if (confirm(`Batalkan seleksi "${name}"? Pendaftar akan kembali ke status menunggu.`)) {
+            router.patch(route('admin.registrations.cancel-selection', registration.id), {}, {
                 preserveScroll: true,
             });
         }
@@ -282,13 +291,22 @@ export default function AnnouncementTab({ registrations, paths, stats, filters }
                                                     </a>
                                                 )}
                                                 {(isAccepted || isReserve || isRejected) && (
-                                                    <button
-                                                        onClick={() => handleReset(reg)}
-                                                        className="inline-flex items-center gap-1.5 rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-xs transition-all hover:bg-gray-100 hover:shadow-sm active:translate-y-px"
-                                                    >
-                                                        <RotateCcw className="h-3.5 w-3.5" />
-                                                        Reset
-                                                    </button>
+                                                    <>
+                                                        <button
+                                                            onClick={() => handleCancelSelection(reg)}
+                                                            className="inline-flex items-center gap-1.5 rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-xs transition-all hover:bg-gray-100 hover:shadow-sm active:translate-y-px"
+                                                        >
+                                                            <XCircle className="h-3.5 w-3.5" />
+                                                            Batal
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleReset(reg)}
+                                                            className="inline-flex items-center gap-1.5 rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-xs transition-all hover:bg-gray-100 hover:shadow-sm active:translate-y-px"
+                                                        >
+                                                            <RotateCcw className="h-3.5 w-3.5" />
+                                                            Reset
+                                                        </button>
+                                                    </>
                                                 )}
                                                 {!isPending && !isReserve && !isAccepted && !isRejected && (
                                                     <span className="text-xs text-gray-400 italic">-</span>

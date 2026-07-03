@@ -110,7 +110,7 @@ class AdminWorkspaceController extends Controller
         $selectionPathFilter = $request->query('selection_path', '');
         $selectionStatusFilter = $request->query('selection_status', '');
 
-        $selectionPaths = AdmissionPath::withCount([
+        $selectionPaths = AdmissionPath::where('is_active', true)->withCount([
                 'registrations as verified' => function ($query) use ($activeYearId) {
                     $query->where('academic_year_id', $activeYearId)
                         ->where('processing_status', 'selesai');
@@ -141,6 +141,7 @@ class AdminWorkspaceController extends Controller
             ->where('academic_year_id', $activeYearId)
             ->where('processing_status', 'selesai')
             ->where('status', '!=', 'draft')
+            ->whereHas('admissionPath', fn ($q) => $q->where('is_active', true))
             ->when($selectionPathFilter, fn ($q) => $q->where('admission_path_id', $selectionPathFilter))
             ->when($selectionStatusFilter, fn ($q) => $q->where('status', $selectionStatusFilter))
             ->orderBy('total_score', 'desc')
@@ -158,6 +159,7 @@ class AdminWorkspaceController extends Controller
             ->where('academic_year_id', $activeYearId)
             ->where('status', '!=', 'draft')
             ->where('processing_status', 'selesai')
+            ->whereHas('admissionPath', fn ($q) => $q->where('is_active', true))
             ->when($announcementPathFilter, fn ($q) => $q->where('admission_path_id', $announcementPathFilter))
             ->when($announcementStatusFilter, fn ($q) => $q->where('status', $announcementStatusFilter))
             ->when($announcementSearch, function ($q) use ($announcementSearch) {
@@ -171,7 +173,7 @@ class AdminWorkspaceController extends Controller
             ->paginate($announcementPerPage)
             ->withQueryString();
 
-        $announcementPaths = AdmissionPath::all()->map(function ($path) use ($activeYearId) {
+        $announcementPaths = AdmissionPath::where('is_active', true)->get()->map(function ($path) use ($activeYearId) {
             $registeredCount = $path->registrations()
                 ->where('academic_year_id', $activeYearId)
                 ->where('processing_status', 'selesai')
@@ -186,12 +188,14 @@ class AdminWorkspaceController extends Controller
             ];
         });
 
+        $activePathFilter = fn ($q) => $q->whereHas('admissionPath', fn ($ap) => $ap->where('is_active', true));
+
         $announcementStats = [
-            'total' => Registration::where('academic_year_id', $activeYearId)->where('status', '!=', 'draft')->where('processing_status', 'selesai')->count(),
-            'accepted' => Registration::where('academic_year_id', $activeYearId)->where('status', 'accepted')->where('processing_status', 'selesai')->count(),
-            'reserve' => Registration::where('academic_year_id', $activeYearId)->where('status', 'reserve')->where('processing_status', 'selesai')->count(),
-            'rejected' => Registration::where('academic_year_id', $activeYearId)->where('status', 'rejected')->where('processing_status', 'selesai')->count(),
-            'pending' => Registration::where('academic_year_id', $activeYearId)->where('status', 'pending')->where('processing_status', 'selesai')->count(),
+            'total' => Registration::where('academic_year_id', $activeYearId)->where('status', '!=', 'draft')->where('processing_status', 'selesai')->where($activePathFilter)->count(),
+            'accepted' => Registration::where('academic_year_id', $activeYearId)->where('status', 'accepted')->where('processing_status', 'selesai')->where($activePathFilter)->count(),
+            'reserve' => Registration::where('academic_year_id', $activeYearId)->where('status', 'reserve')->where('processing_status', 'selesai')->where($activePathFilter)->count(),
+            'rejected' => Registration::where('academic_year_id', $activeYearId)->where('status', 'rejected')->where('processing_status', 'selesai')->where($activePathFilter)->count(),
+            'pending' => Registration::where('academic_year_id', $activeYearId)->where('status', 'pending')->where('processing_status', 'selesai')->where($activePathFilter)->count(),
         ];
 
         return Inertia::render('Admin/Workspace', [
@@ -241,7 +245,7 @@ class AdminWorkspaceController extends Controller
             return back()->with('error', 'Tidak ada tahun ajaran aktif');
         }
 
-        $paths = AdmissionPath::all();
+        $paths = AdmissionPath::where('is_active', true)->get();
         $changed = 0;
 
         foreach ($paths as $path) {

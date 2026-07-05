@@ -127,6 +127,22 @@ class RegistrationController extends Controller
             ->with('success', 'Status seleksi berhasil dibatalkan, pendaftar kembali ke status menunggu.');
     }
 
+    public function updateAdmissionPath(Request $request, Registration $registration): RedirectResponse
+    {
+        Gate::authorize('update', $registration);
+
+        $validated = $request->validate([
+            'admission_path_id' => ['required', 'exists:admission_paths,id'],
+        ]);
+
+        $registration->update([
+            'admission_path_id' => $validated['admission_path_id'],
+        ]);
+
+        return Redirect::back()
+            ->with('success', 'Jalur pendaftaran berhasil diperbarui.');
+    }
+
     public function updateBiodata(Request $request, Registration $registration): RedirectResponse
     {
         Gate::authorize('update', $registration);

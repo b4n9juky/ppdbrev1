@@ -111,6 +111,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
         ->name('registrations.reset');
     Route::patch('/registrations/{registration}/cancel-selection', [RegistrationController::class, 'cancelSelection'])
         ->name('registrations.cancel-selection');
+    Route::patch('/registrations/{registration}/admission-path', [RegistrationController::class, 'updateAdmissionPath'])
+        ->name('registrations.admission-path.update');
     Route::get('/registrations/documents/download-all', [RegistrationController::class, 'downloadAllDocuments'])
         ->name('registrations.download-all-documents');
     Route::get('/print/registration-proof/{registration}', [PrintController::class, 'registrationProof'])

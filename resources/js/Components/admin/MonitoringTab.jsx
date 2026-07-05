@@ -171,8 +171,28 @@ export default function MonitoringTab({ registrations, operators, filters, activ
                                                 </span>
                                             </div>
                                         </td>
-                                        <td className="whitespace-nowrap px-5 py-4 text-sm text-gray-500">
-                                            {reg.admission_path?.name || '-'}
+                                        <td className="whitespace-nowrap px-5 py-4">
+                                            <select
+                                                value={reg.admission_path_id || ''}
+                                                onChange={(e) => {
+                                                    const newPathId = parseInt(e.target.value, 10);
+                                                    if (newPathId === reg.admission_path_id) return;
+                                                    if (confirm('Yakin ingin mengubah jalur pendaftaran pendaftar ini?')) {
+                                                        router.patch(route('admin.registrations.admission-path.update', reg.id), {
+                                                            admission_path_id: newPathId,
+                                                        }, {
+                                                            preserveState: true,
+                                                            preserveScroll: true,
+                                                        });
+                                                    }
+                                                }}
+                                                className="w-full rounded-lg border border-gray-200 bg-white py-1.5 pl-2 pr-7 text-sm font-medium text-gray-700 shadow-sm transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 focus:outline-none"
+                                            >
+                                                <option value="">Pilih Jalur</option>
+                                                {paths.map((p) => (
+                                                    <option key={p.id} value={p.id}>{p.name}</option>
+                                                ))}
+                                            </select>
                                         </td>
                                         <td className="whitespace-nowrap px-5 py-4 text-center">
                                             <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${ps}`}>

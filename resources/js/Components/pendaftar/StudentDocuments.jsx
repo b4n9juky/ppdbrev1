@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
+import { isImage } from '@/lib/utils';
 
 const docTypeLabels = {
     foto: 'Pas Foto',
@@ -14,10 +15,6 @@ const docTypeLabels = {
 };
 
 const docOrder = ['kk', 'akta', 'ijazah', 'rapor', 'surat_keterangan', 'foto', 'ktp_ortu', 'prestasi', 'other'];
-
-function isImage(filePath) {
-    return /\.(jpg|jpeg|png|gif|webp)$/i.test(filePath);
-}
 
 function PreviewModal({ doc, documentTypes, onClose }) {
     const getTypeLabel = (doc) => {

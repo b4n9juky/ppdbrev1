@@ -1,6 +1,7 @@
 import StudentLayout from '@/Layouts/StudentLayout';
 import { Head, Link, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { isImage } from '@/lib/utils';
 
 const docTypeLabels = {
     foto: 'Pas Foto',
@@ -20,10 +21,6 @@ const docTypeColors = {
     other: 'bg-gray-50 text-gray-600 ring-gray-200',
 };
 
-function isImage(filePath) {
-    return /\.(jpg|jpeg|png|gif|webp)$/i.test(filePath);
-}
-
 export default function Documents({ registration, activeYear, documentTypes = [] }) {
     const isLocked = registration && registration.status !== 'draft';
     const docs = registration?.student_documents || [];
@@ -34,6 +31,12 @@ export default function Documents({ registration, activeYear, documentTypes = []
     const [file, setFile] = useState(null);
     const [uploading, setUploading] = useState(false);
     const [previewUrl, setPreviewUrl] = useState(null);
+
+    useEffect(() => {
+        return () => {
+            if (previewUrl) URL.revokeObjectURL(previewUrl);
+        };
+    }, [previewUrl]);
 
     function handleFileChange(e) {
         const f = e.target.files[0] || null;

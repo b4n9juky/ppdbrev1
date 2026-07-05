@@ -12,6 +12,7 @@ use App\Models\StudentDocument;
 use App\Models\Subject;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -142,20 +143,29 @@ class StudentRegistrationController extends Controller
             'file' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
         ]);
 
-        if (StudentDocument::where('registration_id', $registration->id)
-            ->where('document_type', $validated['document_type'])
-            ->exists()
-        ) {
-            return Redirect::back()->with('error', 'Dokumen jenis '.str_replace('_', ' ', $validated['document_type']).' sudah diupload.');
+        try {
+            DB::transaction(function () use ($registration, $validated, $request) {
+                $locked = Registration::where('id', $registration->id)->lockForUpdate()->firstOrFail();
+
+                $exists = StudentDocument::where('registration_id', $locked->id)
+                    ->where('document_type', $validated['document_type'])
+                    ->exists();
+
+                if ($exists) {
+                    throw new \Exception('Dokumen '.str_replace('_', ' ', $validated['document_type']).' sudah diupload.');
+                }
+
+                $path = $request->file('file')->store('documents/'.$locked->id, 'local');
+
+                StudentDocument::create([
+                    'registration_id' => $locked->id,
+                    'document_type' => $validated['document_type'],
+                    'file_path' => $path,
+                ]);
+            });
+        } catch (\Exception $e) {
+            return Redirect::back()->with('error', $e->getMessage());
         }
-
-        $path = $request->file('file')->store('documents/'.$registration->id, 'local');
-
-        StudentDocument::create([
-            'registration_id' => $registration->id,
-            'document_type' => $validated['document_type'],
-            'file_path' => $path,
-        ]);
 
         return Redirect::route('student.registration.show')
             ->with('success', 'Dokumen berhasil diunggah.');

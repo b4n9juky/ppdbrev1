@@ -20,7 +20,15 @@ class RegistrationPolicy
      */
     public function view(User $user, Registration $registration): bool
     {
-        return in_array($user->role, ['admin', 'operator']);
+        if ($user->role === 'admin') {
+            return true;
+        }
+
+        if ($user->role === 'operator') {
+            return $registration->assigned_operator_id === $user->id;
+        }
+
+        return false;
     }
 
     /**

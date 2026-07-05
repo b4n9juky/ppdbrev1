@@ -12,7 +12,8 @@ class DocumentController extends Controller
     {
         $user = auth()->user();
 
-        // Otorisasi: Admin, Operator, Kepala Madrasah, atau Siswa pemilik pendaftaran tersebut
+        $filename = basename($filename);
+
         if (
             in_array($user->role, ['admin', 'operator', 'kepala_madrasah']) ||
             $user->id === $registration->user_id

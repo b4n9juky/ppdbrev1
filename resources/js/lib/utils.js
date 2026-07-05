@@ -37,3 +37,23 @@ export function formatDateTime(dateStr) {
     return '-';
   }
 }
+
+export function isImage(filePath) {
+  return /\.(jpg|jpeg|png|gif|webp)$/i.test(filePath);
+}
+
+export const STATUS_CONFIG = {
+  accepted: 'bg-emerald-50 text-emerald-700 ring-emerald-300',
+  reserve: 'bg-amber-50 text-amber-700 ring-amber-300',
+  rejected: 'bg-red-50 text-red-700 ring-red-300',
+  pending: 'bg-blue-50 text-blue-700 ring-blue-300',
+  draft: 'bg-gray-100 text-gray-700 ring-gray-300',
+};
+
+export const STATUS_LABELS = {
+  accepted: 'Passed',
+  reserve: 'Reserve',
+  rejected: 'Failed',
+  pending: 'Pending',
+  draft: 'Draft',
+};

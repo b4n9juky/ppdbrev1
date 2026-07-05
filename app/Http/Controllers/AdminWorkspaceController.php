@@ -8,13 +8,29 @@ use App\Models\Registration;
 use App\Models\RegistrationAuditLog;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class AdminWorkspaceController extends Controller
 {
+    protected $middleware = ['auth', 'role:admin'];
+
     public function index(Request $request): Response
     {
+        // Authorize admin
+        if (!Auth::check()) {
+            abort(403, 'Unauthenticated.');
+        }
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized.');
+        }
+
+        // Validate per_page parameter
+        $request->validate([
+            'per_page' => 'nullable|integer|min:1',
+        ]);
+
         $activeYear = AcademicYear::where('is_active', true)->first();
         $activeYearId = $activeYear?->id;
 
@@ -87,22 +103,22 @@ class AdminWorkspaceController extends Controller
             'studentBiodata', 'admissionPath', 'user', 'assignedOperator',
             'studentDocuments', 'subjectScores.subject',
         ])
-            ->where('academic_year_id', $activeYearId)
-            ->where('status', '!=', 'draft')
-            ->when($pathFilter, fn ($q) => $q->where('admission_path_id', $pathFilter))
-            ->when($statusFilter, fn ($q) => $q->where('status', $statusFilter))
-            ->when($processingFilter, fn ($q) => $q->where('processing_status', $processingFilter))
-            ->when($operatorFilter, fn ($q) => $q->where('assigned_operator_id', $operatorFilter))
-            ->when($search, function ($q) use ($search) {
-                $q->where(function ($sub) use ($search) {
-                    $sub->whereHas('studentBiodata', fn ($sb) => $sb->where('full_name', 'like', "%{$search}%")->orWhere('nisn', 'like', "%{$search}%"))
-                        ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$search}%"))
-                        ->orWhere('id', is_numeric($search) ? $search : null);
-                });
-            })
-            ->orderBy('created_at', 'desc')
-            ->paginate($perPage)
-            ->withQueryString();
+        ->where('academic_year_id', $activeYearId)
+        ->where('status', '!=', 'draft')
+        ->when($pathFilter, fn ($q) => $q->where('admission_path_id', $pathFilter))
+        ->when($statusFilter, fn ($q) => $q->where('status', $statusFilter))
+        ->when($processingFilter, fn ($q) => $q->where('processing_status', $processingFilter))
+        ->when($operatorFilter, fn ($q) => $q->where('assigned_operator_id', $operatorFilter))
+        ->when($search, function ($q) use ($search) {
+            $q->where(function ($sub) use ($search) {
+                $sub->whereHas('studentBiodata', fn ($sb) => $sb->where('full_name', 'like', "%{$search}%")->orWhere('nisn', 'like', "%{$search}%"))
+                    ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$search}%"))
+                    ->when(is_numeric($search), fn ($q) => $q->orWhere('id', $search));
+            });
+        })
+        ->orderBy('created_at', 'desc')
+        ->paginate($perPage)
+        ->withQueryString();
 
         $operators = User::where('role', 'operator')->get(['id', 'name']);
 
@@ -111,31 +127,31 @@ class AdminWorkspaceController extends Controller
         $selectionStatusFilter = $request->query('selection_status', '');
 
         $selectionPaths = AdmissionPath::where('is_active', true)->withCount([
-                'registrations as verified' => function ($query) use ($activeYearId) {
-                    $query->where('academic_year_id', $activeYearId)
-                        ->where('processing_status', 'selesai');
-                },
-                'registrations as accepted' => function ($query) use ($activeYearId) {
-                    $query->where('academic_year_id', $activeYearId)
-                        ->where('processing_status', 'selesai')
-                        ->where('status', 'accepted');
-                },
-                'registrations as pending' => function ($query) use ($activeYearId) {
-                    $query->where('academic_year_id', $activeYearId)
-                        ->where('processing_status', 'selesai')
-                        ->where('status', 'pending');
-                }
-            ])
-            ->get()
-            ->map(fn ($path) => [
-                'id' => $path->id,
-                'name' => $path->name,
-                'quota' => $path->quota,
-                'verified' => $path->verified,
-                'accepted' => $path->accepted,
-                'pending' => $path->pending,
-                'remaining' => max(0, $path->quota - $path->accepted),
-            ]);
+            'registrations as verified' => function ($query) use ($activeYearId) {
+                $query->where('academic_year_id', $activeYearId)
+                    ->where('processing_status', 'selesai');
+            },
+            'registrations as accepted' => function ($query) use ($activeYearId) {
+                $query->where('academic_year_id', $activeYearId)
+                    ->where('processing_status', 'selesai')
+                    ->where('status', 'accepted');
+            },
+            'registrations as pending' => function ($query) use ($activeYearId) {
+                $query->where('academic_year_id', $activeYearId)
+                    ->where('processing_status', 'selesai')
+                    ->where('status', 'pending');
+            }
+        ])
+        ->get()
+        ->map(fn ($path) => [
+            'id' => $path->id,
+            'name' => $path->name,
+            'quota' => $path->quota,
+            'verified' => $path->verified,
+            'accepted' => $path->accepted,
+            'pending' => $path->pending,
+            'remaining' => max(0, $path->quota - $path->accepted),
+        ]);
 
         $rankings = Registration::with(['studentBiodata', 'admissionPath', 'user'])
             ->where('academic_year_id', $activeYearId)
@@ -240,10 +256,13 @@ class AdminWorkspaceController extends Controller
 
     public function generateRanking(Request $request)
     {
+        // Authorize admin (already enforced by middleware)
         $activeYear = AcademicYear::where('is_active', true)->first();
         if (!$activeYear) {
             return back()->with('error', 'Tidak ada tahun ajaran aktif');
         }
+
+        // No additional request validation needed
 
         $paths = AdmissionPath::where('is_active', true)->get();
         $changed = 0;

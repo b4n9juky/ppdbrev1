@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Toast from '@/Components/Toast';
 import { Head, Link, useForm, router } from '@inertiajs/react';
+import { isImage } from '@/lib/utils';
 
 const steps = ['Pilih Jalur', 'Biodata', 'Upload Dokumen', 'Nilai Ijazah', 'Kirim'];
 
@@ -335,6 +336,12 @@ function StepDocuments({ registration, onNext, onBack, documentTypes = [] }) {
     const [uploading, setUploading] = useState(false);
     const [previewUrl, setPreviewUrl] = useState(null);
 
+    useEffect(() => {
+        return () => {
+            if (previewUrl) URL.revokeObjectURL(previewUrl);
+        };
+    }, [previewUrl]);
+
     function handleFileChange(e) {
         const f = e.target.files[0] || null;
         setFile(f);
@@ -373,10 +380,6 @@ function StepDocuments({ registration, onNext, onBack, documentTypes = [] }) {
                 preserveScroll: true,
             });
         }
-    }
-
-    function isImage(filePath) {
-        return /\.(jpg|jpeg|png|gif|webp)$/i.test(filePath);
     }
 
     const docs = registration?.student_documents || [];
@@ -760,10 +763,6 @@ function StepConfirm({ registration, onBack, documentTypes = [] }) {
 function RegistrationSummary({ registration, documentTypes = [] }) {
     const bio = registration?.student_biodata;
     const docs = registration?.student_documents || [];
-
-    function isImage(filePath) {
-        return /\.(jpg|jpeg|png|gif|webp)$/i.test(filePath);
-    }
 
     return (
         <div className="space-y-6">

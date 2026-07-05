@@ -10,18 +10,13 @@ class HandleInertiaRequests extends Middleware
 {
     protected $rootView = 'app';
 
-    public function version(Request $request): ?string
-    {
-        return parent::version($request);
-    }
-
     public function share(Request $request): array
     {
         return [
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user(),
-                'registration' => $request->user() && $request->user()->role === 'student'
+                'registration' => fn () => $request->user() && $request->user()->role === 'student'
                     ? \App\Models\Registration::where('user_id', $request->user()->id)
                         ->where('academic_year_id', \App\Models\AcademicYear::where('is_active', true)->value('id'))
                         ->first()

@@ -42,6 +42,10 @@ class StudentBiodata extends Model
     {
         return [
             'birth_date' => 'date',
+            'child_order' => 'integer',
+            'siblings_count' => 'integer',
+            'distance_to_school' => 'float',
+            'accepted_date' => 'date',
         ];
     }
 

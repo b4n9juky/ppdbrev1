@@ -1,6 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { FileText, CheckCircle, XCircle, Clock, Users, UserCheck, ArrowRight, Search, RotateCcw, FileSpreadsheet, Download } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
+import Pagination from '@/Components/Pagination';
 
 const statusConfig = {
     draft: { label: 'Draft', bg: 'bg-gray-100 text-gray-700 ring-gray-300' },
@@ -351,52 +352,7 @@ export default function AnnouncementTab({ registrations, paths, stats, filters }
                             <span className="font-medium text-gray-700">{registrations.total}</span> entri</>
                         ) : 'Tidak ada data'}
                     </div>
-                    {registrations.last_page > 1 && (
-                        <div className="flex items-center gap-1">
-                            {registrations.current_page > 1 ? (
-                                <Link href={registrations.prev_page_url} preserveState
-                                    className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 shadow-sm transition hover:bg-gray-50 hover:text-gray-900">
-                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-                                    </svg>
-                                    Prev
-                                </Link>
-                            ) : (
-                                <span className="inline-flex items-center gap-1 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-300 cursor-not-allowed">
-                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-                                    </svg>
-                                    Prev
-                                </span>
-                            )}
-                            {registrations.links.slice(1, -1).map((link, i) => {
-                                if (link.label === '...') {
-                                    return <span key={i} className="px-2 py-2 text-sm text-gray-400">...</span>;
-                                }
-                                return link.active ? (
-                                    <span key={i} className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-r from-emerald-500 to-green-500 text-sm font-semibold text-white shadow-sm">{link.label}</span>
-                                ) : (
-                                    <Link key={i} href={link.url} preserveState className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-600 shadow-sm transition hover:bg-gray-50 hover:text-gray-900">{link.label}</Link>
-                                );
-                            })}
-                            {registrations.current_page < registrations.last_page ? (
-                                <Link href={registrations.next_page_url} preserveState
-                                    className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 shadow-sm transition hover:bg-gray-50 hover:text-gray-900">
-                                    Next
-                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                                    </svg>
-                                </Link>
-                            ) : (
-                                <span className="inline-flex items-center gap-1 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-300 cursor-not-allowed">
-                                    Next
-                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                                    </svg>
-                                </span>
-                            )}
-                        </div>
-                    )}
+                    <Pagination meta={registrations} color="emerald" />
                 </div>
             </div>
         </div>

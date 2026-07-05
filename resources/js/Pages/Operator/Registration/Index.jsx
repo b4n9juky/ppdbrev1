@@ -1,9 +1,10 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import StudentTable from '@/Components/pendaftar/StudentTable';
 import StudentPreviewPanel from '@/Components/pendaftar/StudentPreviewPanel';
-import { Head, router, usePage, Link } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { formatDateTime } from '@/lib/utils';
+import Pagination from '@/Components/Pagination';
 
 const STORAGE_KEY = 'ppdb_operator_split_left';
 const MIN_PERCENT = 20;
@@ -318,26 +319,7 @@ export default function OperatorIndex({ registrations, selectedRegistration, pat
                         </table>
                     </div>
 
-                    {/* History Pagination */}
-                    {myActivities?.last_page > 1 && (
-                        <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50/30 px-6 py-4">
-                            <div className="text-sm text-gray-500">
-                                Menampilkan {myActivities.from}-{myActivities.to} dari {myActivities.total}
-                            </div>
-                            <div className="flex items-center gap-1">
-                                {myActivities.links.slice(1, -1).map((link, i) => {
-                                    if (link.label === '...') {
-                                        return <span key={i} className="px-2 py-2 text-sm text-gray-400">...</span>;
-                                    }
-                                    return link.active ? (
-                                        <span key={i} className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-r from-orange-500 to-amber-600 text-sm font-semibold text-white shadow-sm">{link.label}</span>
-                                    ) : (
-                                        <Link key={i} href={link.url} preserveState className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-600 shadow-sm transition hover:bg-gray-50 hover:text-gray-900">{link.label}</Link>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    )}
+                    <Pagination meta={myActivities} color="orange" />
                 </div>
             )}
         </AuthenticatedLayout>

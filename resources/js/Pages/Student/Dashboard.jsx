@@ -1,5 +1,6 @@
 import StudentLayout from '@/Layouts/StudentLayout';
 import { Head, Link, router } from '@inertiajs/react';
+import { isImage } from '@/lib/utils';
 
 const statusConfig = {
     draft: { label: 'Belum Dikirim', bg: 'bg-yellow-50 text-yellow-700 ring-yellow-300', icon: 'M12 9v2m0 4h.01' },
@@ -62,10 +63,6 @@ const docTypeColors = {
     prestasi: 'bg-violet-50 text-violet-700 ring-violet-200',
     other: 'bg-gray-50 text-gray-600 ring-gray-200',
 };
-
-function isImage(filePath) {
-    return /\.(jpg|jpeg|png|gif|webp)$/i.test(filePath);
-}
 
 const summaryItems = [
     { label: 'Jalur Pendaftaran', key: 'admission_path.name' },

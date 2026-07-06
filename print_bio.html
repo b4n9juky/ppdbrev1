@@ -1,0 +1,520 @@
+<!doctype html>
+
+<html class="light" lang="id">
+    <head>
+        <meta charset="utf-8" />
+        <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+        <title>PPDB Portal - Biodata Siswa</title>
+        <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap"
+            rel="stylesheet"
+        />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+            rel="stylesheet"
+        />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+            rel="stylesheet"
+        />
+        <!-- Tailwind Config Verbatim -->
+        <script id="tailwind-config">
+            tailwind.config = {
+                darkMode: "class",
+                theme: {
+                    extend: {
+                        colors: {
+                            "on-tertiary-fixed-variant": "#6b6a33",
+                            "on-error-container": "#6e1400",
+                            "secondary-fixed": "#d7e7cd",
+                            "tertiary-fixed-dim": "#eeeca7",
+                            "on-primary": "#ebffdf",
+                            "on-tertiary-fixed": "#4e4d19",
+                            "inverse-surface": "#0c0f0a",
+                            "surface-container-low": "#f1f5ea",
+                            "on-error": "#fff7f6",
+                            "tertiary-dim": "#565520",
+                            "on-tertiary": "#fffcb7",
+                            "on-surface-variant": "#5a6156",
+                            "outline-variant": "#adb4a7",
+                            "surface-dim": "#d5dcce",
+                            tertiary: "#62612b",
+                            "surface-container-lowest": "#ffffff",
+                            primary: "#45683b",
+                            "surface-tint": "#45683b",
+                            "primary-fixed": "#c5eeb5",
+                            "on-primary-container": "#385a2f",
+                            "primary-container": "#c5eeb5",
+                            "on-secondary-fixed": "#354330",
+                            "inverse-primary": "#cbf4bb",
+                            outline: "#767d71",
+                            background: "#f8faf1",
+                            secondary: "#55634e",
+                            "on-secondary-fixed-variant": "#51604b",
+                            "surface-container-highest": "#dee5d6",
+                            "error-container": "#fd795a",
+                            "surface-variant": "#dee5d6",
+                            "surface-container-high": "#e5eadd",
+                            "secondary-dim": "#495743",
+                            "on-secondary-container": "#475642",
+                            error: "#a73b21",
+                            "primary-dim": "#395b30",
+                            "surface-bright": "#f8faf1",
+                            "on-surface": "#2e342a",
+                            "surface-container": "#ebf0e3",
+                            surface: "#f8faf1",
+                            "tertiary-fixed": "#fcfab4",
+                            "on-primary-fixed-variant": "#416438",
+                            "primary-fixed-dim": "#b7e0a8",
+                            "tertiary-container": "#fcfab4",
+                            "on-primary-fixed": "#26471e",
+                            "secondary-container": "#d7e7cd",
+                            "on-secondary": "#eefee3",
+                            "inverse-on-surface": "#9b9e96",
+                            "secondary-fixed-dim": "#c9d9bf",
+                            "on-background": "#2e342a",
+                            "on-tertiary-container": "#61602a",
+                            "error-dim": "#791903",
+                        },
+                        borderRadius: {
+                            DEFAULT: "0.125rem",
+                            lg: "0.25rem",
+                            xl: "0.5rem",
+                            full: "0.75rem",
+                        },
+                        spacing: {
+                            gutter: "1.5rem",
+                            "stack-md": "1rem",
+                            "stack-sm": "0.5rem",
+                            "sidebar-width": "280px",
+                            "container-padding": "2rem",
+                            "stack-lg": "1.5rem",
+                            "header-height": "64px",
+                        },
+                        fontFamily: {
+                            "display-lg": ["Inter"],
+                            "label-sm": ["Inter"],
+                            "title-lg": ["Inter"],
+                            "body-md": ["Inter"],
+                            "label-md": ["Inter"],
+                            "body-lg": ["Inter"],
+                            "headline-md": ["Inter"],
+                            "headline-lg": ["Inter"],
+                        },
+                        fontSize: {
+                            "display-lg": [
+                                "36px",
+                                {
+                                    lineHeight: "44px",
+                                    letterSpacing: "-0.02em",
+                                    fontWeight: "700",
+                                },
+                            ],
+                            "label-sm": [
+                                "11px",
+                                { lineHeight: "14px", fontWeight: "600" },
+                            ],
+                            "title-lg": [
+                                "18px",
+                                { lineHeight: "26px", fontWeight: "600" },
+                            ],
+                            "body-md": [
+                                "14px",
+                                { lineHeight: "20px", fontWeight: "400" },
+                            ],
+                            "label-md": [
+                                "12px",
+                                {
+                                    lineHeight: "16px",
+                                    letterSpacing: "0.01em",
+                                    fontWeight: "500",
+                                },
+                            ],
+                            "body-lg": [
+                                "16px",
+                                { lineHeight: "24px", fontWeight: "400" },
+                            ],
+                            "headline-md": [
+                                "20px",
+                                { lineHeight: "28px", fontWeight: "600" },
+                            ],
+                            "headline-lg": [
+                                "28px",
+                                {
+                                    lineHeight: "36px",
+                                    letterSpacing: "-0.01em",
+                                    fontWeight: "600",
+                                },
+                            ],
+                        },
+                    },
+                },
+            };
+        </script>
+        <style>
+            body {
+                font-family: "Inter", sans-serif;
+            }
+            .material-symbols-outlined {
+                font-variation-settings:
+                    "FILL" 0,
+                    "wght" 400,
+                    "GRAD" 0,
+                    "opsz" 24;
+            }
+            /* Custom scrollbar for better look in data tables */
+            ::-webkit-scrollbar {
+                width: 6px;
+            }
+            ::-webkit-scrollbar-track {
+                background: transparent;
+            }
+            ::-webkit-scrollbar-thumb {
+                background: #adb4a7;
+                border-radius: 10px;
+            }
+            ::-webkit-scrollbar-thumb:hover {
+                background: #767d71;
+            }
+        </style>
+    </head>
+    <body class="bg-background text-on-background min-h-screen flex">
+        <!-- SideNavBar (Shared Component) -->
+        <!-- Main Content -->
+        <main class="flex-1 min-h-screen">
+            <!-- TopAppBar (Shared Component) -->
+            <!-- Content Area -->
+            <div class="p-container-padding space-y-stack-lg max-w-6xl mx-auto">
+                <div
+                    class="border-b-2 border-primary pb-4 mb-8 flex justify-between items-end"
+                >
+                    <div class="space-y-1">
+                        <h1
+                            class="text-headline-lg font-bold text-primary uppercase tracking-tight"
+                        >
+                            Laporan Biodata Siswa
+                        </h1>
+                        <p class="text-label-md text-on-surface-variant">
+                            Penerimaan Peserta Didik Baru (PPDB) Online
+                        </p>
+                    </div>
+                    <div
+                        class="text-right text-label-sm text-on-surface-variant/60"
+                    >
+                        <p>Dicetak pada: 24 Mei 2024</p>
+                        <p>ID Pendaftaran: #PPDB-2024-00829</p>
+                    </div>
+                </div>
+                <!-- Breadcrumb -->
+                <!-- Bento Layout Start -->
+                <div class="grid grid-cols-12 gap-6">
+                    <!-- Personal Details Card -->
+                    <div
+                        class="col-span-12 lg:col-span-8 bg-white dark:bg-surface-container-lowest rounded-xl border border-outline-variant shadow-[0px_4px_12px_rgba(0,0,0,0.05)] overflow-hidden"
+                    >
+                        <div
+                            class="p-stack-lg border-b border-outline-variant bg-surface-container-low/30 flex justify-between items-center"
+                        >
+                            <div class="flex items-center gap-3">
+                                <span
+                                    class="material-symbols-outlined text-primary"
+                                    >person_outline</span
+                                >
+                                <h3
+                                    class="font-title-lg text-title-lg text-on-surface"
+                                >
+                                    Informasi Pribadi
+                                </h3>
+                            </div>
+                            <span
+                                class="px-3 py-1 bg-primary-container text-on-primary-container text-[10px] font-bold rounded-full uppercase tracking-wider"
+                                >Lengkap</span
+                            >
+                        </div>
+                        <div
+                            class="p-stack-lg grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6"
+                        >
+                            <div class="space-y-1">
+                                <label
+                                    class="font-label-md text-label-md text-on-surface-variant"
+                                    >Nama Lengkap</label
+                                >
+                                <p
+                                    class="font-body-md text-body-md font-medium text-on-surface"
+                                >
+                                    PUTRI SARI
+                                </p>
+                            </div>
+                            <div class="space-y-1">
+                                <label
+                                    class="font-label-md text-label-md text-on-surface-variant"
+                                    >Nomor Induk Kependudukan (NIK)</label
+                                >
+                                <p
+                                    class="font-body-md text-body-md font-medium text-on-surface"
+                                >
+                                    3275010023940001
+                                </p>
+                            </div>
+                            <div class="space-y-1">
+                                <label
+                                    class="font-label-md text-label-md text-on-surface-variant"
+                                    >NISN</label
+                                >
+                                <p
+                                    class="font-body-md text-body-md font-medium text-on-surface"
+                                >
+                                    0082938475
+                                </p>
+                            </div>
+                            <div class="space-y-1">
+                                <label
+                                    class="font-label-md text-label-md text-on-surface-variant"
+                                    >Jenis Kelamin</label
+                                >
+                                <p
+                                    class="font-body-md text-body-md font-medium text-on-surface"
+                                >
+                                    Perempuan
+                                </p>
+                            </div>
+                            <div class="space-y-1">
+                                <label
+                                    class="font-label-md text-label-md text-on-surface-variant"
+                                    >Tempat, Tanggal Lahir</label
+                                >
+                                <p
+                                    class="font-body-md text-body-md font-medium text-on-surface"
+                                >
+                                    Jakarta, 14 Mei 2008
+                                </p>
+                            </div>
+                            <div class="space-y-1">
+                                <label
+                                    class="font-label-md text-label-md text-on-surface-variant"
+                                    >Agama</label
+                                >
+                                <p
+                                    class="font-body-md text-body-md font-medium text-on-surface"
+                                >
+                                    Islam
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Profile Photo Card (Standalone in Mobile, Sidebar in Desktop) -->
+                    <div
+                        class="col-span-12 lg:col-span-4 bg-white dark:bg-surface-container-lowest rounded-xl border border-outline-variant shadow-[0px_4px_12px_rgba(0,0,0,0.05)] overflow-hidden flex flex-col items-center justify-center p-8 space-y-6"
+                    >
+                        <div class="relative group">
+                            <div
+                                class="absolute inset-0 bg-primary/10 rounded-full scale-110 blur-xl opacity-50"
+                            ></div>
+                            <img
+                                alt="Foto Profil Siswa"
+                                class="relative w-48 h-48 rounded-full border-4 border-white shadow-lg object-cover"
+                                src="https://lh3.googleusercontent.com/aida/AP1WRLuYltarfLh2tyU9eS-nIIUwdTWQGtxBd6SHawC3HiqSToN1FTChI38UfhAzE0Sls5HUmFfGzqtFFWHNew9M1GSYW2Z_-tHG8jSAyyLLmRCR170zvV2X6HyavJAOMP5v19BQl3Gwt_IdRgHw1s0s5dd4H-iBxqygWj8hwtCIJsOxr7JGvzVgouR4aoVg7l05WnUqSN60FiNMNvnviRjY0FxVJMvXV4UDfdyvvIv7SLxqSoxvl66et21Zm7g"
+                            />
+                            <button
+                                class="absolute bottom-2 right-2 bg-primary text-white p-2 rounded-full shadow-md hover:bg-primary-dim transition-colors"
+                            >
+                                <span
+                                    class="material-symbols-outlined text-[20px]"
+                                    >camera_alt</span
+                                >
+                            </button>
+                        </div>
+                        <div class="text-center space-y-1">
+                            <h4
+                                class="font-title-lg text-title-lg text-on-surface"
+                            >
+                                Pas Foto Formal
+                            </h4>
+                            <p
+                                class="font-label-md text-label-md text-on-surface-variant"
+                            >
+                                Ukuran 3x4, Maksimal 2MB
+                            </p>
+                        </div>
+                    </div>
+                    <!-- Family Information Card -->
+                    <div
+                        class="col-span-12 bg-white dark:bg-surface-container-lowest rounded-xl border border-outline-variant shadow-[0px_4px_12px_rgba(0,0,0,0.05)] overflow-hidden"
+                    >
+                        <div
+                            class="p-stack-lg border-b border-outline-variant bg-surface-container-low/30"
+                        >
+                            <div class="flex items-center gap-3">
+                                <span
+                                    class="material-symbols-outlined text-primary"
+                                    >family_history</span
+                                >
+                                <h3
+                                    class="font-title-lg text-title-lg text-on-surface"
+                                >
+                                    Informasi Keluarga
+                                </h3>
+                            </div>
+                        </div>
+                        <div
+                            class="p-stack-lg grid grid-cols-1 md:grid-cols-3 gap-8"
+                        >
+                            <div
+                                class="p-6 rounded-xl bg-background border border-outline-variant/30 space-y-4"
+                            >
+                                <div
+                                    class="flex items-center gap-2 text-primary"
+                                >
+                                    <span
+                                        class="material-symbols-outlined text-[20px]"
+                                        >man</span
+                                    >
+                                    <span
+                                        class="font-bold text-label-md uppercase tracking-wide"
+                                        >Data Ayah</span
+                                    >
+                                </div>
+                                <div class="space-y-3">
+                                    <div>
+                                        <label
+                                            class="font-label-md text-label-md text-on-surface-variant block"
+                                            >Nama Ayah</label
+                                        >
+                                        <p
+                                            class="font-body-md text-body-md font-medium text-on-surface"
+                                        >
+                                            Ahmad Setiawan
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <label
+                                            class="font-label-md text-label-md text-on-surface-variant block"
+                                            >Pekerjaan</label
+                                        >
+                                        <p
+                                            class="font-body-md text-body-md font-medium text-on-surface"
+                                        >
+                                            Wiraswasta
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div
+                                class="p-6 rounded-xl bg-background border border-outline-variant/30 space-y-4"
+                            >
+                                <div
+                                    class="flex items-center gap-2 text-primary"
+                                >
+                                    <span
+                                        class="material-symbols-outlined text-[20px]"
+                                        >woman</span
+                                    >
+                                    <span
+                                        class="font-bold text-label-md uppercase tracking-wide"
+                                        >Data Ibu</span
+                                    >
+                                </div>
+                                <div class="space-y-3">
+                                    <div>
+                                        <label
+                                            class="font-label-md text-label-md text-on-surface-variant block"
+                                            >Nama Ibu</label
+                                        >
+                                        <p
+                                            class="font-body-md text-body-md font-medium text-on-surface"
+                                        >
+                                            Siti Aminah
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <label
+                                            class="font-label-md text-label-md text-on-surface-variant block"
+                                            >Pekerjaan</label
+                                        >
+                                        <p
+                                            class="font-body-md text-body-md font-medium text-on-surface"
+                                        >
+                                            Guru
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div
+                                class="p-6 rounded-xl bg-surface-container-high/20 border border-primary/20 space-y-4 flex flex-col justify-center text-center"
+                            >
+                                <label
+                                    class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest font-bold"
+                                    >Jumlah Saudara Kandung</label
+                                >
+                                <div
+                                    class="text-[48px] font-bold text-primary leading-none"
+                                >
+                                    2
+                                </div>
+                                <p
+                                    class="font-label-md text-label-md text-primary/80 italic"
+                                >
+                                    Data terverifikasi
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Bento Layout End -->
+                <!-- Action Buttons -->
+                <!-- Footer Info -->
+                <footer class="pt-12 pb-8 text-center">
+                    <p
+                        class="font-label-md text-label-md text-on-surface-variant/60"
+                    >
+                        © 2024 Portal PPDB Online. Seluruh hak cipta dilindungi.
+                    </p>
+                </footer>
+            </div>
+        </main>
+        <!-- FAB Overlay (Hidden on Desktop by Contextual Suppression logic) -->
+        <script>
+            // Micro-interaction: Sidebar active state logic
+            const navLinks = document.querySelectorAll("aside nav a");
+            navLinks.forEach((link) => {
+                link.addEventListener("click", (e) => {
+                    // If this were a real SPA, we'd navigate here
+                    // For demo, we just show UI interaction
+                    navLinks.forEach((l) => {
+                        l.classList.remove(
+                            "bg-primary-container",
+                            "text-on-primary-container",
+                            "border-l-4",
+                            "border-primary",
+                        );
+                        l.classList.add(
+                            "text-on-surface-variant",
+                            "hover:bg-surface-container",
+                        );
+                        const icon = l.querySelector(
+                            ".material-symbols-outlined",
+                        );
+                        if (icon) icon.style.fontVariationSettings = "'FILL' 0";
+                    });
+
+                    link.classList.remove(
+                        "text-on-surface-variant",
+                        "hover:bg-surface-container",
+                    );
+                    link.classList.add(
+                        "bg-primary-container",
+                        "text-on-primary-container",
+                        "border-l-4",
+                        "border-primary",
+                    );
+                    const activeIcon = link.querySelector(
+                        ".material-symbols-outlined",
+                    );
+                    if (activeIcon)
+                        activeIcon.style.fontVariationSettings = "'FILL' 1";
+                });
+            });
+        </script>
+    </body>
+</html>

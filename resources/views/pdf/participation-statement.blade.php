@@ -194,7 +194,7 @@
         $parentPhone = '-';
         $parentAddress = '-';
 
-        if ($registration->studentBiodata && $registration->studentBiodata->living_status === 'Wali' && $parent) {
+        if ($registration->studentBiodata && $registration->studentBiodata->living_status === 'Wali' && $parent && $parent->guardian_name) {
             $parentName = $parent->guardian_name;
             $parentNik = $parent->guardian_nik;
             $parentOccupation = $parent->guardian_occupation;
@@ -213,6 +213,12 @@
                 $parentOccupation = $parent->mother_occupation;
                 $parentPhone = $parent->mother_phone;
                 $parentAddress = $parent->mother_address;
+            } elseif ($parent->guardian_name) {
+                $parentName = $parent->guardian_name;
+                $parentNik = $parent->guardian_nik;
+                $parentOccupation = $parent->guardian_occupation;
+                $parentPhone = $parent->guardian_phone;
+                $parentAddress = $parent->guardian_address;
             }
         }
     @endphp

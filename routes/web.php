@@ -125,6 +125,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
         ->name('print.parent-statement');
     Route::get('/print/participation-statement/{registration}', [PrintController::class, 'participationStatement'])
         ->name('print.participation-statement');
+    Route::get('/print/biodata/{registration}', [PrintController::class, 'biodata'])
+        ->name('print.biodata');
     Route::get('/registrations/{registration}/scores', [ScoreController::class, 'edit'])
         ->name('registrations.scores.edit');
     Route::patch('/registrations/{registration}/scores', [ScoreController::class, 'update'])
@@ -161,6 +163,7 @@ Route::middleware(['auth', 'verified', 'role:operator'])->prefix('operator')->na
     Route::get('/print/student-statement/{registration}', [PrintController::class, 'studentStatement'])->name('print.student-statement');
     Route::get('/print/parent-statement/{registration}', [PrintController::class, 'parentStatement'])->name('print.parent-statement');
     Route::get('/print/participation-statement/{registration}', [PrintController::class, 'participationStatement'])->name('print.participation-statement');
+    Route::get('/print/biodata/{registration}', [PrintController::class, 'biodata'])->name('print.biodata');
 });
 
 Route::middleware(['auth', 'verified'])->prefix('student')->name('student.')->group(function () {

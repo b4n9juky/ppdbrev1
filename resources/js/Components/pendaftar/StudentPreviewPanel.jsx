@@ -139,6 +139,14 @@ export default function StudentPreviewPanel({ registration, user, documentTypes,
                         >
                             Cetak Bukti
                         </a>
+                        <a
+                            href={route(`${routePrefix}.print.biodata`, registration.id)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 rounded-lg bg-white px-2.5 py-1.5 text-xs font-semibold text-blue-700 shadow-sm ring-1 ring-blue-200 transition hover:bg-blue-50"
+                        >
+                            Cetak Biodata
+                        </a>
                         {(registration.status === 'accepted' || registration.status === 'reserve') && (
                             <a
                                 href={route(`${routePrefix}.print.decision-letter`, registration.id)}

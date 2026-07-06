@@ -244,6 +244,51 @@ class PrintController extends Controller
         return $pdf->stream('surat-pernyataan-partisipasi-'.str_pad($registration->id, 5, '0', STR_PAD_LEFT).'.pdf');
     }
 
+    public function biodata(Registration $registration): Response
+    {
+        $registration->load([
+            'studentBiodata',
+            'studentParent',
+            'admissionPath',
+            'studentDocuments',
+            'academicYear',
+            'user',
+        ]);
+
+        if (! $registration->studentBiodata) {
+            abort(422, 'Biodata siswa belum dilengkapi.');
+        }
+
+        $madrasah = MadrasahSetting::first();
+
+        $kopSuratBase64 = $madrasah ? $this->imageToBase64($madrasah->kop_surat_path, 800) : null;
+        $signatureBase64 = $madrasah ? $this->imageToBase64($madrasah->signature_path, 300) : null;
+        $stampBase64 = $madrasah ? $this->imageToBase64($madrasah->stamp_path, 300) : null;
+
+        $photoBase64 = null;
+        if ($registration->studentDocuments) {
+            $photo = $registration->studentDocuments->firstWhere('document_type', 'foto');
+            if ($photo && $photo->file_path) {
+                $photoBase64 = $this->imageToBase64($photo->file_path, 400);
+            }
+        }
+
+        ini_set('memory_limit', '256M');
+
+        $pdf = Pdf::loadView('pdf.biodata', [
+            'registration' => $registration,
+            'bio' => $registration->studentBiodata,
+            'parent' => $registration->studentParent,
+            'madrasah' => $madrasah,
+            'kop_surat_base64' => $kopSuratBase64,
+            'signature_base64' => $signatureBase64,
+            'stamp_base64' => $stampBase64,
+            'photo' => $photoBase64,
+        ]);
+
+        return $pdf->stream('biodata-siswa-'.str_pad($registration->id, 5, '0', STR_PAD_LEFT).'.pdf');
+    }
+
     private function generateRegistrationProofPdf(Registration $registration): Response
     {
         $registration->load([

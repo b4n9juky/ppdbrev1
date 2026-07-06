@@ -92,6 +92,10 @@ export default function ApplicantDetailDrawer({ applicant, onClose }) {
                                 <p className="font-medium text-gray-800">{bio.gender === 'L' ? 'Laki-laki' : bio.gender === 'P' ? 'Perempuan' : '-'}</p>
                             </div>
                             <div className="col-span-2">
+                                <span className="text-xs text-gray-400">Email</span>
+                                <p className="font-medium text-gray-800">{applicant.user?.email || '-'}</p>
+                            </div>
+                            <div className="col-span-2">
                                 <span className="text-xs text-gray-400">Tempat, Tanggal Lahir</span>
                                 <p className="font-medium text-gray-800">
                                     {[bio.birth_place, bio.birth_date ? new Date(bio.birth_date).toLocaleDateString('id-ID') : ''].filter(Boolean).join(', ') || '-'}

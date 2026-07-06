@@ -118,6 +118,9 @@ export default function StudentPreviewPanel({ registration, user, documentTypes,
                                 <p className="text-xs text-gray-500">
                                     Jalur: <span className="font-medium text-gray-700">{registration.admission_path?.name || '-'}</span>
                                 </p>
+                                <p className="text-xs text-gray-500">
+                                    Email: <span className="font-medium text-gray-700">{registration.user?.email || '-'}</span>
+                                </p>
                             </div>
                         </div>
                     </div>

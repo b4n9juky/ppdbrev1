@@ -194,9 +194,6 @@
         $parentPhone = '-';
         $parentAddress = '-';
 
-
-         <!--if ($registration->studentBiodata && $registration->studentBiodata->living_status === 'Wali' && $parent) {-->
-
         if ($registration->studentBiodata && $registration->studentBiodata->living_status === 'Wali' && $parent && $parent->guardian_name) {
             $parentName = $parent->guardian_name;
             $parentNik = $parent->guardian_nik;

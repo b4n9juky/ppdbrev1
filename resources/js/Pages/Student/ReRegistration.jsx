@@ -12,7 +12,7 @@ export default function ReRegistration({ registration, activeYear }) {
         return dateStr.split('T')[0];
     };
 
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, processing, errors, clearErrors } = useForm({
         // Student Biodata - Existing
         nisn: bio.nisn || '',
         full_name: bio.full_name || '',
@@ -87,6 +87,95 @@ export default function ReRegistration({ registration, activeYear }) {
 
     const [currentStep, setCurrentStep] = useState(1);
     const [guardianType, setGuardianType] = useState('manual'); // manual, father, mother
+    const [stepErrors, setStepErrors] = useState({});
+
+    function validateStep(step) {
+        const errs = {};
+
+        if (step === 1) {
+            if (!data.nisn) errs.nisn = 'NISN wajib diisi.';
+            if (!data.full_name) errs.full_name = 'Nama lengkap wajib diisi.';
+            if (!data.gender) errs.gender = 'Jenis kelamin wajib dipilih.';
+            if (!data.birth_place) errs.birth_place = 'Tempat lahir wajib diisi.';
+            if (!data.birth_date) errs.birth_date = 'Tanggal lahir wajib diisi.';
+            if (!data.nik || data.nik.length !== 16) errs.nik = 'NIK Siswa harus 16 digit.';
+            if (!data.child_order || parseInt(data.child_order) < 1) errs.child_order = 'Anak ke- wajib diisi (minimal 1).';
+            if (data.siblings_count === '' || parseInt(data.siblings_count) < 0) errs.siblings_count = 'Jumlah saudara kandung wajib diisi.';
+            if (!data.phone_number || !/^[0-9]{11,13}$/.test(data.phone_number)) errs.phone_number = 'Nomor HP harus 11-13 digit angka.';
+            if (!data.address) errs.address = 'Alamat wajib diisi.';
+            if (!data.district) errs.district = 'Kecamatan wajib diisi.';
+            if (!data.subdistrict) errs.subdistrict = 'Kelurahan/Desa wajib diisi.';
+            if (!data.living_status) errs.living_status = 'Status tempat tinggal wajib dipilih.';
+            if (!data.distance_to_school) errs.distance_to_school = 'Jarak ke sekolah wajib dipilih.';
+        }
+
+        if (step === 2) {
+            if (!data.previous_school) errs.previous_school = 'Nama asal sekolah wajib diisi.';
+            if (!data.previous_school_npsn) errs.previous_school_npsn = 'NPSN wajib diisi.';
+            if (!data.previous_school_address) errs.previous_school_address = 'Alamat sekolah asal wajib diisi.';
+            if (!data.previous_school_city) errs.previous_school_city = 'Kota sekolah asal wajib diisi.';
+            if (!data.previous_school_district) errs.previous_school_district = 'Kecamatan sekolah asal wajib diisi.';
+            if (!data.previous_school_subdistrict) errs.previous_school_subdistrict = 'Kelurahan sekolah asal wajib diisi.';
+        }
+
+        if (step === 3) {
+            if (!data.father_name) errs.father_name = 'Nama ayah wajib diisi.';
+            if (!data.father_birth_place) errs.father_birth_place = 'Tempat lahir ayah wajib diisi.';
+            if (!data.father_birth_date) errs.father_birth_date = 'Tanggal lahir ayah wajib diisi.';
+            if (!data.father_nik || data.father_nik.length !== 16) errs.father_nik = 'NIK Ayah harus 16 digit.';
+            if (!data.father_education) errs.father_education = 'Pendidikan ayah wajib dipilih.';
+            if (!data.father_status) errs.father_status = 'Status ayah wajib dipilih.';
+            if (data.father_status === 'Masih Hidup') {
+                if (!data.father_occupation) errs.father_occupation = 'Pekerjaan ayah wajib diisi.';
+                if (!data.father_income) errs.father_income = 'Penghasilan ayah wajib dipilih.';
+                if (!data.father_phone || !/^[0-9]{10,13}$/.test(data.father_phone)) errs.father_phone = 'Nomor HP ayah harus 10-13 digit angka.';
+                if (!data.father_address) errs.father_address = 'Alamat ayah wajib diisi.';
+            }
+        }
+
+        if (step === 4) {
+            if (!data.mother_name) errs.mother_name = 'Nama ibu wajib diisi.';
+            if (!data.mother_birth_place) errs.mother_birth_place = 'Tempat lahir ibu wajib diisi.';
+            if (!data.mother_birth_date) errs.mother_birth_date = 'Tanggal lahir ibu wajib diisi.';
+            if (!data.mother_nik || data.mother_nik.length !== 16) errs.mother_nik = 'NIK Ibu harus 16 digit.';
+            if (!data.mother_education) errs.mother_education = 'Pendidikan ibu wajib dipilih.';
+            if (!data.mother_status) errs.mother_status = 'Status ibu wajib dipilih.';
+            if (data.mother_status === 'Masih Hidup') {
+                if (!data.mother_occupation) errs.mother_occupation = 'Pekerjaan ibu wajib diisi.';
+                if (!data.mother_income) errs.mother_income = 'Penghasilan ibu wajib dipilih.';
+                if (!data.mother_phone || !/^[0-9]{10,13}$/.test(data.mother_phone)) errs.mother_phone = 'Nomor HP ibu harus 10-13 digit angka.';
+                if (!data.mother_address) errs.mother_address = 'Alamat ibu wajib diisi.';
+            }
+        }
+
+        if (step === 5) {
+            if (data.living_status === 'Wali') {
+                if (!data.guardian_name) errs.guardian_name = 'Nama wali wajib diisi.';
+                if (!data.guardian_nik || data.guardian_nik.length !== 16) errs.guardian_nik = 'NIK Wali harus 16 digit.';
+                if (!data.guardian_birth_place) errs.guardian_birth_place = 'Tempat lahir wali wajib diisi.';
+                if (!data.guardian_birth_date) errs.guardian_birth_date = 'Tanggal lahir wali wajib diisi.';
+                if (!data.guardian_education) errs.guardian_education = 'Pendidikan wali wajib dipilih.';
+                if (!data.guardian_occupation) errs.guardian_occupation = 'Pekerjaan wali wajib diisi.';
+                if (!data.guardian_income) errs.guardian_income = 'Penghasilan wali wajib dipilih.';
+                if (!data.guardian_phone || !/^[0-9]{10,13}$/.test(data.guardian_phone)) errs.guardian_phone = 'Nomor HP wali harus 10-13 digit angka.';
+                if (!data.guardian_address) errs.guardian_address = 'Alamat wali wajib diisi.';
+            }
+        }
+
+        if (step === 6) {
+            if (!data.student_statement_agree) errs.student_statement_agree = 'Anda harus menyetujui Surat Pernyataan Siswa.';
+        }
+
+        if (step === 7) {
+            if (!data.parent_statement_agree) errs.parent_statement_agree = 'Anda harus menyetujui Surat Pernyataan Orang Tua.';
+        }
+
+        if (step === 8) {
+            if (!data.participation_statement_agree) errs.participation_statement_agree = 'Anda harus menyetujui Surat Pernyataan Partisipasi.';
+        }
+
+        return errs;
+    }
 
     const handleGuardianTypeChange = (type) => {
         setGuardianType(type);
@@ -136,19 +225,44 @@ export default function ReRegistration({ registration, activeYear }) {
     };
 
     const nextStep = () => {
+        const errs = validateStep(currentStep);
+        setStepErrors(errs);
+        if (Object.keys(errs).length > 0) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+        }
+        setStepErrors({});
         setCurrentStep((prev) => Math.min(prev + 1, 8));
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const prevStep = () => {
+        setStepErrors({});
         setCurrentStep((prev) => Math.max(prev - 1, 1));
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        for (let s = 1; s <= 8; s++) {
+            const errs = validateStep(s);
+            if (Object.keys(errs).length > 0) {
+                setStepErrors(errs);
+                setCurrentStep(s);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+        }
         post(route('student.re-registration.submit'));
     };
+
+    const seClass = (field) => stepErrors[field]
+        ? 'border-red-400 focus:border-red-400 focus:ring-red-400'
+        : 'border-gray-200 focus:border-[#468432] focus:ring-[#468432]';
+
+    const seErr = (field) => stepErrors[field]
+        ? <p className="mt-1 text-xs text-red-600">{stepErrors[field]}</p>
+        : null;
 
     const steps = [
         { id: 1, title: 'Biodata' },
@@ -232,7 +346,7 @@ export default function ReRegistration({ registration, activeYear }) {
                     {/* Main Form */}
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* Validation Error Alert */}
-                        {Object.keys(errors).length > 0 && (
+                        {(Object.keys(errors).length > 0 || Object.keys(stepErrors).length > 0) && (
                             <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
                                 <div className="flex gap-2">
                                     <svg className="h-5 w-5 shrink-0 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -241,9 +355,14 @@ export default function ReRegistration({ registration, activeYear }) {
                                     <div>
                                         <span className="font-bold">Terdapat beberapa kesalahan input:</span>
                                         <ul className="list-disc pl-5 mt-1.5 space-y-0.5">
-                                            {Object.entries(errors).map(([key, val]) => (
-                                                <li key={key}>{val}</li>
-                                            ))}
+                                            {Object.entries(stepErrors).length > 0
+                                                ? Object.entries(stepErrors).map(([key, val]) => (
+                                                    <li key={key}>{val}</li>
+                                                ))
+                                                : Object.entries(errors).map(([key, val]) => (
+                                                    <li key={key}>{val}</li>
+                                                ))
+                                            }
                                         </ul>
                                     </div>
                                 </div>
@@ -263,8 +382,9 @@ export default function ReRegistration({ registration, activeYear }) {
                                                 type="text"
                                                 value={data.full_name}
                                                 onChange={(e) => setData('full_name', e.target.value)}
-                                                className="mt-1.5 block w-full rounded-xl border-gray-200 shadow-sm focus:border-[#468432] focus:ring-[#468432] text-sm"
+                                                className={`mt-1.5 block w-full rounded-xl shadow-sm text-sm ${seClass('full_name')}`}
                                             />
+                                            {seErr('full_name')}
                                         </div>
                                         <div>
                                             <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide">NISN</label>
@@ -272,8 +392,9 @@ export default function ReRegistration({ registration, activeYear }) {
                                                 type="text"
                                                 value={data.nisn}
                                                 onChange={(e) => setData('nisn', e.target.value)}
-                                                className="mt-1.5 block w-full rounded-xl border-gray-200 shadow-sm focus:border-[#468432] focus:ring-[#468432] text-sm"
+                                                className={`mt-1.5 block w-full rounded-xl shadow-sm text-sm ${seClass('nisn')}`}
                                             />
+                                            {seErr('nisn')}
                                         </div>
                                         <div>
                                             <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide">NIK Siswa (16 Digit) <span className="text-red-500">*</span></label>

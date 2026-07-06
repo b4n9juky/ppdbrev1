@@ -214,7 +214,7 @@
                 <td style="width: 250px;">
                     <div class="signature-box">
                         <div class="date-text">
-                            {{ $madrasah->address ? explode(',', $madrasah->address)[0] : 'Bontang' }}, {{ \Carbon\Carbon::now()->locale('id')->settings(['formatFunction' => 'translatedFormat'])->format('d F Y') }}
+                            {{ $madrasah->kota}}, {{ \Carbon\Carbon::now()->locale('id')->settings(['formatFunction' => 'translatedFormat'])->format('d F Y') }}
                         </div>
                         <div class="title-text">
                             Yang membuat pernyataan,<br>Siswa

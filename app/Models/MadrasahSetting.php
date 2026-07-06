@@ -19,6 +19,8 @@ use Illuminate\Database\Eloquent\Model;
     'parent_statement_points',
     'participation_statement_points',
     'show_announcement',
+    'kota',
+    'propinsi',
 ])]
 class MadrasahSetting extends Model
 {

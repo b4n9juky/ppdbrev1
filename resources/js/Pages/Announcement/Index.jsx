@@ -1,38 +1,50 @@
-import { Head, Link, usePage } from '@inertiajs/react';
-import { useState, useMemo } from 'react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { useState, useEffect, useRef } from 'react';
 import { Search, Award, Trophy, School, CheckCircle } from 'lucide-react';
 import Toast from '@/Components/Toast';
+import Pagination from '@/Components/Pagination';
 
-export default function Index({ madrasah, activeYear, paths = [], registrations = [] }) {
+const perPageOptions = [10, 25, 50, 100];
+
+export default function Index({ madrasah, activeYear, paths = [], registrations, filters }) {
     const { auth } = usePage().props;
-    const [search, setSearch] = useState('');
-    
-    // Default to the first path if available
-    const [activePathId, setActivePathId] = useState(() => {
-        return paths.length > 0 ? paths[0].id : '';
-    });
+    const [search, setSearch] = useState(filters.search || '');
+    const [activePathId, setActivePathId] = useState(filters.path || (paths.length > 0 ? paths[0].id : ''));
+    const debounceRef = useRef(null);
+    const isFirstRender = useRef(true);
 
-    // Filter registrations by path and search
-    const filteredRegistrations = useMemo(() => {
-        let items = registrations.filter(r => r.admission_path_id === activePathId);
-        
-        if (search.trim()) {
-            const query = search.toLowerCase();
-            items = items.filter(r => 
-                (r.name && r.name.toLowerCase().includes(query)) ||
-                (r.nisn && r.nisn.includes(query)) ||
-                (r.id && String(r.id).includes(query)) ||
-                (r.previous_school && r.previous_school.toLowerCase().includes(query))
-            );
+    useEffect(() => {
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            return;
         }
-        
-        // Ensure they are sorted by total_score descending
-        return items.sort((a, b) => {
-            const scoreA = parseFloat(a.total_score) || 0;
-            const scoreB = parseFloat(b.total_score) || 0;
-            return scoreB - scoreA;
-        });
-    }, [registrations, activePathId, search]);
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => {
+            router.get(route('announcement'), {
+                path: activePathId,
+                search,
+                per_page: filters.per_page,
+            }, { preserveState: true, preserveScroll: true });
+        }, 400);
+        return () => clearTimeout(debounceRef.current);
+    }, [search, activePathId]);
+
+    function handlePathChange(pathId) {
+        setActivePathId(pathId);
+        setSearch('');
+    }
+
+    function handlePerPage(value) {
+        router.get(route('announcement'), {
+            path: activePathId,
+            search,
+            per_page: value,
+        }, { preserveState: true, preserveScroll: true });
+    }
+
+    const isFirstLoad = !registrations.data;
+    const meta = registrations?.meta || registrations;
+    const data = registrations?.data || [];
 
     return (
         <>
@@ -130,10 +142,7 @@ export default function Index({ madrasah, activeYear, paths = [], registrations 
                                         return (
                                             <button
                                                 key={path.id}
-                                                onClick={() => {
-                                                    setActivePathId(path.id);
-                                                    setSearch(''); // Clear search on tab change
-                                                }}
+                                                onClick={() => handlePathChange(path.id)}
                                                 className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 ${
                                                     isActive
                                                         ? 'bg-gradient-to-r from-emerald-600 to-green-600 text-white shadow-md shadow-emerald-150'
@@ -152,7 +161,7 @@ export default function Index({ madrasah, activeYear, paths = [], registrations 
                                 </div>
                             )}
 
-                            {/* Search and stats bar */}
+                            {/* Search and per_page bar */}
                             {paths.length > 0 && (
                                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-gray-100 bg-white px-6 py-4">
                                     <div className="relative w-full sm:w-80">
@@ -165,8 +174,20 @@ export default function Index({ madrasah, activeYear, paths = [], registrations 
                                             className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-sm text-gray-700 shadow-sm transition placeholder:text-gray-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 focus:outline-none"
                                         />
                                     </div>
-                                    <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                                        Total Siswa Diterima: <span className="text-emerald-600 font-bold text-sm">{filteredRegistrations.length}</span> orang
+                                    <div className="flex items-center gap-3">
+                                        <label className="whitespace-nowrap text-sm text-gray-600">Tampilkan</label>
+                                        <select
+                                            value={filters.per_page || 25}
+                                            onChange={(e) => handlePerPage(e.target.value)}
+                                            className="rounded-xl border border-gray-200 bg-white py-2 pl-3 pr-8 text-sm font-medium text-gray-700 shadow-sm transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 focus:outline-none"
+                                        >
+                                            {perPageOptions.map((opt) => (
+                                                <option key={opt} value={opt}>{opt}</option>
+                                            ))}
+                                        </select>
+                                        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                                            Total: <span className="text-emerald-600 font-bold text-sm">{meta?.total ?? 0}</span> siswa
+                                        </span>
                                     </div>
                                 </div>
                             )}
@@ -187,8 +208,8 @@ export default function Index({ madrasah, activeYear, paths = [], registrations 
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-50 bg-white">
-                                            {filteredRegistrations.map((reg, idx) => {
-                                                const rank = idx + 1;
+                                            {(data.length > 0 ? data : []).map((reg, idx) => {
+                                                const rank = (meta.current_page - 1) * (filters.per_page || 25) + idx + 1;
                                                 return (
                                                     <tr key={reg.id} className="transition-colors hover:bg-gray-50/30">
                                                         <td className="whitespace-nowrap px-6 py-4">
@@ -231,22 +252,22 @@ export default function Index({ madrasah, activeYear, paths = [], registrations 
                                                         <td className="whitespace-nowrap px-6 py-4 text-center">
                                                             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
                                                                 <CheckCircle className="h-3 w-3 text-emerald-600" />
-                                                                {reg.status}
+                                                                Diterima
                                                             </span>
                                                         </td>
                                                     </tr>
                                                 );
                                             })}
-                                            {filteredRegistrations.length === 0 && (
+                                            {data.length === 0 && (
                                                 <tr>
                                                     <td colSpan={7} className="px-6 py-16 text-center">
                                                         <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-50">
                                                             <Award className="h-7 w-7 text-gray-300" />
                                                         </div>
                                                         <p className="text-sm font-medium text-gray-900">
-                                                            {search ? 'Tidak ada hasil seleksi ditemukan' : 'Belum ada pendaftar yang dinyatakan lulus'}
+                                                            {filters.search ? 'Tidak ada hasil seleksi ditemukan' : 'Belum ada pendaftar yang dinyatakan lulus'}
                                                         </p>
-                                                        {search && (
+                                                        {filters.search && (
                                                             <p className="mt-1 text-xs text-gray-400">Coba ubah kata kunci pencarian Anda</p>
                                                         )}
                                                     </td>
@@ -255,6 +276,11 @@ export default function Index({ madrasah, activeYear, paths = [], registrations 
                                         </tbody>
                                     </table>
                                 </div>
+                            )}
+
+                            {/* Pagination and per_page */}
+                            {data.length > 0 && (
+                                <Pagination meta={meta} color="emerald" />
                             )}
                         </div>
                     </section>

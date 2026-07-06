@@ -7,6 +7,8 @@ export default function Edit({ setting }) {
     const { data, setData, post, processing, errors } = useForm({
         madrasah_name: setting.madrasah_name || '',
         address: setting.address || '',
+        kota: setting.kota || '',
+        propinsi: setting.propinsi || '',
         contact: setting.contact || '',
         headmaster_name: setting.headmaster_name || '',
         headmaster_nip: setting.headmaster_nip || '',
@@ -73,6 +75,29 @@ export default function Edit({ setting }) {
                                 className="mt-1 block w-full rounded-xl border-gray-200 shadow-sm transition focus:border-emerald-400 focus:ring-emerald-400"
                             />
                             {errors.address && <p className="mt-1 text-sm text-red-600">{errors.address}</p>}
+                        </div>
+
+                        <div className="grid gap-4 sm:grid-cols-2">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Kota</label>
+                                <input
+                                    type="text"
+                                    value={data.kota}
+                                    onChange={(e) => setData('kota', e.target.value)}
+                                    className="mt-1 block w-full rounded-xl border-gray-200 shadow-sm transition focus:border-emerald-400 focus:ring-emerald-400"
+                                />
+                                {errors.kota && <p className="mt-1 text-sm text-red-600">{errors.kota}</p>}
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Propinsi</label>
+                                <input
+                                    type="text"
+                                    value={data.propinsi}
+                                    onChange={(e) => setData('propinsi', e.target.value)}
+                                    className="mt-1 block w-full rounded-xl border-gray-200 shadow-sm transition focus:border-emerald-400 focus:ring-emerald-400"
+                                />
+                                {errors.propinsi && <p className="mt-1 text-sm text-red-600">{errors.propinsi}</p>}
+                            </div>
                         </div>
 
                         <div>

@@ -117,7 +117,7 @@
             padding: 4px 6px;
             width: 50%;
         }
-        
+
         .signature-box-left {
             text-align: center;
             margin-right: auto;
@@ -128,20 +128,20 @@
             margin-left: auto;
             width: 250px;
         }
-        
+
         .signature-box-left .date-text,
         .signature-box-right .date-text {
             font-size: 10.5pt;
             margin-bottom: 6px;
         }
-        
+
         .signature-box-left .title-text,
         .signature-box-right .title-text {
             font-size: 10.5pt;
             margin-bottom: 12px;
             height: 38px;
         }
-        
+
         .signature-box-left .name-text,
         .signature-box-right .name-text {
             font-weight: 700;
@@ -152,7 +152,7 @@
         .signature-box-left .name-text {
             text-transform: uppercase;
         }
-        
+
         .signature-box-left .info-text,
         .signature-box-right .info-text {
             font-size: 9pt;
@@ -308,7 +308,7 @@
                         <div class="title-text">
                             Mengetahui,<br>Kepala {{ $madrasah->madrasah_name ?? 'Madrasah Aliyah' }}
                         </div>
-                        
+
                         <div class="stamp-overlay">
                             @if($signature_base64)
                                 <img src="{{ $signature_base64 }}" class="signature-img" alt="Tanda Tangan">
@@ -325,7 +325,7 @@
                 <td>
                     <div class="signature-box-right">
                         <div class="date-text">
-                            {{ $madrasah->address ? explode(',', $madrasah->address)[0] : 'Bontang' }}, {{ \Carbon\Carbon::now()->locale('id')->settings(['formatFunction' => 'translatedFormat'])->format('d F Y') }}
+                            {{ $madrasah->kota }}, {{ \Carbon\Carbon::now()->locale('id')->settings(['formatFunction' => 'translatedFormat'])->format('d F Y') }}
                         </div>
                         <div class="title-text">
                             Yang membuat pernyataan,<br>Orang Tua / Wali Siswa

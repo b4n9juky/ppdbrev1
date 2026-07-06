@@ -8,6 +8,7 @@ use App\Models\DocumentType;
 use App\Models\Subject;
 use App\Models\User;
 use Database\Seeders\RegistrantSeeder;
+use Database\Seeders\MadrasahSettingSeeder;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -76,5 +77,6 @@ class DatabaseSeeder extends Seeder
         }
 
         $this->call(RegistrantSeeder::class);
+        $this->call(MadrasahSettingSeeder::class);
     }
 }

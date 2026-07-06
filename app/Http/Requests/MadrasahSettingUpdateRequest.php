@@ -11,6 +11,8 @@ class MadrasahSettingUpdateRequest extends FormRequest
         return [
             'madrasah_name' => ['required', 'string', 'max:255'],
             'address' => ['nullable', 'string', 'max:1000'],
+            'kota' => ['nullable', 'string', 'max:100'],
+            'propinsi' => ['nullable', 'string', 'max:100'],
             'contact' => ['nullable', 'string', 'max:255'],
             'headmaster_name' => ['nullable', 'string', 'max:255'],
             'headmaster_nip' => ['nullable', 'string', 'max:255'],

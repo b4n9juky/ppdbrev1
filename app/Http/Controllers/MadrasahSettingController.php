@@ -14,9 +14,7 @@ class MadrasahSettingController extends Controller
 {
     public function edit(): Response
     {
-        $setting = MadrasahSetting::first() ?? MadrasahSetting::create([
-            'madrasah_name' => 'Madrasah Aliyah',
-        ]);
+        $setting = MadrasahSetting::firstOrFail();
 
         return Inertia::render('Admin/MadrasahSetting/Edit', [
             'setting' => $setting,
@@ -25,9 +23,7 @@ class MadrasahSettingController extends Controller
 
     public function update(MadrasahSettingUpdateRequest $request): RedirectResponse
     {
-        $setting = MadrasahSetting::first() ?? MadrasahSetting::create([
-            'madrasah_name' => 'Madrasah Aliyah',
-        ]);
+        $setting = MadrasahSetting::firstOrFail();
 
         $data = $request->validated();
 

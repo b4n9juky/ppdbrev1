@@ -131,6 +131,7 @@ class RegistrationController extends Controller
             'documentTypes' => DocumentType::all(),
             'myActivities' => $myActivities,
             'filters' => [
+                'tab' => $tab,
                 'sort' => $sortField,
                 'direction' => $sortDirection,
                 'search' => $search,

@@ -242,16 +242,24 @@ export default function ReRegistration({ registration, activeYear }) {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
+    const stepNames = {
+        1: 'Biodata', 2: 'Asal Sekolah', 3: 'Ayah',
+        4: 'Ibu', 5: 'Wali', 6: 'Pern. Siswa', 7: 'Pern. Ortu', 8: 'Partisipasi',
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
+        const allErrs = {};
         for (let s = 1; s <= 8; s++) {
             const errs = validateStep(s);
-            if (Object.keys(errs).length > 0) {
-                setStepErrors(errs);
-                setCurrentStep(s);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                return;
+            for (const [key, msg] of Object.entries(errs)) {
+                allErrs[key] = `[${stepNames[s]}] ${msg}`;
             }
+        }
+        if (Object.keys(allErrs).length > 0) {
+            setStepErrors(allErrs);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
         }
         post(route('student.re-registration.submit'));
     };

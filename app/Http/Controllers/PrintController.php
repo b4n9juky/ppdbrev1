@@ -377,7 +377,7 @@ class PrintController extends Controller
     {
         $image = match ($mime) {
             'image/jpeg' => imagecreatefromjpeg($path),
-            'image/png'  => imagecreatefrompng($path),
+            'image/png'  => @imagecreatefrompng($path),
             'image/gif'  => imagecreatefromgif($path),
             default      => null,
         };

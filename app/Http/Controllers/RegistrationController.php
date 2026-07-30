@@ -25,7 +25,11 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use ZipArchive;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class RegistrationController extends Controller
 {
@@ -584,5 +588,359 @@ class RegistrationController extends Controller
         }
 
         return response()->download($zipPath, $zipFileName)->deleteFileAfterSend(true);
+    }
+
+    public function downloadAcceptedBiodata(): BinaryFileResponse
+    {
+        $activeYear = AcademicYear::where('is_active', true)->first();
+        if (!$activeYear) {
+            abort(404, 'Tidak ada tahun ajaran aktif.');
+        }
+
+        $registrations = Registration::with([
+            'studentBiodata', 'studentParent', 'admissionPath', 'studentDocuments', 'academicYear', 'user'
+        ])
+            ->where('academic_year_id', $activeYear->id)
+            ->where('status', 'accepted')
+            ->orderBy('admission_path_id')
+            ->orderBy('id')
+            ->get();
+
+        if ($registrations->isEmpty()) {
+            abort(404, 'Tidak ada siswa diterima untuk diunduh biodatanya.');
+        }
+
+        $zipFileName = 'biodata-siswa-diterima-' . str_replace('/', '-', $activeYear->name) . '.zip';
+        $zipPath = storage_path('app/private/temp/' . $zipFileName);
+
+        if (!is_dir(storage_path('app/private/temp'))) {
+            mkdir(storage_path('app/private/temp'), 0755, true);
+        }
+
+        $zip = new ZipArchive;
+        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+            abort(500, 'Gagal membuat file zip.');
+        }
+
+        $madrasah = MadrasahSetting::first();
+
+        $kopSuratBase64 = $madrasah ? $this->imageToBase64($madrasah->kop_surat_path, 800) : null;
+        $signatureBase64 = $madrasah ? $this->imageToBase64($madrasah->signature_path, 300) : null;
+        $stampBase64 = $madrasah ? $this->imageToBase64($madrasah->stamp_path, 300) : null;
+
+        ini_set('memory_limit', '512M');
+
+        $added = 0;
+        foreach ($registrations as $reg) {
+            if (!$reg->studentBiodata) {
+                continue;
+            }
+
+            $nisn = $reg->studentBiodata->nisn;
+            if (!$nisn) {
+                continue;
+            }
+
+            $photoBase64 = null;
+            if ($reg->studentDocuments) {
+                $photo = $reg->studentDocuments->firstWhere('document_type', 'foto');
+                if ($photo && $photo->file_path) {
+                    $photoBase64 = $this->imageToBase64($photo->file_path, 400);
+                }
+            }
+
+            $pdf = Pdf::loadView('pdf.biodata', [
+                'registration' => $reg,
+                'bio' => $reg->studentBiodata,
+                'parent' => $reg->studentParent,
+                'madrasah' => $madrasah,
+                'kop_surat_base64' => $kopSuratBase64,
+                'signature_base64' => $signatureBase64,
+                'stamp_base64' => $stampBase64,
+                'photo' => $photoBase64,
+            ]);
+
+            $pathName = preg_replace('/[<>:"\/\\\\|?*]/', '-', $reg->admissionPath?->name ?? 'tanpa-jalur');
+            $safeName = preg_replace('/[<>:"\/\\\\|?*]/', '-', $reg->studentBiodata->full_name);
+            $fileName = $nisn . ' - ' . $safeName . '.pdf';
+            $zip->addFromString($pathName . '/' . $fileName, $pdf->output());
+            $added++;
+        }
+
+        $zip->close();
+
+        if ($added === 0) {
+            unlink($zipPath);
+            abort(404, 'Tidak ada biodata yang ditemukan untuk siswa diterima.');
+        }
+
+        return response()->download($zipPath, $zipFileName)->deleteFileAfterSend(true);
+    }
+
+    public function exportAcceptedBiodataExcel(): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        $activeYear = AcademicYear::where('is_active', true)->first();
+        if (!$activeYear) {
+            abort(404, 'Tidak ada tahun ajaran aktif.');
+        }
+
+        $registrations = Registration::with([
+            'studentBiodata', 'studentParent', 'admissionPath', 'user',
+        ])
+            ->where('academic_year_id', $activeYear->id)
+            ->where('status', 'accepted')
+            ->orderBy('admission_path_id')
+            ->orderByRaw('COALESCE(total_score, 0) DESC')
+            ->orderBy('id')
+            ->get();
+
+        if ($registrations->isEmpty()) {
+            abort(404, 'Tidak ada siswa diterima untuk diexport.');
+        }
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Biodata Siswa Diterima');
+
+        $headers = [
+            'No',
+            'Jalur Pendaftaran',
+            'Total Nilai',
+            // Biodata
+            'NISN',
+            'Nama Lengkap',
+            'Jenis Kelamin',
+            'Tempat Lahir',
+            'Tanggal Lahir',
+            'Alamat',
+            'No. HP',
+            'NIK',
+            'Anak Ke-',
+            'Jumlah Saudara',
+            'Status Siswa',
+            'Kecamatan',
+            'Kelurahan',
+            'Status Tinggal',
+            'Jarak ke Sekolah',
+            'Golongan Darah',
+            'Disabilitas',
+            'Asal Sekolah',
+            'Status Sekolah Asal',
+            'NPSN Sekolah Asal',
+            'Alamat Sekolah Asal',
+            'Kota Sekolah Asal',
+            'Kecamatan Sekolah Asal',
+            'Kelurahan Sekolah Asal',
+            'Kelas Diterima',
+            'Program Diterima',
+            'Tanggal Diterima',
+            // Ayah
+            'Nama Ayah',
+            'Tempat Lahir Ayah',
+            'Tanggal Lahir Ayah',
+            'NIK Ayah',
+            'Pendidikan Ayah',
+            'Pekerjaan Ayah',
+            'Penghasilan Ayah',
+            'Alamat Ayah',
+            'No. HP Ayah',
+            'Status Ayah',
+            // Ibu
+            'Nama Ibu',
+            'Tempat Lahir Ibu',
+            'Tanggal Lahir Ibu',
+            'NIK Ibu',
+            'Pendidikan Ibu',
+            'Pekerjaan Ibu',
+            'Penghasilan Ibu',
+            'Alamat Ibu',
+            'No. HP Ibu',
+            'Status Ibu',
+            // Wali
+            'Nama Wali',
+            'Tempat Lahir Wali',
+            'Tanggal Lahir Wali',
+            'NIK Wali',
+            'Pendidikan Wali',
+            'Pekerjaan Wali',
+            'Penghasilan Wali',
+            'Alamat Wali',
+            'No. HP Wali',
+            'Status Wali',
+        ];
+
+        $sheet->fromArray($headers, null, 'A1');
+
+        $genderLabels = ['male' => 'Laki-laki', 'female' => 'Perempuan'];
+
+        $row = 2;
+        foreach ($registrations as $i => $reg) {
+            $bio = $reg->studentBiodata;
+            $parent = $reg->studentParent;
+
+            $sheet->fromArray([
+                $i + 1,
+                $reg->admissionPath?->name ?? '-',
+                $reg->total_score ?? 0,
+                // Biodata
+                $bio?->nisn ?? '-',
+                $bio?->full_name ?? $reg->user?->name ?? '-',
+                $genderLabels[$bio?->gender] ?? $bio?->gender ?? '-',
+                $bio?->birth_place ?? '-',
+                $bio?->birth_date ? $bio->birth_date->format('d-m-Y') : '-',
+                $bio?->address ?? '-',
+                $bio?->phone_number ?? '-',
+                $bio?->nik ?? '-',
+                $bio?->child_order ?? '',
+                $bio?->siblings_count ?? '',
+                $bio?->student_status ?? '-',
+                $bio?->district ?? '-',
+                $bio?->subdistrict ?? '-',
+                $bio?->living_status ?? '-',
+                $bio?->distance_to_school ?? '-',
+                $bio?->blood_type ?? '-',
+                $bio?->disability ?? '-',
+                $bio?->previous_school ?? '-',
+                $bio?->previous_school_status ?? '-',
+                $bio?->previous_school_npsn ?? '-',
+                $bio?->previous_school_address ?? '-',
+                $bio?->previous_school_city ?? '-',
+                $bio?->previous_school_district ?? '-',
+                $bio?->previous_school_subdistrict ?? '-',
+                $bio?->accepted_class ?? '-',
+                $bio?->accepted_program ?? '-',
+                $bio?->accepted_date ? $bio->accepted_date->format('d-m-Y') : '-',
+                // Ayah
+                $parent?->father_name ?? '-',
+                $parent?->father_birth_place ?? '-',
+                $parent?->father_birth_date ? $parent->father_birth_date->format('d-m-Y') : '-',
+                $parent?->father_nik ?? '-',
+                $parent?->father_education ?? '-',
+                $parent?->father_occupation ?? '-',
+                $parent?->father_income ?? '-',
+                $parent?->father_address ?? '-',
+                $parent?->father_phone ?? '-',
+                $parent?->father_status ?? '-',
+                // Ibu
+                $parent?->mother_name ?? '-',
+                $parent?->mother_birth_place ?? '-',
+                $parent?->mother_birth_date ? $parent->mother_birth_date->format('d-m-Y') : '-',
+                $parent?->mother_nik ?? '-',
+                $parent?->mother_education ?? '-',
+                $parent?->mother_occupation ?? '-',
+                $parent?->mother_income ?? '-',
+                $parent?->mother_address ?? '-',
+                $parent?->mother_phone ?? '-',
+                $parent?->mother_status ?? '-',
+                // Wali
+                $parent?->guardian_name ?? '-',
+                $parent?->guardian_birth_place ?? '-',
+                $parent?->guardian_birth_date ? $parent->guardian_birth_date->format('d-m-Y') : '-',
+                $parent?->guardian_nik ?? '-',
+                $parent?->guardian_education ?? '-',
+                $parent?->guardian_occupation ?? '-',
+                $parent?->guardian_income ?? '-',
+                $parent?->guardian_address ?? '-',
+                $parent?->guardian_phone ?? '-',
+                $parent?->guardian_status ?? '-',
+            ], null, 'A' . $row);
+
+            $row++;
+        }
+
+        $columnCount = count($headers);
+        for ($colIdx = 1; $colIdx <= $columnCount; $colIdx++) {
+            $colLetter = Coordinate::stringFromColumnIndex($colIdx);
+            $sheet->getColumnDimension($colLetter)->setAutoSize(true);
+        }
+
+        $lastColumn = Coordinate::stringFromColumnIndex($columnCount);
+        $sheet->getStyle('A1:' . $lastColumn . '1')
+            ->getFont()
+            ->setBold(true);
+
+        $fileName = 'biodata-lengkap-siswa-diterima-' . str_replace('/', '-', $activeYear->name) . '.xlsx';
+        $filePath = storage_path('app/private/temp/' . $fileName);
+
+        if (!is_dir(storage_path('app/private/temp'))) {
+            mkdir(storage_path('app/private/temp'), 0755, true);
+        }
+
+        $writer = new Xlsx($spreadsheet);
+        $writer->save($filePath);
+        $spreadsheet->disconnectWorksheets();
+
+        return response()->download($filePath, $fileName)->deleteFileAfterSend(true);
+    }
+
+    private function imageToBase64($path, ?int $maxWidth = null): ?string
+    {
+        if (!$path) {
+            return null;
+        }
+
+        $fullPath = null;
+        if (Storage::disk('local')->exists($path)) {
+            $fullPath = Storage::disk('local')->path($path);
+        } elseif (Storage::disk('public')->exists($path)) {
+            $fullPath = Storage::disk('public')->path($path);
+        }
+
+        if (!$fullPath || !file_exists($fullPath)) {
+            return null;
+        }
+
+        $mime = mime_content_type($fullPath);
+        if ($maxWidth && $mime && str_starts_with($mime, 'image/')) {
+            return $this->resizeImageToBase64($fullPath, $mime, $maxWidth);
+        }
+
+        return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($fullPath));
+    }
+
+    private function resizeImageToBase64(string $path, string $mime, int $maxWidth): string
+    {
+        $image = match ($mime) {
+            'image/jpeg' => @imagecreatefromjpeg($path),
+            'image/png' => @imagecreatefrompng($path),
+            'image/gif' => @imagecreatefromgif($path),
+            default => null,
+        };
+
+        if (!$image) {
+            return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($path));
+        }
+
+        $origWidth = imagesx($image);
+        $origHeight = imagesy($image);
+
+        if ($origWidth <= $maxWidth) {
+            ob_start();
+            match ($mime) {
+                'image/jpeg' => imagejpeg($image, null, 80),
+                'image/png' => imagepng($image, null, 6),
+                default => imagegif($image),
+            };
+            $data = ob_get_clean();
+            imagedestroy($image);
+            return 'data:' . $mime . ';base64,' . base64_encode($data);
+        }
+
+        $ratio = $maxWidth / $origWidth;
+        $newHeight = (int) ($origHeight * $ratio);
+        $resized = imagecreatetruecolor($maxWidth, $newHeight);
+        imagecopyresampled($resized, $image, 0, 0, 0, 0, $maxWidth, $newHeight, $origWidth, $origHeight);
+        imagedestroy($image);
+
+        ob_start();
+        match ($mime) {
+            'image/jpeg' => imagejpeg($resized, null, 80),
+            'image/png' => imagepng($resized, null, 6),
+            default => imagegif($resized),
+        };
+        $data = ob_get_clean();
+        imagedestroy($resized);
+
+        return 'data:' . $mime . ';base64,' . base64_encode($data);
     }
 }

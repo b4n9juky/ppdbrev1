@@ -176,6 +176,20 @@ export default function AnnouncementTab({ registrations, paths, stats, filters }
                             <Download className="h-4 w-4" />
                             Download Berkas
                         </a>
+                        <a
+                            href={route('admin.registrations.biodata.download-all')}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-purple-200 bg-purple-50 px-4 py-2 text-sm font-semibold text-purple-700 shadow-sm transition hover:bg-purple-100 hover:text-purple-800 focus:ring-2 focus:ring-purple-100 focus:outline-none active:scale-[0.98]"
+                        >
+                            <Download className="h-4 w-4" />
+                            Download Biodata
+                        </a>
+                        <a
+                            href={route('admin.registrations.biodata.export-excel')}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-semibold text-orange-700 shadow-sm transition hover:bg-orange-100 hover:text-orange-800 focus:ring-2 focus:ring-orange-100 focus:outline-none active:scale-[0.98]"
+                        >
+                            <FileSpreadsheet className="h-4 w-4" />
+                            Export Excel Biodata
+                        </a>
                     </div>
                     <div className="flex items-center gap-3">
                         <label className="text-sm text-gray-600 whitespace-nowrap">Tampilkan</label>

@@ -115,6 +115,10 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
         ->name('registrations.admission-path.update');
     Route::get('/registrations/documents/download-all', [RegistrationController::class, 'downloadAllDocuments'])
         ->name('registrations.download-all-documents');
+    Route::get('/registrations/biodata/download-all', [RegistrationController::class, 'downloadAcceptedBiodata'])
+        ->name('registrations.biodata.download-all');
+    Route::get('/registrations/biodata/export-excel', [RegistrationController::class, 'exportAcceptedBiodataExcel'])
+        ->name('registrations.biodata.export-excel');
     Route::get('/print/registration-proof/{registration}', [PrintController::class, 'registrationProof'])
         ->name('print.registration-proof');
     Route::get('/print/decision-letter/{registration}', [PrintController::class, 'decisionLetter'])
